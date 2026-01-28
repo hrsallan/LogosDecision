@@ -5,8 +5,6 @@ from datetime import datetime
 from core.analytics import deep_scan_excel, get_file_hash, deep_scan_porteira_excel
 from core.database import init_db, save_releitura_data, save_porteira_data, get_releitura_chart_data, get_releitura_due_chart_data, get_porteira_chart_data, get_releitura_metrics, get_porteira_metrics, get_releitura_details, is_file_duplicate, reset_database, get_porteira_table_data, get_porteira_totals, get_porteira_chart_summary, save_porteira_table_data, get_porteira_nao_executadas_chart, reset_porteira_database
 from core.auth import authenticate_user, register_user
-from core.dashboard_metrics import get_dashboard_metrics
-
 app = Flask(__name__)
 CORS(app)
 
@@ -62,11 +60,6 @@ def status_porteira():
         "chart": {"labels": labels, "values": values},
         "details": []
     })
-
-@app.route('/api/dashboard/metrics', methods=['GET'])
-def dashboard_metrics():
-    metrics = get_dashboard_metrics()
-    return jsonify(metrics)
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
