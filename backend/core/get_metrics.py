@@ -216,9 +216,9 @@ def get_dashboard_metrics():
     
     return {
         "status": "online",
-        "last_collection": last_collection,  # Indicador de confiança
+        "last_collection": last_collection,  
         "metrics": {
-            "sla_percent": sla_pct,  # % pendências dentro do SLA
+            "sla_percent": sla_pct, 
             "sla_percent_display": f"{sla_pct}%" if sla_pct is not None else "N/A",
             "pendentes": pendentes,
             "pendentes_comp": comparisons["var_pendentes"],
@@ -233,39 +233,4 @@ def get_dashboard_metrics():
             "entradas": entradas,
             "resolucoes": resolucoes
         },
-        "alerts": generate_alerts(sla_pct, aging, pendentes)
     }
-
-def generate_alerts(sla_pct, aging, pendentes):
-    """Gera alertas baseados em métricas reais"""
-    alerts = []
-    
-    if sla_pct is not None and sla_pct < 50:
-        alerts.append({
-            "severity": "critical",
-            "icon": "🔴",
-            "message": f"SLA crítico: apenas {sla_pct}% dentro do prazo"
-        })
-    
-    if aging["aging_6plus"] > 0:
-        alerts.append({
-            "severity": "warning",
-            "icon": "🟡",
-            "message": f"{aging['aging_6plus']} pendências com mais de 6h"
-        })
-    
-    if aging["aging_2_6"] > 0 and aging["aging_6plus"] == 0:
-        alerts.append({
-            "severity": "info",
-            "icon": "🔵",
-            "message": f"{aging['aging_2_6']} pendências entre 2-6h"
-        })
-    
-    if pendentes == 0:
-        alerts.append({
-            "severity": "success",
-            "icon": "✅",
-            "message": "Todas as pendências resolvidas!"
-        })
-    
-    return alerts

@@ -148,6 +148,45 @@
             document.getElementById('v-clock-val').innerText = `${hours}:${minutes}`;
             document.getElementById('v-date').innerText = now.toLocaleDateString('pt-BR');
         }, 1000);
+        
+            function checkSystemStatus() {
+            const pill =
+                document.getElementById("v2-conn") ||
+                document.getElementById("v-conn");
+
+            if (!pill) return; // não existe pill nesta página
+
+            const host = window.location.hostname || "127.0.0.1";
+            const dateParam = encodeURIComponent(new Date().toISOString().slice(0, 10));
+
+            const endpoints = [
+                `http://${host}:5000/api/status/releitura?date=${dateParam}`,
+                `http://${host}:5000/api/status/porteira?date=${dateParam}`,
+            ];
+
+            const requests = endpoints.map((url) =>
+                fetch(url, { cache: "no-store" }).then((res) => {
+                if (!res.ok) throw new Error("offline");
+                return true;
+                })
+            );
+
+            Promise.allSettled(requests).then((results) => {
+                const anyOnline = results.some((r) => r.status === "fulfilled");
+
+                if (anyOnline) {
+                pill.innerText = "SISTEMA ONLINE";
+                pill.className = "v2-status-pill online";
+                } else {
+                pill.innerText = "SISTEMA OFFLINE";
+                pill.className = "v2-status-pill offline";
+                }
+            });
+            }
+
+            setInterval(checkSystemStatus, 5000);
+            checkSystemStatus();
+
     </script>
 </body>
 </html>
