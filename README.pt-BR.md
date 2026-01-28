@@ -15,7 +15,7 @@
 
 ---
 
-## 📋 Visão Geral
+## 📋 Menu Principal
 
 VigilaCore é uma aplicação web full-stack projetada para monitorar e analisar dados de leitura de medição. Oferece métricas de dashboard, visualizações em gráficos e relatórios detalhados para acompanhamento de operações de **Releitura** e **Porteira**.
 

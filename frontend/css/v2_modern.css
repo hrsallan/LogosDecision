@@ -96,7 +96,8 @@ body {
     flex-direction: column;
     gap: 4px;
     padding: 0 12px;
-}
+
+    position: relative;}
 
 .v2-nav-item {
     display: flex;
@@ -113,7 +114,12 @@ body {
     background: none;
     width: 100%;
     text-align: left;
-}
+
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    overflow: hidden;
+    pointer-events: auto;}
 
 .v2-nav-item:hover {
     background: var(--v2-surface-light);
@@ -152,10 +158,9 @@ body {
 
 .v2-nav-logout {
     margin-top: auto;
-    color: var(--v2-danger);
+color: var(--v2-danger);
     border-top: 1px solid var(--v2-border);
     padding-top: 12px;
-    margin-top: 12px;
 }
 
 .v2-nav-logout:hover {

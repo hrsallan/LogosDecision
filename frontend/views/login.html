@@ -356,7 +356,7 @@
 
                 if (data.success) {
                     localStorage.setItem('vigilacore_user', JSON.stringify(data.user));
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'menu_principal.html';
                 } else {
                     alert(data.message || 'Erro ao fazer login');
                 }
