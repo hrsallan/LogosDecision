@@ -676,7 +676,7 @@ const ctx = document.getElementById("naoExecutadasChart");
 
                     updateConnectionStatus(true);
                 })
-                .catch((err) => {
+                .catch((error) => {
                     console.error("Erro ao sincronizar (porteira):", err);
                     alert("Falha ao sincronizar pelo portal. Verifique se o backend está rodando e se as dependências do sincronizador estão instaladas.");
                     updateConnectionStatus(false);
