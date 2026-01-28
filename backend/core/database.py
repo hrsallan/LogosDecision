@@ -1,5 +1,5 @@
 import sqlite3
-from core.auth import hash_password
+from core.auth import hash_password, authenticate_user as secure_authenticate
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -50,7 +50,7 @@ def _porteira_cycle_where(ciclo: str | None):
     # Base (01..88) entra sempre
     # Rural entra apenas se sufixo_ul estiver na lista allowed
     where = (
-        f"WHERE (CAST(substr(UL, -2) AS INTEGER) < 89 "
+        f"WHERE (CAST(substr(UL, -2) AS INTEGER) < 89 \
         f"OR CAST(substr(UL, -2) AS INTEGER) IN ({placeholders}))"
     )
     return where, tuple(int(x) for x in allowed)
@@ -157,14 +157,20 @@ def init_db():
         )
     ''')
 
-    # Criar um usuário administrador padrão se não existir
-    cursor.execute("SELECT id FROM users WHERE username = 'devallan'")
-    if not cursor.fetchone():
-        hashed_password = hash_password('pudin123')
-        cursor.execute("""
-            INSERT INTO users (username, password, role)
-            VALUES (?, ?, 'admin')
-        """, ('devallan', hashed_password))
+    # Criar usuário admin padrão via variáveis de ambiente (SEGURO)
+    # Configure ADMIN_USERNAME e ADMIN_PASSWORD no arquivo .env
+    admin_username = os.getenv('ADMIN_USERNAME')
+    admin_password = os.getenv('ADMIN_PASSWORD')
+    
+    if admin_username and admin_password:
+        cursor.execute("SELECT id FROM users WHERE username = ?", (admin_username,))
+        if not cursor.fetchone():
+            hashed_password = hash_password(admin_password)
+            cursor.execute("""
+                INSERT INTO users (username, password, role)
+                VALUES (?, ?, 'admin')
+            """, (admin_username, hashed_password))
+            print(f"✅ Usuário admin '{admin_username}' criado com sucesso!")
 
     cursor.execute("PRAGMA table_info(releituras)")
     columns = [column[1] for column in cursor.fetchall()]
@@ -178,26 +184,25 @@ def init_db():
     conn.commit()
     conn.close()
 
-def authenticate_user(username, password):
-    conn = sqlite3.connect(str(DB_PATH))
-    cursor = conn.cursor()
-    cursor.execute('SELECT id, username, role FROM users WHERE username = ? AND password = ?', (username, password))
-    user = cursor.fetchone()
-    conn.close()
-    if user:
-        return {"id": user[0], "username": user[1], "role": user[2]}
-    return None
+
+# Usar a função segura de autenticação do módulo auth.py
+# A função authenticate_user agora usa bcrypt para verificar senhas
+authenticate_user = secure_authenticate
+
 
 def register_user(username, password, role='user'):
+    """Registra um novo usuário com senha hasheada usando bcrypt"""
     try:
+        hashed_password = hash_password(password)
         conn = sqlite3.connect(str(DB_PATH))
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (username, password, role))
+        cursor.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (username, hashed_password, role))
         conn.commit()
         conn.close()
         return True
     except sqlite3.IntegrityError:
         return False
+
 
 def reset_database():
     conn = sqlite3.connect(str(DB_PATH))
@@ -252,6 +257,7 @@ def is_file_duplicate(file_hash, module):
     exists = cursor.fetchone() is not None
     conn.close()
     return exists
+
 
 def save_releitura_data(details, file_hash):
     conn = sqlite3.connect(str(DB_PATH))
@@ -339,6 +345,7 @@ def update_installation_status(installation_list, new_status, module):
     conn.commit()
     conn.close()
 
+
 def get_releitura_details():
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
@@ -361,6 +368,7 @@ def get_releitura_details():
 
     details.sort(key=sort_key)
     return details[:100]
+
 
 def get_releitura_metrics():
     conn = sqlite3.connect(str(DB_PATH))
@@ -404,6 +412,7 @@ def get_porteira_metrics():
     conn.close()
     
     return {"total": total, "pendentes": pendentes}
+
 
 def get_releitura_chart_data(date_str=None):
     conn = sqlite3.connect(str(DB_PATH))
@@ -469,6 +478,7 @@ def get_releitura_due_chart_data(date_str=None):
     values = [int(counts[k]) for k in key_full]
     return labels, values
 
+
 def get_porteira_chart_data(date_str=None):
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
@@ -492,6 +502,7 @@ SELECT hora, total
             continue
 
     return list(hourly_data.keys()), list(hourly_data.values())
+
 
 def get_porteira_table_data(ciclo: str | None = None):
     """Retorna todos os dados da tabela resultados_leitura"""
@@ -522,6 +533,7 @@ def get_porteira_table_data(ciclo: str | None = None):
     
     return [dict(r) for r in rows]
 
+
 def get_porteira_totals(ciclo: str | None = None):
     """Retorna os totalizadores da tabela resultados_leitura"""
     conn = sqlite3.connect(str(DB_PATH))
@@ -548,6 +560,7 @@ def get_porteira_totals(ciclo: str | None = None):
         'total_releituras': int(row[2] or 0),
         'releituras_nao_exec': int(row[3] or 0)
     }
+
 
 def save_porteira_table_data(data_list):
     """Salva dados na tabela resultados_leitura"""
@@ -597,6 +610,7 @@ def save_porteira_table_data(data_list):
     conn.commit()
     conn.close()
 
+
 def get_porteira_chart_summary(ciclo: str | None = None):
     """Retorna dados agregados para o gráfico de barras da porteira"""
     conn = sqlite3.connect(str(DB_PATH))
@@ -635,6 +649,7 @@ def get_porteira_chart_summary(ciclo: str | None = None):
             {"label": "Não executadas", "data": [nao, rel_nao]},
         ]
     }
+
 
 def get_porteira_nao_executadas_chart(ciclo: str | None = None):
     """
@@ -679,6 +694,7 @@ def get_porteira_nao_executadas_chart(ciclo: str | None = None):
     
     return labels, values
 
+
 def reset_porteira_database():
     """Limpa apenas os dados da tabela de porteira"""
     conn = sqlite3.connect(str(DB_PATH))
@@ -693,6 +709,7 @@ def reset_porteira_database():
     
     print("✅ Dados da Porteira zerados com sucesso!")
 
+
 def save_file_history(module, count, file_hash):
     """Salva histórico de upload de arquivo"""
     conn = sqlite3.connect(str(DB_PATH))
@@ -702,12 +719,12 @@ def save_file_history(module, count, file_hash):
         cursor.execute('''
             INSERT INTO history_porteira (module, count, file_hash, timestamp)
             VALUES (?, ?, ?, ?)
-        ''', (module, count, file_hash, datetime.now()))
+            ''', (module, count, file_hash, datetime.now()))
     else:
         cursor.execute('''
             INSERT INTO history_releitura (module, count, file_hash, timestamp)
             VALUES (?, ?, ?, ?)
-        ''', (module, count, file_hash, datetime.now()))
+            ''', (module, count, file_hash, datetime.now()))
     
     conn.commit()
     conn.close()
