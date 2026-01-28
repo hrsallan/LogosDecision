@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VigilaCore | Releituras</title>
+    <link rel="stylesheet" href="../css/v2_modern.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/sidebar_toggle.js"></script>
+</head>
+<body>
+    <div class="v2-container">
+        <!-- SIDEBAR -->
+        <aside class="v2-sidebar">
+            <div class="v2-logo-section"><button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
+                <div class="v2-logo-text v2-brand-text"><span class="logo-vigila">Vigila</span><span class="logo-core">Core</span></div>
+            </div>
+
+            <nav class="v2-nav">
+                <a href="dashboard.html" class="v2-nav-item" data-title="Visão Geral">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span class="v2-nav-text">Visão Geral</span>
+                </a>
+                <a href="releitura.html" class="v2-nav-item active" data-title="Releituras">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="v2-nav-text">Releituras</span>
+                </a>
+                <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
+                    <i data-lucide="door-open"></i>
+                    <span class="v2-nav-text">Porteira</span>
+                </a>
+
+                <div class="v2-nav-divider"></div>
+                <div class="v2-nav-section-label">Em breve</div>
+
+                <a href="relatorios.html" class="v2-nav-item" data-title="Relatórios">
+                    <i data-lucide="file-text"></i>
+                    <span class="v2-nav-text">Relatórios</span>
+                </a>
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
+                    <i data-lucide="brain"></i>
+                    <span class="v2-nav-text">Análise IA</span>
+                </a>
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
+                    <i data-lucide="settings"></i>
+                    <span class="v2-nav-text">Administração</span>
+                </a>
+
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
+                    <i data-lucide="power"></i>
+                    <span class="v2-nav-text">Sair</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- CONTENT -->
+        <div class="v2-content">
+            <!-- HEADER -->
+            <header class="v2-header">
+                <div class="v2-header-left">
+                    <h1 class="v2-header-title">Monitoramento Releituras</h1>
+                    <p class="v2-header-subtitle">Análise das Releituras Não Executadas | CEMIG SGL</p>
+                </div>
+                <div class="v2-header-right">
+                    <button id="v2-reset-btn" class="v2-status-pill offline" style="cursor:pointer; border:1px solid var(--v3-danger); background: rgba(248, 81, 73, 0.1);">ZERAR BANCO</button>
+
+                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
+
+                    <button id="v2-upload-btn" type="button" class="v2-icon-btn" title="Carregar relatório">
+                        <i data-lucide="cloud-upload"></i>
+                    </button>
+                    <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
+                    <span id="v2-upload-text" class="sr-only">CARREGAR RELATÓRIO</span>
+
+
+                    <button id="v2-sync-btn" type="button" class="v2-icon-btn">
+                        <i data-lucide="cloud-download"></i>
+                    </button>
+                    
+                    <div class="v2-calendar-wrap">
+                        <button id="v2-cal-btn" type="button" class="v2-icon-btn" title="Selecionar data do gráfico">
+                            <i data-lucide="calendar-days"></i>
+                        </button>
+                        <span id="v2-cal-badge" class="v2-date-badge" style="display:none"></span>
+                        <input id="v2-cal-input" class="v2-date-input" type="date" aria-label="Selecionar data do gráfico" />
+                    </div>
+                    <div class="v2-clock-widget">
+                        <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                        <div class="v2-date-display" id="v2-date">--/--/----</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT -->
+            <main class="v2-main">
+                <div class="v2-grid-layout">
+                    <!-- Métricas - Full Width -->
+                    <div class="v2-metrics-row">
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Releituras Totais</span>
+                            <span class="v2-card-value" id="v2-total">0</span>
+                        </div>
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Pendências</span>
+                            <span class="v2-card-value warning" id="v2-pend">0</span>
+                        </div>
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Realizadas</span>
+                            <span class="v2-card-value success" id="v2-realizadas">0</span>
+                        </div>
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Atrasadas</span>
+                            <span class="v2-card-value danger" id="v2-atrasadas">0</span>
+                        </div>
+                    </div>
+<!-- Gráfico Interativo - Full Width com maior altura -->
+                    <div class="v2-card v2-card-chart v2-chart-large">
+                        <div class="v2-card-header">
+                            <h3>Gráfico de Releituras Não Executadas (Real-Time DB)</h3>
+                        </div>
+                        <div class="v2-canvas-container v2-canvas-large">
+                            <canvas id="v2-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico por Vencimento - Full Width -->
+                    <div class="v2-card v2-card-chart">
+                        <div class="v2-card-header">
+                            <h3>Gráfico por Data de Vencimento (Pendências)</h3>
+                        </div>
+                        <div class="v2-canvas-container">
+                            <canvas id="v2-due-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Detalhes - Full Width -->
+                    <div class="v2-card v2-table-area">
+                        <div class="v2-card-header">
+                            <h3>Detalhes das Releituras (Deep-Scan)</h3>
+                        </div>
+                        <div class="v2-table-scroll">
+                            <table class="v2-table">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>UL</th>
+                                        <th>Instalação</th>
+                                        <th>Endereço</th>
+                                        <th>Razão</th>
+                                        <th>Reg.</th>
+                                        <th>Vencimento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="v2-table-body">
+                                    <tr><td colspan="7" class="v2-empty">Nenhum dado carregado</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- FOOTER -->
+                    <footer class="v2-footer">
+                <span>VigilaCore  | Desenvolvimento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        // --- Calendar (snapshot day selector) ---
+        const calBtn = document.getElementById('v2-cal-btn');
+        const calInput = document.getElementById('v2-cal-input');
+        const calBadge = document.getElementById('v2-cal-badge');
+
+        let selectedDateISO = new Date().toISOString().slice(0, 10);
+        calInput.value = selectedDateISO;
+
+        function updateCalBadge() {
+            const todayISO = new Date().toISOString().slice(0, 10);
+            if (!selectedDateISO || selectedDateISO === todayISO) {
+                calBadge.style.display = 'none';
+                calBadge.textContent = '';
+                return;
+            }
+            calBadge.style.display = 'inline-flex';
+            calBadge.textContent = new Date(selectedDateISO + 'T00:00:00').toLocaleDateString('pt-BR');
+        }
+        updateCalBadge();
+
+        calBtn.addEventListener('click', () => {
+            // showPicker() funciona em navegadores modernos; fallback: focus/click
+            if (calInput.showPicker) calInput.showPicker();
+            else { calInput.focus(); calInput.click(); }
+        });
+
+        calInput.addEventListener('change', () => {
+            if (calInput.value) selectedDateISO = calInput.value;
+            updateCalBadge();
+            checkV2Status(true); // recarrega gráfico do dia escolhido
+        });
+
+        let v2Chart;
+        let v2DueChart;
+        const ctx = document.getElementById('v2-chart').getContext('2d');
+        const dueCtx = document.getElementById('v2-due-chart').getContext('2d');
+        let isUploading = false;
+
+        function initV2Chart(labels = [], values = []) {
+            if (v2Chart) v2Chart.destroy();
+            v2Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Releituras',
+                        data: values,
+                        borderColor: '#00d1ff',
+                        backgroundColor: 'rgba(0, 209, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#00d1ff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#8b949e' }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#8b949e' }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+
+function initV2DueChart(labels = [], values = []) {
+    if (v2DueChart) v2DueChart.destroy();
+    v2DueChart = new Chart(dueCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Pendências',
+                data: values,
+                borderColor: '#00d1ff',
+                backgroundColor: 'rgba(0, 209, 255, 0.1)',
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointBackgroundColor: '#00d1ff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#8b949e' }
+                },
+                x: { 
+                    grid: { display: false },
+                    ticks: { color: '#8b949e' }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+        function updateUI(data) {
+            if (data.metrics) {
+                document.getElementById('v2-total').innerText = data.metrics.total;
+                document.getElementById('v2-pend').innerText = data.metrics.pendentes;
+                document.getElementById('v2-realizadas').innerText = data.metrics.realizadas;
+                const atrasadasEl = document.getElementById('v2-atrasadas');
+                if (atrasadasEl && data.metrics.atrasadas !== undefined) {
+                    atrasadasEl.innerText = data.metrics.atrasadas;
+                }
+            }
+            if (data.chart) initV2Chart(data.chart.labels, data.chart.values);
+            if (data.due_chart) initV2DueChart(data.due_chart.labels, data.due_chart.values);
+            if (data.details && data.details.length > 0) {
+                const tbody = document.getElementById('v2-table-body');
+                tbody.innerHTML = data.details.map(row => `
+                    <tr>
+                        <td><span class="v2-status-tag ${row.status.toLowerCase().includes('atrasado') ? 'atrasado' : 'pendente'}">${row.status}</span></td>
+                        <td>${row.ul}</td>
+                        <td>${row.inst}</td>
+                        <td>${row.endereco}</td>
+                        <td>${row.razao}</td>
+                        <td>${row.reg || '03'}</td>
+                        <td>${row.venc}</td>
+                    </tr>
+                `).join('');
+            } else {
+                document.getElementById('v2-table-body').innerHTML = '<tr><td colspan="7" class="v2-empty">Nenhum dado carregado</td></tr>';
+            }
+            if (data.server_time) document.getElementById('v2-sync-val').innerText = data.server_time.substring(0, 5);
+        }
+
+        const uploadBtn = document.getElementById('v2-upload-btn');
+        const fileInput = document.getElementById('v2-file-input');
+
+        if (uploadBtn && fileInput) {
+            uploadBtn.onclick = () => fileInput.click();
+        }
+
+        if (fileInput) fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            isUploading = true;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('v2-upload-text').innerText = "PROCESSANDO...";
+
+            fetch('http://127.0.0.1:5000/api/upload?module=releitura', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateUI(data);
+                    document.getElementById('v2-upload-text').innerText = "✅ SUCESSO!";
+                } else if (data.error === "DUPLICADO") {
+                    alert(data.message);
+                    document.getElementById('v2-upload-text').innerText = "⚠️ DUPLICADO";
+                } else {
+                    alert(data.error || "Erro no processamento");
+                    document.getElementById('v2-upload-text').innerText = "❌ ERRO";
+                }
+                setTimeout(() => {
+                    document.getElementById('v2-upload-text').innerText = "CARREGAR RELATÓRIO CEMIG (.XLS)";
+                    isUploading = false;
+                }, 3000);
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('v2-upload-text').innerText = "❌ ERRO DE CONEXÃO";
+                isUploading = false;
+            });
+        };
+
+        
+        // --- Portal Sync (download + process) ---
+        const syncBtn = document.getElementById('v2-sync-btn');
+        if (syncBtn) {
+            syncBtn.addEventListener('click', () => {
+                if (isUploading) return;
+                isUploading = true;
+                syncBtn.style.opacity = '0.6';
+                syncBtn.style.pointerEvents = 'none';
+                document.getElementById('v2-upload-text').innerText = "SINCRONIZANDO (PORTAL)...";
+                fetch('http://127.0.0.1:5000/api/sync/releitura', { method: 'POST' })
+                    .then(async (res) => {
+                        // Evita cair no catch por erro de parse quando o backend devolve HTML/empty body
+                        if (!res.ok) {
+                            const body = await res.text().catch(() => "");
+                            throw new Error(`HTTP ${res.status} em /api/sync/releitura: ${body.slice(0, 200)}`);
+                        }
+                        // Se não for JSON válido, retorna null para tratarmos abaixo
+                        try { return await res.json(); } catch { return null; }
+                    })
+                    .then(data => {
+                        if (!data) {
+                            throw new Error("Resposta inválida do backend (JSON).");
+                        }
+                        if (data.success) {
+                            updateUI(data);
+                            // após sync, o gráfico do dia selecionado pode ser diferente (se selecionar outra data)
+                            checkV2Status(true);
+                            document.getElementById('v2-upload-text').innerText = "✅ ATUALIZADO!";
+                        } else if (data.error === "DUPLICADO") {
+                            alert(data.message);
+                            document.getElementById('v2-upload-text').innerText = "⚠️ DUPLICADO";
+                        } else {
+                            alert(data.error || "Erro ao sincronizar");
+                            document.getElementById('v2-upload-text').innerText = "❌ ERRO";
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        // Não trava a experiência com popup: só sinaliza no status da tela
+                        document.getElementById('v2-upload-text').innerText = "❌ ERRO (verifique o backend)";
+                        const pill = document.getElementById('v2-conn');
+                        if (pill) {
+                            pill.innerText = "SISTEMA OFFLINE";
+                            pill.className = "v2-status-pill offline";
+                        }
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            document.getElementById('v2-upload-text').innerText = "CARREGAR RELATÓRIO CEMIG (.XLS)";
+                            isUploading = false;
+                            syncBtn.style.opacity = '';
+                            syncBtn.style.pointerEvents = '';
+                        }, 1500);
+                    });
+            });
+        }
+
+document.getElementById('v2-reset-btn').onclick = async () => {
+            const ok = confirm("Deseja realmente ZERAR todo o banco de dados?");
+            if (!ok) return;
+
+            const username = prompt("Confirme o usuário ADMIN:");
+            if (!username) return;
+
+            const password = prompt("Digite a senha do ADMIN para confirmar:");
+            if (!password) return;
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    alert(data.message || "Senha inválida / Acesso negado.");
+                    return;
+                }
+
+                // Limpa caches e zera UI imediatamente (evita gráfico "persistir" visualmente)
+                lastChartData = null;
+                lastDueChartData = null;
+                lastTableData = null;
+
+                document.getElementById('v2-total').innerText = '0';
+                document.getElementById('v2-pend').innerText = '0';
+                document.getElementById('v2-realizadas').innerText = '0';
+                const atrasadasEl = document.getElementById('v2-atrasadas');
+                if (atrasadasEl) atrasadasEl.innerText = '0';
+
+                document.getElementById('v2-table-body').innerHTML =
+                    '<tr><td colspan="7" class="v2-empty">Nenhum dado carregado</td></tr>';
+
+                initV2Chart(
+                    Array.from({ length: 12 }, (_, i) => String(i + 7).padStart(2, '0') + 'h'),
+                    Array.from({ length: 12 }, () => 0)
+                );
+
+                initV2DueChart(
+                    ['--/--','--/--','--/--','--/--','--/--','--/--','--/--'],
+                    [0,0,0,0,0,0,0]
+                );
+
+                selectedDateISO = new Date().toISOString().slice(0, 10);
+                calInput.value = selectedDateISO;
+                updateCalBadge();
+                checkV2Status(true);
+
+                alert("Banco zerado com sucesso!");
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao comunicar com o backend.");
+            }
+        };
+
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+
+        let lastChartData = null;
+        let lastDueChartData = null;
+        let lastTableData = null;
+        
+        function checkV2Status() {
+            if (isUploading) return;
+            fetch('http://127.0.0.1:5000/api/status/releitura?date=' + encodeURIComponent(selectedDateISO))
+                .then(res => res.json())
+                .then(data => {
+                    const pill = document.getElementById('v2-conn');
+                    pill.innerText = "SISTEMA ONLINE";
+                    pill.className = "v2-status-pill online";
+                    
+                    if (data.metrics) {
+                        document.getElementById('v2-total').innerText = data.metrics.total;
+                        document.getElementById('v2-pend').innerText = data.metrics.pendentes;
+                        const realizadas = (data.metrics.realizadas !== undefined) ? data.metrics.realizadas : (data.metrics.total - data.metrics.pendentes);
+                        document.getElementById('v2-realizadas').innerText = realizadas || 0;
+                    }
+                    
+                    if (data.chart && JSON.stringify(data.chart) !== JSON.stringify(lastChartData)) {
+                        lastChartData = data.chart;
+                        initV2Chart(data.chart.labels, data.chart.values);
+                    }
+                    if (data.due_chart && JSON.stringify(data.due_chart) !== JSON.stringify(lastDueChartData)) {
+                        lastDueChartData = data.due_chart;
+                        initV2DueChart(data.due_chart.labels, data.due_chart.values);
+                    }
+                    
+                    if (data.details && data.details.length > 0 && JSON.stringify(data.details) !== JSON.stringify(lastTableData)) {
+                        lastTableData = data.details;
+                        const tbody = document.getElementById('v2-table-body');
+                        tbody.innerHTML = data.details.map(row => `
+                            <tr>
+                                <td><span class="v2-status-tag ${row.status.toLowerCase().includes('atrasado') ? 'atrasado' : 'pendente'}">${row.status}</span></td>
+                                <td>${row.ul}</td>
+                                <td>${row.inst}</td>
+                                <td>${row.endereco || '-'}</td>
+                                <td>${row.razao}</td>
+                                <td>${row.reg || '03'}</td>
+                                <td>${row.venc}</td>
+                            </tr>
+                        `).join('');
+                    }
+                })
+                .catch(() => {
+                    const pill = document.getElementById('v2-conn');
+                    pill.innerText = "SISTEMA OFFLINE";
+                    pill.className = "v2-status-pill offline";
+                });
+        }
+        setInterval(checkV2Status, 5000);
+        checkV2Status();
+    </script>
+</body>
+</html>

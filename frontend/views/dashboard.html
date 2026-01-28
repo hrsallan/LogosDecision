@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VigilaCore | Dashboard </title>
+    <link rel="stylesheet" href="../css/v2_modern.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .v-card-comparison {
+            font-size: 0.75rem;
+            color: var(--v2-text-dim);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--v2-border);
+        }
+
+        .v-comparison-up {
+            color: var(--v2-danger);
+        }
+
+        .v-comparison-down {
+            color: var(--v2-success);
+        }
+
+        .v-comparison-neutral {
+            color: var(--v2-text-dim);
+        }
+
+        .v-last-collection {
+            font-size: 0.65rem;
+            color: var(--v2-text-dim);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .v-aging-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .v-aging-bucket {
+            flex: 1;
+            background: var(--v2-surface-light);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .v-aging-bucket-label {
+            font-size: 0.6rem;
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .v-aging-bucket-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--v2-primary);
+        }
+
+        .v-alert-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .v-alert-critical {
+            background: rgba(248, 81, 73, 0.1);
+            border-left: 3px solid var(--v2-danger);
+        }
+
+        .v-alert-warning {
+            background: rgba(210, 153, 34, 0.1);
+            border-left: 3px solid var(--v2-warning);
+        }
+
+        .v-alert-info {
+            background: rgba(0, 209, 255, 0.1);
+            border-left: 3px solid var(--v2-primary);
+        }
+
+        .v-alert-success {
+            background: rgba(35, 134, 54, 0.1);
+            border-left: 3px solid var(--v2-success);
+        }
+
+        .v-alert-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .v-alert-message {
+            flex: 1;
+        }
+
+        .v-grid-2col {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+
+        .v2-icon-btn{
+            width:34px;
+            height:34px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            border:1px solid var(--v2-border);
+            background: rgba(255,255,255,0.02);
+            color: var(--v2-text-dim);
+            border-radius: 12px;
+            cursor:pointer;
+            transition: opacity .15s ease, transform .15s ease;
+        }
+
+        .v2-icon-btn:hover{
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .v2-icon-btn i{
+            width:18px;
+            height:18px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+                @media (max-width: 1200px) {
+            .v-grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .v-flow-chart-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            height: 400px;
+        }
+
+        .v-flow-chart-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .v-flow-chart-item .v2-card-label {
+            flex-shrink: 0;
+            margin-bottom: 0 !important;
+        }
+
+        .v-flow-chart-item canvas {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .v-data-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: var(--v2-text-dim);
+            font-size: 0.85rem;
+            min-height: 0;
+        }
+    </style>
+<script src="../js/sidebar_toggle.js"></script>
+</head>
+<body>
+    <div class="v2-container">
+        <!-- SIDEBAR -->
+        <aside class="v2-sidebar">
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
+                <div class="v2-logo-text v2-brand-text"><span class="logo-vigila">Vigila</span><span class="logo-core">Core</span></div>
+            </div>
+
+            <nav class="v2-nav">
+                <a href="dashboard.html" class="v2-nav-item active" data-title="Visão Geral">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span class="v2-nav-text">Visão Geral</span>
+                </a>
+                <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="v2-nav-text">Releituras</span>
+                </a>
+
+                <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
+                    <i data-lucide="door-open"></i>
+                    <span class="v2-nav-text">Porteira</span>
+                </a>
+
+                <div class="v2-nav-divider"></div>
+                <div class="v2-nav-section-label">Em breve</div>
+
+                <a href="relatorios.html" class="v2-nav-item" data-title="Relatórios">
+                    <i data-lucide="file-text"></i>
+                    <span class="v2-nav-text">Relatórios</span>
+                </a>
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
+                    <i data-lucide="brain"></i>
+                    <span class="v2-nav-text">Análise IA</span>
+                </a>
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
+                    <i data-lucide="settings"></i>
+                    <span class="v2-nav-text">Administração</span>
+                </a>
+
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
+                    <i data-lucide="power"></i>
+                    <span class="v2-nav-text">Sair</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- CONTENT -->
+        <div class="v2-content">
+            <!-- HEADER -->
+            <header class="v2-header">
+                <div class="v2-header-left">
+                    <h1 class="v2-header-title">Dashboard Operacional</h1>
+                    <p class="v2-header-subtitle">Métricas Acionáveis | SGL CEMIG</p>
+                </div>
+                <div class="v2-header-right">
+                    <div id="v-conn" class="v2-status-pill offline">SISTEMA OFFLINE</div>
+                    <button id="v-refresh-btn" class="v2-icon-btn">
+                        <i data-lucide="refresh-cw"></i>
+                    </button>
+                    <div class="v2-clock-widget">
+                        <div class="v2-time-display" id="v-clock-val">--:--</div>
+                        <div class="v2-date-display" id="v-date">--/--/----</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT -->
+            <main class="v2-main">
+                <!-- ALERTAS -->
+                <div id="v-alerts-container" style="margin-bottom: 16px;"></div>
+
+                <!-- GRID PRINCIPAL -->
+                <div class="v2-grid">
+                    <!-- Card 1: % SLA -->
+                    <div class="v2-card v2-card-metric">
+                        <span class="v2-card-label">% Pendências dentro do Prazo</span>
+                        <span class="v2-card-value" id="v-sla">N/A</span>
+                        <div class="v-card-comparison" id="v-sla-comp"></div>
+                        <div class="v-last-collection" id="v-sla-collection"></div>
+                    </div>
+
+                    <!-- Card 2: Tempo Médio de Resolução -->
+                    <div class="v2-card v2-card-metric">
+                        <span class="v2-card-label">Pendências Ativas</span>
+                        <span class="v2-card-value warning" id="v-pendentes">0</span>
+                        <div class="v-card-comparison" id="v-pend-comp"></div>
+                        <div class="v-last-collection" id="v-pend-collection"></div>
+                    </div>
+
+                    <!-- Card 3: Resolvidas Hoje -->
+                    <div class="v2-card v2-card-metric">
+                        <span class="v2-card-label">Resolvidas Hoje</span>
+                        <span class="v2-card-value success" id="v-resolvidas">0</span>
+                        <div class="v-card-comparison" id="v-res-comp"></div>
+                        <div class="v-last-collection" id="v-res-collection"></div>
+                    </div>
+
+                    <!-- Card 4: Total Processado -->
+                    <div class="v2-card v2-card-metric">
+                        <span class="v2-card-label">Total Processado</span>
+                        <span class="v2-card-value" id="v-total">0</span>
+                        <div class="v-last-collection" id="v-total-collection"></div>
+                    </div>
+
+                    <!-- Card 5: Backlog Aging -->
+                    <div class="v2-card" style="grid-column: span 4;">
+                        <span class="v2-card-label">Backlog Aging (Horas)</span>
+                        <div class="v-aging-container">
+                            <div class="v-aging-bucket">
+                                <div class="v-aging-bucket-label">0-2h</div>
+                                <div class="v-aging-bucket-value" id="v-aging-0-2">0</div>
+                            </div>
+                            <div class="v-aging-bucket">
+                                <div class="v-aging-bucket-label">2-6h</div>
+                                <div class="v-aging-bucket-value" id="v-aging-2-6">0</div>
+                            </div>
+                            <div class="v-aging-bucket">
+                                <div class="v-aging-bucket-label">6h+</div>
+                                <div class="v-aging-bucket-value" id="v-aging-6plus">0</div>
+                            </div>
+                        </div>
+                        <div class="v-last-collection" id="v-aging-collection"></div>
+                    </div>
+
+                    <!-- Card 6: Gráficos de Fluxo -->
+                    <div class="v2-card" style="grid-column: span 4;">
+                        <div class="v2-card-header">
+                            <h3>Fluxo Operacional (24h)</h3>
+                            <span class="v2-card-badge">Entradas vs Resoluções</span>
+                        </div>
+                        <div class="v-flow-chart-container">
+                            <div class="v-flow-chart-item">
+                                <div class="v2-card-label" >Entradas por Hora</div>
+                                <div class="v-data-empty" id="v-entradas-empty">Aguardando dados...</div>
+                                <canvas id="v-chart-entradas" style="display: none;"></canvas>
+                            </div>
+                            <div class="v-flow-chart-item">
+                                <div class="v2-card-label" >Resoluções por Hora</div>
+                                <div class="v-data-empty" id="v-resolucoes-empty">Aguardando dados...</div>
+                                <canvas id="v-chart-resolucoes" style="display: none;"></canvas>
+                            </div>
+                        </div>
+                        <div class="v-last-collection" id="v-flow-collection"></div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="v2-footer">
+                <span>VigilaCore  | Desenvolvimento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Proteção de rota
+        (function() {
+            const user = localStorage.getItem('vigilacore_user');
+            if (!user) {
+                window.location.href = 'login.html';
+            }
+        })();
+
+        lucide.createIcons();
+        let chartEntradas, chartResolucoes;
+
+        // Atualizar relógio
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+
+        function getComparisonClass(compStr) {
+            if (compStr.includes('↑')) return 'v-comparison-up';
+            if (compStr.includes('↓')) return 'v-comparison-down';
+            return 'v-comparison-neutral';
+        }
+
+        function renderAlerts(alerts) {
+            const container = document.getElementById('v-alerts-container');
+            container.innerHTML = '';
+
+            if (!alerts || alerts.length === 0) return;
+
+            alerts.forEach(alert => {
+                const severityClass = `v-alert-${alert.severity}`;
+                const alertEl = document.createElement('div');
+                alertEl.className = `v-alert-item ${severityClass}`;
+                alertEl.innerHTML = `
+                    <span class="v-alert-icon">${alert.icon}</span>
+                    <span class="v-alert-message">${alert.message}</span>
+                `;
+                container.appendChild(alertEl);
+            });
+        }
+
+        function initChart(canvasId, label, data, color) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            if (canvasId === 'v-chart-entradas' && chartEntradas) {
+                chartEntradas.destroy();
+            } else if (canvasId === 'v-chart-resolucoes' && chartResolucoes) {
+                chartResolucoes.destroy();
+            }
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: label,
+                        data: data.values,
+                        backgroundColor: `${color}20`,
+                        borderColor: color,
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#8b949e' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8b949e', font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 12, 16, 0.8)',
+                            titleColor: '#c9d1d9',
+                            bodyColor: '#8b949e',
+                            borderColor: 'rgba(0, 209, 255, 0.3)',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            });
+
+            if (canvasId === 'v-chart-entradas') {
+                chartEntradas = chart;
+            } else if (canvasId === 'v-chart-resolucoes') {
+                chartResolucoes = chart;
+            }
+        }
+
+        function updateDashboard() {
+            fetch('http://127.0.0.1:5000/api/dashboard/metrics')
+                .then(res => res.json())
+                .then(data => {
+                    const pill = document.getElementById('v-conn');
+                    pill.innerText = "SISTEMA ONLINE";
+                    pill.className = "v2-status-pill online";
+
+                    // Atualizar status de coleta
+                    const lastCollection = data.last_collection ? `Última coleta: ${data.last_collection}` : 'Sem dados de coleta';
+
+                    // Métricas
+                    if (data.metrics) {
+                        const slaDisplay = data.metrics.sla_percent_display;
+                        document.getElementById('v-sla').innerText = slaDisplay;
+                        document.getElementById('v-sla-collection').innerText = lastCollection;
+
+                        document.getElementById('v-pendentes').innerText = data.metrics.pendentes;
+                        const pendComp = data.metrics.pendentes_comp;
+                        document.getElementById('v-pend-comp').innerHTML = `
+                            <span class="${getComparisonClass(pendComp)}">
+                                ${pendComp} vs ontem
+                            </span>
+                        `;
+                        document.getElementById('v-pend-collection').innerText = lastCollection;
+
+                        document.getElementById('v-resolvidas').innerText = data.metrics.resolvidas_hoje;
+                        const resComp = data.metrics.resolvidas_comp;
+                        document.getElementById('v-res-comp').innerHTML = `
+                            <span class="${getComparisonClass(resComp)}">
+                                ${resComp} vs ontem
+                            </span>
+                        `;
+                        document.getElementById('v-res-collection').innerText = lastCollection;
+
+                        document.getElementById('v-total').innerText = data.metrics.total;
+                        document.getElementById('v-total-collection').innerText = lastCollection;
+                    }
+
+                    // Aging
+                    if (data.aging) {
+                        document.getElementById('v-aging-0-2').innerText = data.aging.aging_0_2;
+                        document.getElementById('v-aging-2-6').innerText = data.aging.aging_2_6;
+                        document.getElementById('v-aging-6plus').innerText = data.aging.aging_6plus;
+                        document.getElementById('v-aging-collection').innerText = lastCollection;
+                    }
+
+                    // Gráficos de fluxo
+                    if (data.flow && data.flow.labels && data.flow.labels.length > 0) {
+                        const hasEntradas = data.flow.entradas.some(v => v > 0);
+                        const hasResolucoes = data.flow.resolucoes.some(v => v > 0);
+
+                        // Entradas
+                        if (hasEntradas) {
+                            document.getElementById('v-entradas-empty').style.display = 'none';
+                            document.getElementById('v-chart-entradas').style.display = 'block';
+                            initChart('v-chart-entradas', 'Entradas', {
+                                labels: data.flow.labels,
+                                values: data.flow.entradas
+                            }, '#00d1ff');
+                        } else {
+                            document.getElementById('v-entradas-empty').innerText = 'Sem dados de entradas nas últimas 24h';
+                        }
+
+                        // Resoluções
+                        if (hasResolucoes) {
+                            document.getElementById('v-resolucoes-empty').style.display = 'none';
+                            document.getElementById('v-chart-resolucoes').style.display = 'block';
+                            initChart('v-chart-resolucoes', 'Resoluções', {
+                                labels: data.flow.labels,
+                                values: data.flow.resolucoes
+                            }, '#238636');
+                        } else {
+                            document.getElementById('v-resolucoes-empty').innerText = 'Sem dados de resoluções nas últimas 24h';
+                        }
+
+                        document.getElementById('v-flow-collection').innerText = lastCollection;
+                    }
+
+                    // Alertas
+                    if (data.alerts) {
+                        renderAlerts(data.alerts);
+                    }
+                })
+                .catch(() => {
+                    const pill = document.getElementById('v-conn');
+                    pill.innerText = "SISTEMA OFFLINE";
+                    pill.className = "v2-status-pill offline";
+                });
+        }
+
+        // Atualizar a cada 5 segundos
+        setInterval(updateDashboard, 5000);
+        updateDashboard();
+
+        // Botão Atualizar manual
+        const refreshBtn = document.getElementById('v-refresh-btn');
+        refreshBtn.addEventListener('click', function() {
+            // Adicionar classe loading
+            refreshBtn.classList.add('loading');
+            refreshBtn.disabled = true;
+
+            // Chamar atualização
+            updateDashboard();
+
+            // Remover loading após 1 segundo
+            setTimeout(() => {
+                refreshBtn.classList.remove('loading');
+                refreshBtn.disabled = false;
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

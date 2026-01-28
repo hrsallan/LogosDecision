@@ -1,0 +1,181 @@
+/* VigilaCore v2.0 - Enterprise Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+    --color-bg: #05070a;
+    --color-surface: #0d1117;
+    --color-surface-light: #161b22;
+    --color-primary: #58a6ff;
+    --color-primary-glow: rgba(88, 166, 255, 0.15);
+    --color-accent: #79c0ff;
+    --color-text: #c9d1d9;
+    --color-text-dim: #8b949e;
+    --color-border: #30363d;
+    --color-success: #3fb950;
+    --color-warning: #d29922;
+    --color-danger: #f85149;
+    
+    --sidebar-width: 280px;
+    --header-height: 80px;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --shadow-premium: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* SIDEBAR PREMIUM */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.sidebar-header {
+    padding: 32px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-v2 {
+    width: 40px;
+    filter: drop-shadow(0 0 10px var(--color-primary));
+}
+
+.brand-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.brand-name span { color: var(--color-primary); }
+
+.nav-menu {
+    flex: 1;
+    padding: 0 16px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    color: var(--color-text-dim);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 4px;
+}
+
+.nav-item:hover, .nav-item.active {
+    color: #fff;
+    background: var(--color-surface-light);
+}
+
+.nav-item.active {
+    color: var(--color-primary);
+    box-shadow: inset 4px 0 0 var(--color-primary);
+}
+
+.nav-item i { width: 20px; }
+
+/* MAIN CONTENT AREA */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-y: auto;
+    background: radial-gradient(circle at 50% -20%, rgba(0, 74, 153, 0.1), transparent 70%);
+}
+
+.top-header {
+    height: var(--header-height);
+    padding: 0 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.page-info h1 { font-size: 1.5rem; font-weight: 800; }
+.page-info p { font-size: 0.85rem; color: var(--color-text-dim); }
+
+/* CARDS & WIDGETS */
+.dashboard-grid {
+    padding: 32px 40px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.card-v2 {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    transition: transform 0.3s, border-color 0.3s;
+    box-shadow: var(--shadow-premium);
+}
+
+.card-v2:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-primary);
+}
+
+.metric-label { font-size: 0.75rem; font-weight: 800; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.metric-value { font-size: 2.2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin: 8px 0; }
+
+/* CHART AREA */
+.chart-box {
+    grid-column: span 3;
+    min-height: 400px;
+}
+
+.side-panel {
+    grid-column: span 1;
+}
+
+/* UTILS */
+.status-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.05);
+}
+
+.online { color: var(--color-success); }
+.offline { color: var(--color-danger); }
+
+.footer-v2 {
+    padding: 24px 40px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+    font-weight: 600;
+}

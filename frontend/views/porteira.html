@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VigilaCore | Porteira</title>
+    <link rel="stylesheet" href="../css/v2_modern.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/sidebar_toggle.js"></script>
+</head>
+<body class="page-porteira">
+<div class="v2-container">
+        <!-- SIDEBAR -->
+        <aside class="v2-sidebar">
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">Vigila</span>
+                    <span class="logo-core">Core</span>
+                </div>
+            </div>
+
+            <nav class="v2-nav">
+                <a href="dashboard.html" class="v2-nav-item" data-title="Visão Geral">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span class="v2-nav-text">Visão Geral</span>
+                </a>
+                <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="v2-nav-text">Releituras</span>
+                </a>
+                <a href="porteira.html" class="v2-nav-item active" data-title="Porteira">
+                    <i data-lucide="door-open"></i>
+                    <span class="v2-nav-text">Porteira</span>
+                </a>
+
+                <div class="v2-nav-divider"></div>
+                <div class="v2-nav-section-label">Em breve</div>
+
+                <a href="relatorios.html" class="v2-nav-item" data-title="Relatórios">
+                    <i data-lucide="file-text"></i>
+                    <span class="v2-nav-text">Relatórios</span>
+                </a>
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
+                    <i data-lucide="brain"></i>
+                    <span class="v2-nav-text">Análise IA</span>
+                </a>
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
+                    <i data-lucide="settings"></i>
+                    <span class="v2-nav-text">Administração</span>
+                </a>
+
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
+                    <i data-lucide="power"></i>
+                    <span class="v2-nav-text">Sair</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- CONTENT -->
+        <div class="v2-content">
+            <!-- HEADER -->
+            <header class="v2-header">
+                <div class="v2-header-left">
+                    <h1 class="v2-header-title">Monitoramento Porteira</h1>
+                    <p class="v2-header-subtitle">Análise de Leituras e Releituras | CEMIG SGL</p>
+                </div>
+                <div class="v2-header-right">
+                    <button id="v2-reset-btn" class="v2-status-pill offline" style="cursor:pointer; border:1px solid var(--v3-danger); background: rgba(248, 81, 73, 0.1);">ZERAR BANCO</button>
+
+                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
+
+                    <button id="v2-upload-btn" type="button" class="v2-icon-btn" title="Carregar relatório">
+                        <i data-lucide="cloud-upload"></i>
+                    </button>
+                    <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
+                    <span id="v2-upload-text" class="sr-only">CARREGAR RELATÓRIO</span>
+
+                    <button id="v2-sync-btn" type="button" class="v2-icon-btn" title="Baixar do portal">
+                        <i data-lucide="cloud-download"></i>
+                    </button>
+
+                    <button id="v2-refresh-btn" type="button" class="v2-icon-btn" title="Atualizar dados">
+                        <i data-lucide="refresh-ccw"></i>
+                    </button>
+                    
+                    <div class="v2-clock-widget">
+                        <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                        <div class="v2-date-display" id="v2-date">--/--/----</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- MAIN CONTENT -->
+            <main class="v2-main">
+                <div class="v2-grid-layout">
+                    <!-- Métricas - Full Width -->
+                    <div class="v2-metrics-row">
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Total de Leituras</span>
+                            <span class="v2-card-value" id="v2-total-leituras">0</span>
+                        </div>
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Leituras Não Executadas</span>
+                            <span class="v2-card-value warning" id="v2-leituras-nao-exec">0</span>
+                        </div>
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Total de Releituras</span>
+                            <span class="v2-card-value" id="v2-total-releituras">0</span>
+                        </div>
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">Releituras Não Executadas</span>
+                            <span class="v2-card-value danger" id="v2-releituras-nao-exec">0</span>
+                        </div>
+                        <div class="v2-card v2-card-metric">
+                            <span class="v2-card-label">% Releituras Não Executadas</span>
+                            <span class="v2-card-value danger" id="v2-perc-releituras-nao-exec">0%</span>
+                        </div>
+
+                        <!-- Filtro por Ciclo (Rural OSB) -->
+                        
+<div class="v2-card" id="v2-cycle-card" style="grid-column: span 3;">
+    <div class="v2-cycle-top">
+        <div>
+            <div class="v2-card-label">Rural OSB</div>
+            <div class="v2-cycle-title">Selecionar Ciclo <span class="v2-cycle-sub">(razões rurais por mês)</span></div>
+        </div>
+
+        <div class="v2-cycle-segment" role="group" aria-label="Selecionar ciclo">
+            <button type="button" class="v2-cycle-btn is-active" data-cycle="" id="cycle-btn-all">Todos</button>
+            <button type="button" class="v2-cycle-btn" data-cycle="97" id="cycle-btn-97">Ciclo 97</button>
+            <button type="button" class="v2-cycle-btn" data-cycle="98" id="cycle-btn-98">Ciclo 98</button>
+            <button type="button" class="v2-cycle-btn" data-cycle="99" id="cycle-btn-99">Ciclo 99</button>
+        </div>
+    </div>
+
+    <div class="v2-cycle-ulgrid" id="cycle-ul-cards" aria-label="Razões incluídas no filtro"></div>
+</div>
+<!-- Gráfico de Barras - Full Width -->
+                    <div class="v2-card v2-card-chart v2-chart-large">
+                        <div class="v2-card-header">
+                            <h3>Gráfico de Leituras e Releituras (Executadas vs Não Executadas)</h3>
+                        </div>
+                        <div class="v2-canvas-container v2-canvas-large">
+                            <canvas id="porteiraChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Não Executadas por Razão - Full Width -->
+                    <div class="v2-card v2-card-chart">
+                        <div class="v2-card-header">
+                            <h3>Leituras Não Executadas por Razão</h3>
+                        </div>
+                        <div class="v2-canvas-container">
+                            <canvas id="naoExecutadasChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Detalhes - Full Width -->
+                    <div class="v2-card v2-table-area">
+                        <div class="v2-card-header">
+                            <h3>Pendências Separadas por Contrato</h3>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <label for="razao-filter" style="color: var(--v3-text-secondary); font-size: 0.875rem;">Filtrar por Razão:</label>
+                                <select id="razao-filter" style="background: var(--v3-card-bg); border: 1px solid var(--v3-border); color: var(--v3-text); padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem;">
+                                    <option value="">Todas as Razões</option>
+                                </select>
+                                <input type="text" id="search-input" placeholder="Buscar (UL / Tipo UL / Contrato / Razão)" style="background: var(--v3-card-bg); border: 1px solid var(--v3-border); color: var(--v3-text); padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; flex: 1; max-width: 300px;">
+                            </div>
+                        </div>
+                        <div class="v2-table-scroll">
+                            <table class="v2-table">
+                                <thead>
+                                    <tr>
+                                        <th>Contrato</th>
+                                        <th>UL</th>
+                                        <th>Tipo UL</th>
+                                        <th>Razão</th>
+                                        <th>Total Leituras</th>
+                                        <th>Não Executadas</th>
+                                        <th>Releituras</th>
+                                        <th>Releituras Não Executadas</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="v2-table-body">
+                                    <tr><td colspan="8" class="v2-empty">Nenhum dado carregado</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="v2-footer">
+                <span>VigilaCore | Desenvolvimento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Inicializa ícones Lucide
+        lucide.createIcons();
+
+        let porteiraChart = null;
+        let naoExecutadasChart = null;
+        let allTableData = [];
+        let filteredTableData = [];
+        let selectedCycle = ""; // "" = todos
+        let cacheBust = 0; // usado para forçar refresh e evitar cache
+        // Regras dos ciclos rurais (Razões 89..100): por mês (97/98/99) e a Razão 96 entra sempre.
+        const CYCLE_RAZOES = {
+            "97": [90, 91],
+            "98": [92, 93],
+            "99": [89, 94],
+        };
+        const RURAL_ALWAYS = [96];
+
+        
+        function getAllowedRuralRazoens(cycle) {
+            const c = (cycle || "").toString().trim();
+            const base = (CYCLE_RAZOES[c] || []).slice();
+            // além das razões do ciclo, a própria Razão do ciclo (97/98/99) entra,
+            // e a Razão 96 entra sempre.
+            const cycNum = (c && String(parseInt(c,10)) === c) ? [parseInt(c,10)] : [];
+            return [...base, ...cycNum, ...RURAL_ALWAYS];
+        }
+
+        let universeNeedsRefresh = true;
+        let universeRows = [];
+        let isUploading = false;
+
+        function buildUrl(path, includeCycle = true) {
+            const base = "http://127.0.0.1:5000";
+            const url = new URL(path, base);
+            if (includeCycle && selectedCycle) {
+                url.searchParams.set('ciclo', selectedCycle);
+            }
+            if (cacheBust) {
+                url.searchParams.set('_t', String(cacheBust));
+            }
+            return url.toString();
+        }
+
+        function setCycle(cycle) {
+            selectedCycle = (cycle || "").toString().trim();
+            updateCycleButtons();
+
+            // Resetar filtros visuais para refletir imediatamente o novo ciclo
+            const razaoSel = document.getElementById('razao-filter');
+            if (razaoSel) razaoSel.value = "all";
+            const search = document.getElementById('search-input');
+            if (search) search.value = "";
+
+            // Força refresh (evita cache e recarrega tudo)
+            refreshAll(true);
+        }
+
+        function updateCycleButtons() {
+            const btnAll = document.getElementById('cycle-btn-all');
+            const btn97 = document.getElementById('cycle-btn-97');
+            const btn98 = document.getElementById('cycle-btn-98');
+            const btn99 = document.getElementById('cycle-btn-99');
+
+            const buttons = [btnAll, btn97, btn98, btn99].filter(Boolean);
+            buttons.forEach(b => b.classList.remove('is-active'));
+
+            const map = {"": btnAll, "97": btn97, "98": btn98, "99": btn99};
+            const activeBtn = map[selectedCycle] || btnAll;
+            if (activeBtn) activeBtn.classList.add('is-active');
+        }
+
+
+        
+        function renderCycleUniverseInfo() {
+            const cards = document.getElementById('cycle-ul-cards');
+            if (!cards) return;
+
+            // Modelo dos cards (agora com 5 blocos quando um ciclo está selecionado:
+            // Base (01–88) + 2 razões do ciclo + a própria razão do ciclo (97/98/99) + R96 (sempre).
+            let cardModels = [];
+
+            if (!selectedCycle) {
+                // "Todos": resumo dos ciclos
+                cardModels = [
+                    {label: "BASE", value: "R01–R88", tone: "base"},
+                    {label: "C97", value: "R90 • R91 • R97", tone: "cycle"},
+                    {label: "C98", value: "R92 • R93 • R98", tone: "cycle"},
+                    {label: "C99", value: "R89 • R94 • R99", tone: "cycle"},
+                    {label: "SEMPRE", value: "R96", tone: "always"},
+                ];
+            } else {
+                const allowed = getAllowedRuralRazoens(selectedCycle).map(r => "R" + String(r).padStart(2,"0"));
+                // allowed já inclui: [razões do ciclo] + [ciclo] + [96]
+                // Vamos separar para exibir bonitinho:
+                const cycleNum = "R" + String(parseInt(selectedCycle,10)).padStart(2,"0");
+                const always = "R96";
+                const rurals = allowed.filter(x => x !== always && x !== cycleNum);
+
+                // rurals deve ter 2 itens
+                cardModels = [
+                    {label: "BASE", value: "R01–R88", tone: "base"},
+                    {label: "RURAL", value: rurals[0] || "—", tone: "rural"},
+                    {label: "RURAL", value: rurals[1] || "—", tone: "rural"},
+                    {label: "CICLO", value: cycleNum, tone: "cycle"},
+                    {label: "SEMPRE", value: always, tone: "always"},
+                ];
+            }
+
+            cards.innerHTML = cardModels.map(m => `
+                <div class="v2-cycle-ulcard ${m.tone}">
+                    <div class="v2-cycle-ulcard-label">${m.label}</div>
+                    <div class="v2-cycle-ulcard-value">${m.value}</div>
+                </div>
+            `).join("");
+        }
+
+        async function loadUniverse() {
+            // usado só para identificar quais ULs rurais existem em cada ciclo (97/98/99)
+            // IMPORTANTE: não pode quebrar o JS se o backend devolver corpo vazio
+            try {
+                const res = await fetch(buildUrl('/api/porteira/table', false));
+                const txt = await res.text();
+
+                let data = null;
+                try {
+                    data = JSON.parse(txt);
+                } catch (_) {
+                    data = null;
+                }
+
+                if (res.ok && data && data.success) {
+                    universeRows = data.data || [];
+                    renderCycleUniverseInfo();
+                    return;
+                }
+
+                // Se respondeu OK mas não veio JSON, não travar a tela
+                if (res.ok && !data) {
+                    universeRows = [];
+                    renderCycleUniverseInfo();
+                    return;
+                }
+
+                console.warn('Falha ao carregar universo de ciclos:', data || txt);
+            } catch (e) {
+                console.warn('Falha ao carregar universo de ciclos:', e);
+            }
+        }
+
+        async function refreshAll(force = false) {
+            if (force) {
+                cacheBust = Date.now();
+                universeNeedsRefresh = true;
+            }
+            if (universeNeedsRefresh) {
+                await loadUniverse();
+                universeNeedsRefresh = false;
+            }
+            await Promise.all([renderChart(), renderNaoExecutadasChart(), loadTableData()]);
+        }
+
+        // Relógio
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+
+        // Função para renderizar o gráfico principal
+        async function renderChart() {
+            try {
+                const res = await fetch(buildUrl("/api/porteira/chart"));
+                const payload = await res.json();
+
+                const ctx = document.getElementById("porteiraChart");
+
+                if (porteiraChart) {
+                    porteiraChart.destroy();
+                }
+
+                porteiraChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: payload.labels,
+                        datasets: payload.datasets.map((ds, idx) => ({
+                            ...ds,
+                            backgroundColor: idx === 0 
+                                ? 'rgba(34, 197, 94, 0.7)' 
+                                : 'rgba(248, 81, 73, 0.7)',
+                            borderColor: idx === 0 
+                                ? 'rgba(34, 197, 94, 1)' 
+                                : 'rgba(248, 81, 73, 1)',
+                            borderWidth: 2
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: "top",
+                                labels: {
+                                    color: 'rgba(255, 255, 255, 0.9)',
+                                    font: { size: 13 }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)'
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                updateConnectionStatus(true);
+            } catch (error) {
+                console.error("Erro ao renderizar gráfico:", error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Função para renderizar o gráfico de não executadas
+        async function renderNaoExecutadasChart() {
+            try {
+                const res = await fetch(buildUrl("/api/porteira/nao-executadas-chart"));
+                let data = null;
+                const text = await res.text().catch(() => "");
+                try { data = JSON.parse(text || '{}'); } catch { data = { success: res.ok }; }
+                if (!res.ok) {
+                    throw new Error((data && data.error) ? data.error : (`HTTP ${res.status}`));
+                }
+const ctx = document.getElementById("naoExecutadasChart");
+
+                if (naoExecutadasChart) {
+                    naoExecutadasChart.destroy();
+                }
+
+                naoExecutadasChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: "Leituras Não Executadas",
+                            data: data.values,
+                            backgroundColor: 'rgba(248, 81, 73, 0.7)',
+                            borderColor: 'rgba(248, 81, 73, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)'
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Erro ao renderizar gráfico de não executadas:", error);
+            }
+        }
+
+        // Função para carregar dados da tabela
+        async function loadTableData() {
+            try {
+                const res = await fetch(buildUrl("/api/porteira/table"));
+                const data = await res.json();
+
+                if (data.success) {
+                    // Só exibir linhas com pendência (leitura OU releitura não executada)
+                    allTableData = (data.data || []).filter(r =>
+                        (Number(r.Leituras_Nao_Executadas || 0) > 0) || (Number(r.Releituras_Nao_Executadas || 0) > 0)
+                    );
+                    filteredTableData = [...allTableData];
+                    
+                    // Atualizar métricas
+                    updateMetrics(data.totals);
+                    
+                    // Atualizar opções do filtro de razão
+                    updateRazaoFilter();
+                    
+                    // Renderizar tabela
+                    renderTable();
+
+                    // Atualizar texto do filtro de ciclos
+                    renderCycleUniverseInfo();
+                    
+                    updateConnectionStatus(true);
+                } else {
+                    console.error("Erro ao carregar dados:", data.error);
+                    updateConnectionStatus(false);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados da tabela:", error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Atualizar métricas
+        function updateMetrics(totals) {
+            document.getElementById('v2-total-leituras').innerText = totals.total_leituras || 0;
+            document.getElementById('v2-leituras-nao-exec').innerText = totals.leituras_nao_exec || 0;
+            document.getElementById('v2-total-releituras').innerText = totals.total_releituras || 0;
+            document.getElementById('v2-releituras-nao-exec').innerText = totals.releituras_nao_exec || 0;
+            const totalRel = Number(totals.total_releituras || 0);
+            const naoExecRel = Number(totals.releituras_nao_exec || 0);
+            const perc = totalRel > 0 ? ((naoExecRel / totalRel) * 100) : 0;
+            const percEl = document.getElementById('v2-perc-releituras-nao-exec');
+            if (percEl) percEl.innerText = `${perc.toFixed(1)}%`;
+        }
+
+        // Atualizar filtro de razão
+        function updateRazaoFilter() {
+            const razoes = [...new Set(allTableData.map(row => row.Razao))].sort();
+            const select = document.getElementById('razao-filter');
+            
+            // Manter a opção "Todas as Razões"
+            select.innerHTML = '<option value="">Todas as Razões</option>';
+            
+            razoes.forEach(razao => {
+                const option = document.createElement('option');
+                option.value = razao;
+                option.textContent = `Razão ${razao}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Renderizar tabela
+        function renderTable() {
+            const tbody = document.getElementById('v2-table-body');
+            
+            if (filteredTableData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="v2-empty">Nenhuma pendência encontrada para os filtros atuais.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredTableData.map(row => {
+                const totalLeit = Number(row.Total_Leituras || 0);
+                const naoExec = Number(row.Leituras_Nao_Executadas || 0);
+                const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
+                const statusClass = percNaoExec > 10 ? 'danger' : percNaoExec > 5 ? 'warning' : 'success';
+                
+                return `
+                    <tr>
+                        <td>${row.Conjunto_Contrato}</td>
+                        <td><strong>${row.UL}</strong></td>
+                        <td>${row.Tipo_UL || ''}</td>
+                        <td><span class="v2-status-tag ${statusClass}">R${row.Razao}</span></td>
+                        <td>${Math.round(row.Total_Leituras)}</td>
+                        <td><span style="color: var(--v3-warning);">${Math.round(row.Leituras_Nao_Executadas)}</span></td>
+                        <td>${Math.round(row.Releituras_Totais)}</td>
+                        <td><span style="color: var(--v3-danger);">${Math.round(row.Releituras_Nao_Executadas)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Filtrar tabela
+        function filterTable() {
+            const razaoValue = document.getElementById('razao-filter').value;
+            const searchValue = document.getElementById('search-input').value.toLowerCase();
+
+            filteredTableData = allTableData.filter(row => {
+                const matchRazao = !razaoValue || row.Razao === razaoValue;
+                const matchSearch = !searchValue || 
+                    String(row.UL || '').toLowerCase().includes(searchValue) ||
+                    String(row.Razao || '').toLowerCase().includes(searchValue) ||
+                    String(row.Tipo_UL || '').toLowerCase().includes(searchValue) ||
+                    String(row.Conjunto_Contrato || '').toLowerCase().includes(searchValue);
+                
+                return matchRazao && matchSearch;
+            });
+
+            renderTable();
+        }
+
+        // Event listeners para filtros
+        document.getElementById('razao-filter').addEventListener('change', filterTable);
+        document.getElementById('search-input').addEventListener('input', filterTable);
+
+        // Ciclos
+        document.getElementById('cycle-btn-all').addEventListener('click', () => setCycle(''));
+        document.getElementById('cycle-btn-97').addEventListener('click', () => setCycle('97'));
+        document.getElementById('cycle-btn-98').addEventListener('click', () => setCycle('98'));
+        document.getElementById('cycle-btn-99').addEventListener('click', () => setCycle('99'));
+
+                // Botão de atualizar (força recarregar gráficos/tabela)
+        const refreshBtn = document.getElementById('v2-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => refreshAll(true));
+        }
+
+// Botão de sincronização
+        async function syncPorteiraFromPortal() {
+            if (isUploading) return;
+            isUploading = true;
+
+            const syncBtn = document.getElementById('v2-sync-btn');
+            const uploadBtn = document.getElementById('v2-upload-btn');
+
+            syncBtn.style.opacity = '0.6';
+            syncBtn.style.pointerEvents = 'none';
+            uploadBtn.style.opacity = '0.6';
+            uploadBtn.style.pointerEvents = 'none';
+
+            // feedback
+            const uploadText = document.getElementById('v2-upload-text');
+            if (uploadText) uploadText.innerText = "SINCRONIZANDO (PORTAL)...";
+
+                        fetch('http://127.0.0.1:5000/api/sync/porteira', { method: 'POST' })
+                .then(async (res) => {
+                    const text = await res.text().catch(() => "");
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status} em /api/sync/porteira: ${text.slice(0, 200)}`);
+                    }
+                    // alguns ambientes podem devolver corpo vazio mesmo com sucesso; nesse caso, só recarrega a tela
+                    try { return JSON.parse(text || '{}'); } catch { return { success: true }; }
+                })
+                .then(async (data) => {
+                    // tratar duplicado / falhas reais
+                    if (data && data.error === "DUPLICADO") {
+                        alert(data.message || "Relatório duplicado.");
+                        return;
+                    }
+
+                    if (data && data.success === false) {
+                        throw new Error(data.error || "Falha ao sincronizar.");
+                    }
+
+                    // Atualizar métricas
+                    if (data.totals) updateMetrics(data.totals);
+
+                    universeNeedsRefresh = true;
+                    await refreshAll();
+
+                    updateConnectionStatus(true);
+                })
+                .catch((err) => {
+                    console.error("Erro ao sincronizar (porteira):", err);
+                    alert("Falha ao sincronizar pelo portal. Verifique se o backend está rodando e se as dependências do sincronizador estão instaladas.");
+                    updateConnectionStatus(false);
+                })
+                .finally(() => {
+                    isUploading = false;
+                    syncBtn.style.opacity = '';
+                    syncBtn.style.pointerEvents = '';
+                    uploadBtn.style.opacity = '';
+                    uploadBtn.style.pointerEvents = '';
+                    if (uploadText) uploadText.innerText = "";
+                });
+        }
+
+        // Botões de sincronização (header e card da tabela)
+        document.getElementById('v2-sync-btn').addEventListener('click', syncPorteiraFromPortal);
+        // Upload de arquivo
+        document.getElementById('v2-upload-btn').addEventListener('click', () => {
+            document.getElementById('v2-file-input').click();
+        });
+
+        document.getElementById('v2-file-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || isUploading) return;
+
+            isUploading = true;
+            const uploadBtn = document.getElementById('v2-upload-btn');
+            const syncBtn = document.getElementById('v2-sync-btn');
+            
+            uploadBtn.style.opacity = '0.5';
+            uploadBtn.style.pointerEvents = 'none';
+            syncBtn.style.opacity = '0.5';
+            syncBtn.style.pointerEvents = 'none';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/upload/porteira', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // alguns ambientes podem devolver corpo vazio / não-JSON mesmo com sucesso
+                const text = await res.text().catch(() => "");
+                let data = {};
+                try { data = JSON.parse(text || '{}'); } catch { data = { success: res.ok }; }
+
+                if (data.success) {
+                    // Atualizar UI
+                    if (data.totals) updateMetrics(data.totals);
+                    if (data.chart) {
+                        const ctx = document.getElementById("porteiraChart");
+                        if (porteiraChart) porteiraChart.destroy();
+                        porteiraChart = new Chart(ctx, {
+                            type: "bar",
+                            data: {
+                                labels: data.chart.labels,
+                                datasets: data.chart.datasets.map((ds, idx) => ({
+                                    ...ds,
+                                    backgroundColor: idx === 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(248, 81, 73, 0.7)',
+                                    borderColor: idx === 0 ? 'rgba(34, 197, 94, 1)' : 'rgba(248, 81, 73, 1)',
+                                    borderWidth: 2
+                                }))
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: "top", labels: { color: 'rgba(255, 255, 255, 0.9)', font: { size: 13 } } } },
+                                scales: {
+                                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } },
+                                    x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } }
+                                }
+                            }
+                        });
+                    }
+                    if (data.nao_exec_chart) {
+                        const ctx2 = document.getElementById("naoExecutadasChart");
+                        if (naoExecutadasChart) naoExecutadasChart.destroy();
+                        naoExecutadasChart = new Chart(ctx2, {
+                            type: "bar",
+                            data: {
+                                labels: data.nao_exec_chart.labels,
+                                datasets: [{
+                                    label: "Leituras Não Executadas",
+                                    data: data.nao_exec_chart.values,
+                                    backgroundColor: 'rgba(248, 81, 73, 0.7)',
+                                    borderColor: 'rgba(248, 81, 73, 1)',
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } },
+                                    x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } }
+                                }
+                            }
+                        });
+                    }
+                    
+                    universeNeedsRefresh = true;
+                    await refreshAll();
+                    const loaded = (data && typeof data.count !== 'undefined') ? data.count : '';
+                    alert(`✅ Arquivo processado com sucesso!${loaded !== '' ? `
+${loaded} registros carregados.` : ''}`);
+} else if (data.error === "DUPLICADO") {
+                    alert(data.message);
+                } else {
+                    alert("❌ Erro: " + (data.error || "Erro desconhecido"));
+                }
+            } catch (error) {
+                console.error("Erro no upload:", error);
+                alert("❌ Erro ao enviar arquivo. Verifique o console.");
+                updateConnectionStatus(false);
+            } finally {
+                isUploading = false;
+                uploadBtn.style.opacity = '';
+                uploadBtn.style.pointerEvents = '';
+                syncBtn.style.opacity = '';
+                syncBtn.style.pointerEvents = '';
+                e.target.value = '';
+            }
+        });
+
+        // Botão de reset
+        document.getElementById('v2-reset-btn').addEventListener('click', async () => {
+            const ok = confirm("Deseja realmente ZERAR todo o banco de dados da Porteira?");
+            if (!ok) return;
+
+            const username = prompt("Confirme o usuário ADMIN:");
+            if (!username) return;
+
+            const password = prompt("Digite a senha do ADMIN para confirmar:");
+            if (!password) return;
+
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/reset/porteira', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    alert(data.message || "Senha inválida / Acesso negado.");
+                    return;
+                }
+
+                // Limpa UI
+                allTableData = [];
+                filteredTableData = [];
+                
+                document.getElementById('v2-total-leituras').innerText = '0';
+                document.getElementById('v2-leituras-nao-exec').innerText = '0';
+                document.getElementById('v2-total-releituras').innerText = '0';
+                document.getElementById('v2-releituras-nao-exec').innerText = '0';
+                const percEl = document.getElementById('v2-perc-releituras-nao-exec');
+                if (percEl) percEl.innerText = '0%';
+
+                document.getElementById('v2-table-body').innerHTML =
+                    '<tr><td colspan="8" class="v2-empty">Nenhum dado carregado</td></tr>';
+
+                if (porteiraChart) porteiraChart.destroy();
+                if (naoExecutadasChart) naoExecutadasChart.destroy();
+
+                universeNeedsRefresh = true;
+                await refreshAll();
+
+                alert("✅ Banco da Porteira zerado com sucesso!");
+            } catch (e) {
+                console.error(e);
+                alert("❌ Erro ao comunicar com o backend.");
+            }
+        });
+
+        // Atualizar status de conexão
+        function updateConnectionStatus(online) {
+            const pill = document.getElementById('v2-conn');
+            if (online) {
+                pill.innerText = "SISTEMA ONLINE";
+                pill.className = "v2-status-pill online";
+            } else {
+                pill.innerText = "SISTEMA OFFLINE";
+                pill.className = "v2-status-pill offline";
+            }
+        }
+
+        // Inicialização
+        refreshAll();
+        
+        // Atualiza automaticamente a cada 30 segundos
+        setInterval(() => {
+            if (!isUploading) {
+                refreshAll();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
