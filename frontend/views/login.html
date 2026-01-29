@@ -351,11 +351,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-
                 const data = await response.json();
 
-                if (data.success) {
-                    localStorage.setItem('vigilacore_user', JSON.stringify(data.user));
+                if (data.success && data.token) {
+                    localStorage.setItem('vigilacore_token', data.token);
                     window.location.href = 'menu_principal.html';
                 } else {
                     alert(data.message || 'Erro ao fazer login');

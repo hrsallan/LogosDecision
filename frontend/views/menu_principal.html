@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../css/v2_modern.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../js/utils.js"></script>
  <style>
     /* ===== ESTRUTURA GLOBAL (MENU / HEADER / FOOTER) ===== */
 
@@ -165,7 +166,7 @@
             ];
 
             const requests = endpoints.map((url) =>
-                fetch(url, { cache: "no-store" }).then((res) => {
+                authFetch(url, { cache: "no-store" }).then((res) => {
                 if (!res.ok) throw new Error("offline");
                 return true;
                 })

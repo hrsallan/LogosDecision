@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="../css/v2_modern.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="../js/sidebar_toggle.js"></script>
+    <script src="../js/sidebar_toggle.js"></script>
+    <script src="../js/utils.js"></script>
 </head>
 <body class="page-porteira">
 <div class="v2-container">
@@ -324,7 +325,7 @@
             // usado só para identificar quais ULs rurais existem em cada ciclo (97/98/99)
             // IMPORTANTE: não pode quebrar o JS se o backend devolver corpo vazio
             try {
-                const res = await fetch(buildUrl('/api/porteira/table', false));
+                const res = await authFetch(buildUrl('/api/porteira/table', false));
                 const txt = await res.text();
 
                 let data = null;
@@ -377,7 +378,7 @@
         // Função para renderizar o gráfico principal
         async function renderChart() {
             try {
-                const res = await fetch(buildUrl("/api/porteira/chart"));
+                const res = await authFetch(buildUrl("/api/porteira/chart"));
                 const payload = await res.json();
 
                 const ctx = document.getElementById("porteiraChart");
@@ -445,7 +446,7 @@
         // Função para renderizar o gráfico de não executadas
         async function renderNaoExecutadasChart() {
             try {
-                const res = await fetch(buildUrl("/api/porteira/nao-executadas-chart"));
+                const res = await authFetch(buildUrl("/api/porteira/nao-executadas-chart"));
                 let data = null;
                 const text = await res.text().catch(() => "");
                 try { data = JSON.parse(text || '{}'); } catch { data = { success: res.ok }; }
@@ -507,7 +508,7 @@ const ctx = document.getElementById("naoExecutadasChart");
         // Função para carregar dados da tabela
         async function loadTableData() {
             try {
-                const res = await fetch(buildUrl("/api/porteira/table"));
+                const res = await authFetch(buildUrl("/api/porteira/table"));
                 const data = await res.json();
 
                 if (data.success) {
@@ -651,7 +652,7 @@ const ctx = document.getElementById("naoExecutadasChart");
             const uploadText = document.getElementById('v2-upload-text');
             if (uploadText) uploadText.innerText = "SINCRONIZANDO (PORTAL)...";
 
-                        fetch('http://127.0.0.1:5000/api/sync/porteira', { method: 'POST' })
+                        authFetch('http://127.0.0.1:5000/api/sync/porteira', { method: 'POST' })
                 .then(async (res) => {
                     const text = await res.text().catch(() => "");
                     if (!res.ok) {
@@ -718,7 +719,7 @@ const ctx = document.getElementById("naoExecutadasChart");
             formData.append('file', file);
 
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/upload/porteira', {
+                const res = await authFetch('http://127.0.0.1:5000/api/upload/porteira', {
                     method: 'POST',
                     body: formData
                 });
@@ -819,7 +820,7 @@ ${loaded} registros carregados.` : ''}`);
             if (!password) return;
 
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/reset/porteira', {
+                const res = await authFetch('http://127.0.0.1:5000/api/reset/porteira', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })

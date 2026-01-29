@@ -3,22 +3,14 @@ from core.auth import hash_password, authenticate_user as secure_authenticate
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
-from dotenv import load_dotenv  # ADICIONE ESTA LINHA
+from dotenv import load_dotenv
 
 # Carregar variáveis do .env
-load_dotenv()  # ADICIONE ESTA LINHA
+load_dotenv()
 
 DB_PATH = Path(__file__).parent.parent / 'data' / 'vigilacore.db'
 
 # --- Ciclos Rurais (Porteira) ---
-# IMPORTANTE:
-# Neste projeto, o filtro de ciclos da "Porteira" deve ser aplicado pelos
-# DOIS ÚLTIMOS DÍGITOS da UL (e não pelo campo Razao do relatório).
-#
-# Regras:
-# - Base: ULs com sufixo 01..88 sempre entram
-# - Rural: ULs com sufixo >= 89 entram conforme ciclo selecionado (97/98/99)
-# - A UL de sufixo 96 entra sempre (independente do ciclo)
 CYCLE_RAZOES = {
     "97": [90, 91],
     "98": [92, 93],
@@ -26,130 +18,36 @@ CYCLE_RAZOES = {
 }
 RURAL_ALWAYS_INCLUDE = [96]
 
-def _porteira_cycle_where(ciclo: str | None):
+
+def _porteira_cycle_where(ciclo: str | None, prefix: str = "WHERE"):
     """Retorna (where_sql, params) para filtrar Porteira por ciclo.
     O filtro é feito pelo sufixo (2 últimos dígitos) da UL.
-
-    - Base: sufixo 01..88 sempre entra
-    - Rural: sufixo >= 89 entra apenas se estiver no ciclo selecionado
-      (ex.: ciclo 97 => 90,91,97 e 96 sempre)
     """
     if not ciclo:
         return "", tuple()
     c = str(ciclo).strip()
     allowed = list(CYCLE_RAZOES.get(c, []))
-    # o próprio ciclo também entra (97/98/99)
     if c.isdigit():
         allowed.append(int(c))
-    # e o 96 entra sempre
     allowed += list(RURAL_ALWAYS_INCLUDE)
 
-    # Se ciclo inválido, mantém apenas o 96 (base sempre entra via condição)
     if not allowed:
         allowed = list(RURAL_ALWAYS_INCLUDE)
     placeholders = ",".join(["?"] * len(allowed))
 
-    # sufixo_ul = últimos 2 dígitos da UL (UL armazenada como TEXT)
-    # Base (01..88) entra sempre
-    # Rural entra apenas se sufixo_ul estiver na lista allowed
     where = (
-        f"WHERE (CAST(substr(UL, -2) AS INTEGER) < 89 "
+        f"{prefix} (CAST(substr(UL, -2) AS INTEGER) < 89 "
         f"OR CAST(substr(UL, -2) AS INTEGER) IN ({placeholders}))"
     )
     return where, tuple(int(x) for x in allowed)
+
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS releituras (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ul TEXT,
-            instalacao TEXT,
-            endereco TEXT,
-            razao TEXT,
-            vencimento TEXT,
-            reg TEXT DEFAULT '03',
-            status TEXT DEFAULT 'PENDENTE',
-            upload_time TIMESTAMP
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS history_releitura (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            module TEXT,
-            count INTEGER,
-            file_hash TEXT,
-            timestamp TIMESTAMP
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS porteiras (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ul TEXT,
-            instalacao TEXT,
-            status TEXT DEFAULT 'PENDENTE',
-            upload_time TIMESTAMP
-        )
-    ''')
 
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS history_porteira (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            module TEXT,
-            count INTEGER,
-            file_hash TEXT,
-            timestamp TIMESTAMP
-        )
-    ''')
-
-    # Histórico leve para gráficos (snapshot por upload/hora)
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS grafico_historico (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            module TEXT NOT NULL,
-            data DATE NOT NULL,
-            hora TEXT NOT NULL,
-            timestamp_upload TIMESTAMP NOT NULL,
-            total INTEGER NOT NULL,
-            pendentes INTEGER NOT NULL,
-            realizadas INTEGER NOT NULL,
-            file_hash TEXT,
-            UNIQUE(module, data, hora)
-        )
-    ''')
-
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS resultados_leitura (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            Conjunto_Contrato TEXT,
-            UL TEXT,
-            Tipo_UL TEXT,
-            Razao TEXT,
-            Total_Leituras REAL,
-            Leituras_Nao_Executadas REAL,
-            Porcentagem_Nao_Executada REAL,
-            Releituras_Totais REAL,
-            Releituras_Nao_Executadas REAL,
-            upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-
-    # Migração leve: garantir coluna Tipo_UL para a Porteira (CNV/OSB).
-    # Projetos antigos criavam resultados_leitura sem essa coluna.
-    cursor.execute("PRAGMA table_info(resultados_leitura)")
-    rl_cols = [c[1] for c in cursor.fetchall()]
-    if 'Tipo_UL' not in rl_cols:
-        try:
-            cursor.execute("ALTER TABLE resultados_leitura ADD COLUMN Tipo_UL TEXT DEFAULT ''")
-        except Exception:
-            # Se falhar por qualquer motivo, seguimos (a UI ainda funciona sem o campo)
-            pass
-
+    # Tabela de usuários
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -160,11 +58,103 @@ def init_db():
         )
     ''')
 
-    # Criar usuário admin padrão via variáveis de ambiente (SEGURO)
-    # Configure ADMIN_USERNAME e ADMIN_PASSWORD no arquivo .env
+    # Releituras - com user_id
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS releituras (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            ul TEXT,
+            instalacao TEXT,
+            endereco TEXT,
+            razao TEXT,
+            vencimento TEXT,
+            reg TEXT DEFAULT '03',
+            status TEXT DEFAULT 'PENDENTE',
+            upload_time TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # Histórico de uploads - Releitura
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS history_releitura (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            module TEXT,
+            count INTEGER,
+            file_hash TEXT,
+            timestamp TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # Porteiras - com user_id
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS porteiras (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            ul TEXT,
+            instalacao TEXT,
+            status TEXT DEFAULT 'PENDENTE',
+            upload_time TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # Histórico de uploads - Porteira
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS history_porteira (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            module TEXT,
+            count INTEGER,
+            file_hash TEXT,
+            timestamp TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # Gráfico histórico (snapshots por hora) - com user_id
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS grafico_historico (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            module TEXT NOT NULL,
+            data DATE NOT NULL,
+            hora TEXT NOT NULL,
+            timestamp_upload TIMESTAMP NOT NULL,
+            total INTEGER NOT NULL,
+            pendentes INTEGER NOT NULL,
+            realizadas INTEGER NOT NULL,
+            file_hash TEXT,
+            UNIQUE(user_id, module, data, hora),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # Resultados de leitura (porteira) - com user_id
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS resultados_leitura (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            Conjunto_Contrato TEXT,
+            UL TEXT,
+            Tipo_UL TEXT,
+            Razao TEXT,
+            Total_Leituras REAL,
+            Leituras_Nao_Executadas REAL,
+            Porcentagem_Nao_Executada REAL,
+            Releituras_Totais REAL,
+            Releituras_Nao_Executadas REAL,
+            upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # Criar usuário admin padrão via variáveis de ambiente
     admin_username = os.getenv('ADMIN_USERNAME')
     admin_password = os.getenv('ADMIN_PASSWORD')
-    
+
     if admin_username and admin_password:
         cursor.execute("SELECT id FROM users WHERE username = ?", (admin_username,))
         if not cursor.fetchone():
@@ -175,21 +165,11 @@ def init_db():
             """, (admin_username, hashed_password))
             print(f"✅ Usuário admin '{admin_username}' criado com sucesso!")
 
-    cursor.execute("PRAGMA table_info(releituras)")
-    columns = [column[1] for column in cursor.fetchall()]
-    if 'razao' not in columns:
-        cursor.execute("ALTER TABLE releituras ADD COLUMN razao TEXT")
-    if 'endereco' not in columns:
-        cursor.execute("ALTER TABLE releituras ADD COLUMN endereco TEXT")
-    if 'reg' not in columns:
-        cursor.execute("ALTER TABLE releituras ADD COLUMN reg TEXT DEFAULT '03'")
-    
     conn.commit()
     conn.close()
 
 
 # Usar a função segura de autenticação do módulo auth.py
-# A função authenticate_user agora usa bcrypt para verificar senhas
 authenticate_user = secure_authenticate
 
 
@@ -207,27 +187,36 @@ def register_user(username, password, role='user'):
         return False
 
 
-def reset_database():
+def get_user_by_id(user_id):
+    """Retorna os dados do usuário pelo ID"""
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, username, role FROM users WHERE id = ?', (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def reset_database(user_id):
+    """Reseta apenas os dados do usuário especificado"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    cursor.execute('DELETE FROM releituras')
-    cursor.execute('DELETE FROM history_releitura')
-    cursor.execute('DELETE FROM porteiras')
-    cursor.execute('DELETE FROM history_porteira')
-    cursor.execute('DELETE FROM grafico_historico')
+    cursor.execute('DELETE FROM releituras WHERE user_id = ?', (user_id,))
+    cursor.execute('DELETE FROM history_releitura WHERE user_id = ?', (user_id,))
+    cursor.execute("DELETE FROM grafico_historico WHERE user_id = ? AND module = 'releitura'", (user_id,))
     conn.commit()
     conn.close()
-    print("[1.0.1] Banco de dados zerado com sucesso.")
+    print(f"[USER {user_id}] Banco de releituras zerado com sucesso.")
 
 
-def _save_grafico_snapshot(module: str, total: int, pendentes: int, realizadas: int, file_hash: str | None, timestamp_iso: str):
-    """Salva 1 ponto do gráfico por hora (consolida por (module,data,hora))."""
+def _save_grafico_snapshot(module: str, total: int, pendentes: int, realizadas: int, file_hash: str | None, timestamp_iso: str, user_id: int):
+    """Salva 1 ponto do gráfico por hora (consolida por (user_id, module, data, hora))."""
     try:
         ts = datetime.fromisoformat(timestamp_iso)
     except Exception:
         ts = datetime.now()
 
-    # Consolidar por hora (HH:00)
     data_ref = ts.date().isoformat()
     hora_ref = f"{ts.hour:02d}:00"
 
@@ -235,128 +224,138 @@ def _save_grafico_snapshot(module: str, total: int, pendentes: int, realizadas: 
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT INTO grafico_historico (module, data, hora, timestamp_upload, total, pendentes, realizadas, file_hash)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(module, data, hora) DO UPDATE SET
+        INSERT INTO grafico_historico (user_id, module, data, hora, timestamp_upload, total, pendentes, realizadas, file_hash)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id, module, data, hora) DO UPDATE SET
             timestamp_upload = excluded.timestamp_upload,
             total = excluded.total,
             pendentes = excluded.pendentes,
             realizadas = excluded.realizadas,
             file_hash = excluded.file_hash
-    ''', (module, data_ref, hora_ref, timestamp_iso, int(total), int(pendentes), int(realizadas), file_hash))
+    ''', (user_id, module, data_ref, hora_ref, timestamp_iso, int(total), int(pendentes), int(realizadas), file_hash))
 
     conn.commit()
     conn.close()
 
-def is_file_duplicate(file_hash, module):
+
+def is_file_duplicate(file_hash, module, user_id):
+    """Verifica se o arquivo já foi processado por este usuário"""
     if not file_hash:
         return False
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
+
     table = 'history_releitura' if module == 'releitura' else 'history_porteira'
-    cursor.execute(f'SELECT id FROM {table} WHERE file_hash = ?', (file_hash,))
-    
+    cursor.execute(f'SELECT id FROM {table} WHERE user_id = ? AND file_hash = ?', (user_id, file_hash))
+
     exists = cursor.fetchone() is not None
     conn.close()
     return exists
 
-def save_releitura_data(details, file_hash):
+
+def save_releitura_data(details, file_hash, user_id):
+    """Salva dados de releitura para o usuário especificado"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     now = datetime.now().isoformat()
-    
-    # Limpar apenas o ESTADO ATUAL (mantém históricos)
-    cursor.execute('DELETE FROM releituras')
+
+    # Limpar apenas os dados DESTE USUÁRIO
+    cursor.execute('DELETE FROM releituras WHERE user_id = ?', (user_id,))
     conn.commit()
-    
-    # Inserir TODOS os registros (03 e Z3 separadamente)
+
+    # Inserir TODOS os registros
     for item in details:
         endereco = item.get('endereco', '')
         reg = item.get('reg', '03')
-        
-        # Sempre inserir - não atualizar
+
         cursor.execute('''
-            INSERT INTO releituras (ul, instalacao, endereco, razao, vencimento, reg, upload_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (item['ul'], item['inst'], endereco, item['ul'][:2], item['venc'], reg, now))
+            INSERT INTO releituras (user_id, ul, instalacao, endereco, razao, vencimento, reg, upload_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, item['ul'], item['inst'], endereco, item['ul'][:2], item['venc'], reg, now))
 
     cursor.execute('''
-        INSERT INTO history_releitura (module, count, file_hash, timestamp)
-        VALUES (?, ?, ?, ?)
-    ''', ('releitura', len(details), file_hash, now))
+        INSERT INTO history_releitura (user_id, module, count, file_hash, timestamp)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (user_id, 'releitura', len(details), file_hash, now))
 
-    # Snapshot para gráfico (1 ponto por hora)
+    # Snapshot para gráfico
     total = len(details)
-    pendentes = len(details)  # no upload, tudo entra como pendente
+    pendentes = len(details)
     realizadas = 0
-    # Salva após o commit do estado atual para manter consistência
+
     conn.commit()
     conn.close()
-    _save_grafico_snapshot('releitura', total, pendentes, realizadas, file_hash, now)
+    _save_grafico_snapshot('releitura', total, pendentes, realizadas, file_hash, now, user_id)
     return
 
 
-def save_porteira_data(details, file_hash):
+def save_porteira_data(details, file_hash, user_id):
+    """Salva dados de porteira para o usuário especificado"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     now = datetime.now().isoformat()
-    
+
     for item in details:
-        cursor.execute('SELECT id FROM porteiras WHERE instalacao = ?', (item['inst'],))
+        cursor.execute('SELECT id FROM porteiras WHERE user_id = ? AND instalacao = ?', (user_id, item['inst']))
         if not cursor.fetchone():
             cursor.execute('''
-                INSERT INTO porteiras (ul, instalacao, status, upload_time)
-                VALUES (?, ?, ?, ?)
-            ''', (item['ul'], item['inst'], 'PENDENTE', now))
+                INSERT INTO porteiras (user_id, ul, instalacao, status, upload_time)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (user_id, item['ul'], item['inst'], 'PENDENTE', now))
 
     cursor.execute('''
-        INSERT INTO history_porteira (module, count, file_hash, timestamp)
-        VALUES (?, ?, ?, ?)
-    ''', ('porteira', len(details), file_hash, now))
+        INSERT INTO history_porteira (user_id, module, count, file_hash, timestamp)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (user_id, 'porteira', len(details), file_hash, now))
 
     conn.commit()
     conn.close()
 
-    # Snapshot para gráfico (estado atual após o upload)
+    # Snapshot para gráfico
     conn2 = sqlite3.connect(str(DB_PATH))
     cur2 = conn2.cursor()
-    cur2.execute('SELECT COUNT(*) FROM porteiras')
+    cur2.execute('SELECT COUNT(*) FROM porteiras WHERE user_id = ?', (user_id,))
     total = cur2.fetchone()[0]
-    cur2.execute("SELECT COUNT(*) FROM porteiras WHERE status = 'PENDENTE'")
+    cur2.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
     pendentes = cur2.fetchone()[0]
     conn2.close()
     realizadas = total - pendentes
-    _save_grafico_snapshot('porteira', total, pendentes, realizadas, file_hash, now)
+    _save_grafico_snapshot('porteira', total, pendentes, realizadas, file_hash, now, user_id)
 
-def update_installation_status(installation_list, new_status, module):
+
+def update_installation_status(installation_list, new_status, module, user_id):
+    """Atualiza status de instalações para o usuário especificado"""
     if not installation_list:
         return
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
+
     table_name = 'releituras' if module == 'releitura' else 'porteiras'
     placeholders = ','.join('?' * len(installation_list))
-    
+
     cursor.execute(f'''
         UPDATE {table_name}
         SET status = ?
-        WHERE instalacao IN ({placeholders})
-    ''', (new_status, *installation_list))
-    
+        WHERE user_id = ? AND instalacao IN ({placeholders})
+    ''', (new_status, user_id, *installation_list))
+
     conn.commit()
     conn.close()
 
-def get_releitura_details():
+
+def get_releitura_details(user_id):
+    """Retorna detalhes das releituras do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    cursor.execute('SELECT ul, instalacao, endereco, razao, vencimento, reg, status FROM releituras WHERE status = "PENDENTE"')
+    cursor.execute('''
+        SELECT ul, instalacao, endereco, razao, vencimento, reg, status 
+        FROM releituras 
+        WHERE user_id = ? AND status = 'PENDENTE'
+    ''', (user_id,))
     rows = cursor.fetchall()
     conn.close()
-    
-    today = datetime.now() - timedelta(hours=3)
+
     details = []
-    
     for r in rows:
         item = {"ul": r[0], "inst": r[1], "endereco": r[2], "razao": r[3], "venc": r[4], "reg": r[5], "status": r[6]}
         details.append(item)
@@ -370,22 +369,23 @@ def get_releitura_details():
     details.sort(key=sort_key)
     return details[:100]
 
-def get_releitura_metrics():
+
+def get_releitura_metrics(user_id):
+    """Retorna métricas de releitura do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
-    cursor.execute('SELECT COUNT(*) FROM releituras')
+    cursor.execute('SELECT COUNT(*) FROM releituras WHERE user_id = ?', (user_id,))
     total = int(cursor.fetchone()[0] or 0)
 
-    cursor.execute("SELECT vencimento FROM releituras WHERE status = 'PENDENTE'")
+    cursor.execute("SELECT vencimento FROM releituras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
     rows = cursor.fetchall()
     conn.close()
 
     pendentes = len(rows)
     realizadas = max(total - pendentes, 0)
 
-    # Atrasadas = pendentes cujo vencimento (dd/mm/YYYY) é menor que a data de hoje
-    ref = datetime.now() - timedelta(hours=3)  # consistência com o restante do projeto
+    ref = datetime.now() - timedelta(hours=3)
     today = ref.date()
 
     atrasadas = 0
@@ -396,33 +396,34 @@ def get_releitura_metrics():
             if d < today:
                 atrasadas += 1
         except Exception:
-            # se não der pra interpretar, ignora
             pass
 
     return {"total": total, "pendentes": pendentes, "realizadas": realizadas, "atrasadas": atrasadas}
 
 
-def get_porteira_metrics():
+def get_porteira_metrics(user_id):
+    """Retorna métricas de porteira do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM porteiras')
+    cursor.execute('SELECT COUNT(*) FROM porteiras WHERE user_id = ?', (user_id,))
     total = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM porteiras WHERE status = 'PENDENTE'")
+    cursor.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
     pendentes = cursor.fetchone()[0]
     conn.close()
-    
+
     return {"total": total, "pendentes": pendentes}
 
-def get_releitura_chart_data(date_str=None):
+
+def get_releitura_chart_data(user_id, date_str=None):
+    """Retorna dados do gráfico de releitura do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    # Pega os snapshots do DIA (por padrão, hoje)
     cursor.execute('''
-SELECT hora, total
+        SELECT hora, total
         FROM grafico_historico
-        WHERE module = 'releitura' AND data = COALESCE(?, DATE('now','localtime'))
+        WHERE user_id = ? AND module = 'releitura' AND data = COALESCE(?, DATE('now','localtime'))
         ORDER BY hora ASC
-    ''', (date_str,))
+    ''', (user_id, date_str))
     rows = cursor.fetchall()
     conn.close()
 
@@ -432,7 +433,6 @@ SELECT hora, total
             h = int(str(hora).split(':')[0])
             hora_label = f"{h:02d}h"
             if hora_label in hourly_data:
-                # 1 ponto por hora (último snapshot vence por causa do upsert)
                 hourly_data[hora_label] = int(total)
         except Exception:
             continue
@@ -440,12 +440,8 @@ SELECT hora, total
     return list(hourly_data.keys()), list(hourly_data.values())
 
 
-def get_releitura_due_chart_data(date_str=None):
-    """Contagem de releituras PENDENTES por data de vencimento (janela de 7 dias).
-    Janela: dia anterior ao 'date_str' (ou hoje) + o próprio dia + 5 dias à frente.
-    Labels: dd/mm
-    """
-    # Data de referência (snapshot)
+def get_releitura_due_chart_data(user_id, date_str=None):
+    """Retorna dados do gráfico de vencimento de releituras do usuário"""
     try:
         if date_str:
             ref = datetime.strptime(date_str, "%Y-%m-%d")
@@ -454,10 +450,8 @@ def get_releitura_due_chart_data(date_str=None):
     except Exception:
         ref = datetime.now()
 
-    # Consistência com o restante do projeto (horário local aproximado)
     ref = ref - timedelta(hours=3)
-
-    days = [(ref.date() + timedelta(days=delta)) for delta in range(-1, 6)]  # -1..+5 (7 dias)
+    days = [(ref.date() + timedelta(days=delta)) for delta in range(-1, 6)]
 
     labels = [d.strftime("%d/%m") for d in days]
     key_full = [d.strftime("%d/%m/%Y") for d in days]
@@ -465,7 +459,7 @@ def get_releitura_due_chart_data(date_str=None):
 
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    cursor.execute("SELECT vencimento FROM releituras WHERE status = 'PENDENTE'")
+    cursor.execute("SELECT vencimento FROM releituras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
     rows = cursor.fetchall()
     conn.close()
 
@@ -477,15 +471,17 @@ def get_releitura_due_chart_data(date_str=None):
     values = [int(counts[k]) for k in key_full]
     return labels, values
 
-def get_porteira_chart_data(date_str=None):
+
+def get_porteira_chart_data(user_id, date_str=None):
+    """Retorna dados do gráfico de porteira do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute('''
-SELECT hora, total
+        SELECT hora, total
         FROM grafico_historico
-        WHERE module = 'porteira' AND data = COALESCE(?, DATE('now','localtime'))
+        WHERE user_id = ? AND module = 'porteira' AND data = COALESCE(?, DATE('now','localtime'))
         ORDER BY hora ASC
-    ''', (date_str,))
+    ''', (user_id, date_str))
     rows = cursor.fetchall()
     conn.close()
 
@@ -501,13 +497,22 @@ SELECT hora, total
 
     return list(hourly_data.keys()), list(hourly_data.values())
 
-def get_porteira_table_data(ciclo: str | None = None):
-    """Retorna todos os dados da tabela resultados_leitura"""
+
+def get_porteira_table_data(user_id, ciclo: str | None = None):
+    """Retorna todos os dados da tabela resultados_leitura do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    
-    where, params = _porteira_cycle_where(ciclo)
+
+    where_parts = ["user_id = ?"]
+    params = [user_id]
+
+    cycle_where, cycle_params = _porteira_cycle_where(ciclo, prefix="AND")
+    if cycle_where:
+        where_parts.append(cycle_where.replace("AND ", "", 1))
+        params.extend(cycle_params)
+
+    where_clause = "WHERE " + " AND ".join(where_parts)
 
     cursor.execute(f'''
         SELECT
@@ -521,21 +526,30 @@ def get_porteira_table_data(ciclo: str | None = None):
             Releituras_Totais,
             Releituras_Nao_Executadas
         FROM resultados_leitura
-        {where}
+        {where_clause}
         ORDER BY UL
     ''', params)
-    
+
     rows = cursor.fetchall()
     conn.close()
-    
+
     return [dict(r) for r in rows]
 
-def get_porteira_totals(ciclo: str | None = None):
-    """Retorna os totalizadores da tabela resultados_leitura"""
+
+def get_porteira_totals(user_id, ciclo: str | None = None):
+    """Retorna os totalizadores da tabela resultados_leitura do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
-    where, params = _porteira_cycle_where(ciclo)
+
+    where_parts = ["user_id = ?"]
+    params = [user_id]
+
+    cycle_where, cycle_params = _porteira_cycle_where(ciclo, prefix="AND")
+    if cycle_where:
+        where_parts.append(cycle_where.replace("AND ", "", 1))
+        params.extend(cycle_params)
+
+    where_clause = "WHERE " + " AND ".join(where_parts)
 
     cursor.execute(f'''
         SELECT
@@ -544,12 +558,12 @@ def get_porteira_totals(ciclo: str | None = None):
             SUM(Releituras_Totais) as total_releituras,
             SUM(Releituras_Nao_Executadas) as releituras_nao_exec
         FROM resultados_leitura
-        {where}
+        {where_clause}
     ''', params)
-    
+
     row = cursor.fetchone()
     conn.close()
-    
+
     return {
         'total_leituras': int(row[0] or 0),
         'leituras_nao_exec': int(row[1] or 0),
@@ -557,60 +571,53 @@ def get_porteira_totals(ciclo: str | None = None):
         'releituras_nao_exec': int(row[3] or 0)
     }
 
-def save_porteira_table_data(data_list):
-    """Salva dados na tabela resultados_leitura"""
+
+def save_porteira_table_data(data_list, user_id):
+    """Salva dados na tabela resultados_leitura do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
-    # Limpa dados antigos
-    cursor.execute('DELETE FROM resultados_leitura')
-    
+
+    # Limpa dados antigos DESTE USUÁRIO
+    cursor.execute('DELETE FROM resultados_leitura WHERE user_id = ?', (user_id,))
+
     # Insere novos dados
     for data in data_list:
-        # Suporta versões antigas do banco (sem Tipo_UL)
-        try:
-            cursor.execute('''
-                INSERT INTO resultados_leitura 
-                (Conjunto_Contrato, UL, Tipo_UL, Razao, Total_Leituras, Leituras_Nao_Executadas, 
-                 Porcentagem_Nao_Executada, Releituras_Totais, Releituras_Nao_Executadas)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                data.get('Conjunto_Contrato'),
-                data.get('UL'),
-                data.get('Tipo_UL'),
-                data.get('Razao'),
-                data.get('Total_Leituras'),
-                data.get('Leituras_Nao_Executadas'),
-                data.get('Porcentagem_Nao_Executada'),
-                data.get('Releituras_Totais'),
-                data.get('Releituras_Nao_Executadas')
-            ))
-        except Exception:
-            cursor.execute('''
-                INSERT INTO resultados_leitura 
-                (Conjunto_Contrato, UL, Razao, Total_Leituras, Leituras_Nao_Executadas, 
-                 Porcentagem_Nao_Executada, Releituras_Totais, Releituras_Nao_Executadas)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                data.get('Conjunto_Contrato'),
-                data.get('UL'),
-                data.get('Razao'),
-                data.get('Total_Leituras'),
-                data.get('Leituras_Nao_Executadas'),
-                data.get('Porcentagem_Nao_Executada'),
-                data.get('Releituras_Totais'),
-                data.get('Releituras_Nao_Executadas')
-            ))
-    
+        cursor.execute('''
+            INSERT INTO resultados_leitura 
+            (user_id, Conjunto_Contrato, UL, Tipo_UL, Razao, Total_Leituras, Leituras_Nao_Executadas, 
+             Porcentagem_Nao_Executada, Releituras_Totais, Releituras_Nao_Executadas)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            user_id,
+            data.get('Conjunto_Contrato'),
+            data.get('UL'),
+            data.get('Tipo_UL'),
+            data.get('Razao'),
+            data.get('Total_Leituras'),
+            data.get('Leituras_Nao_Executadas'),
+            data.get('Porcentagem_Nao_Executada'),
+            data.get('Releituras_Totais'),
+            data.get('Releituras_Nao_Executadas')
+        ))
+
     conn.commit()
     conn.close()
 
-def get_porteira_chart_summary(ciclo: str | None = None):
-    """Retorna dados agregados para o gráfico de barras da porteira"""
+
+def get_porteira_chart_summary(user_id, ciclo: str | None = None):
+    """Retorna dados agregados para o gráfico de barras da porteira do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
-    where, params = _porteira_cycle_where(ciclo)
+
+    where_parts = ["user_id = ?"]
+    params = [user_id]
+
+    cycle_where, cycle_params = _porteira_cycle_where(ciclo, prefix="AND")
+    if cycle_where:
+        where_parts.append(cycle_where.replace("AND ", "", 1))
+        params.extend(cycle_params)
+
+    where_clause = "WHERE " + " AND ".join(where_parts)
 
     cursor.execute(f'''
         SELECT
@@ -619,23 +626,23 @@ def get_porteira_chart_summary(ciclo: str | None = None):
             SUM(Releituras_Totais) as total_releituras,
             SUM(Releituras_Nao_Executadas) as releituras_nao_exec
         FROM resultados_leitura
-        {where}
+        {where_clause}
     ''', params)
-    
+
     row = cursor.fetchone()
     conn.close()
-    
+
     if not row or row[0] is None:
         return {"labels": [], "datasets": []}
-    
+
     total = int(row[0] or 0)
     nao = int(row[1] or 0)
     execu = max(total - nao, 0)
-    
+
     rel_total = int(row[2] or 0)
     rel_nao = int(row[3] or 0)
     rel_execu = max(rel_total - rel_nao, 0)
-    
+
     return {
         "labels": ["Leituras", "Releituras"],
         "datasets": [
@@ -644,78 +651,80 @@ def get_porteira_chart_summary(ciclo: str | None = None):
         ]
     }
 
-def get_porteira_nao_executadas_chart(ciclo: str | None = None):
-    """
-    Retorna dados para o gráfico de leituras não executadas por razão
-    Similar ao gráfico de vencimento das releituras
-    """
+
+def get_porteira_nao_executadas_chart(user_id, ciclo: str | None = None):
+    """Retorna dados para o gráfico de leituras não executadas por razão do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
-    where = "WHERE Leituras_Nao_Executadas > 0"
-    params: tuple = ()
-    cycle_where, cycle_params = _porteira_cycle_where(ciclo)
+
+    where_parts = ["user_id = ?", "Leituras_Nao_Executadas > 0"]
+    params = [user_id]
+
+    cycle_where, cycle_params = _porteira_cycle_where(ciclo, prefix="AND")
     if cycle_where:
-        # cycle_where vem como "WHERE (...)" -> transformar em "AND (...)"
-        where += " AND " + cycle_where.replace("WHERE", "", 1).strip()
-        params = cycle_params
+        where_parts.append(cycle_where.replace("AND ", "", 1))
+        params.extend(cycle_params)
+
+    where_clause = "WHERE " + " AND ".join(where_parts)
 
     cursor.execute(f'''
         SELECT 
             Razao,
             SUM(Leituras_Nao_Executadas) as total_nao_exec
         FROM resultados_leitura
-        {where}
+        {where_clause}
         GROUP BY Razao
         ORDER BY Razao
     ''', params)
-    
+
     rows = cursor.fetchall()
     conn.close()
-    
+
     labels = []
     values = []
-    
+
     for razao, total in rows:
         labels.append(f"Razão {razao}")
         values.append(int(total))
-    
-    # Se não houver dados, retornar estrutura vazia
+
     if not labels:
         labels = [f"Razão {i:02d}" for i in range(1, 8)]
         values = [0] * 7
-    
+
     return labels, values
 
-def reset_porteira_database():
-    """Limpa apenas os dados da tabela de porteira"""
+
+def reset_porteira_database(user_id):
+    """Limpa apenas os dados da porteira do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
-    cursor.execute('DELETE FROM resultados_leitura')
-    cursor.execute('DELETE FROM history_porteira')
-    cursor.execute("DELETE FROM grafico_historico WHERE module = 'porteira'")
-    
+
+    cursor.execute('DELETE FROM resultados_leitura WHERE user_id = ?', (user_id,))
+    cursor.execute('DELETE FROM porteiras WHERE user_id = ?', (user_id,))
+    cursor.execute('DELETE FROM history_porteira WHERE user_id = ?', (user_id,))
+    cursor.execute("DELETE FROM grafico_historico WHERE user_id = ? AND module = 'porteira'", (user_id,))
+
     conn.commit()
     conn.close()
-    
-    print("✅ Dados da Porteira zerados com sucesso!")
 
-def save_file_history(module, count, file_hash):
-    """Salva histórico de upload de arquivo"""
+    print(f"✅ Dados da Porteira do usuário {user_id} zerados com sucesso!")
+
+
+def save_file_history(module, count, file_hash, user_id):
+    """Salva histórico de upload de arquivo do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
+
     if module == 'porteira':
         cursor.execute('''
-            INSERT INTO history_porteira (module, count, file_hash, timestamp)
-            VALUES (?, ?, ?, ?)
-        ''', (module, count, file_hash, datetime.now()))
+            INSERT INTO history_porteira (user_id, module, count, file_hash, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_id, module, count, file_hash, datetime.now()))
     else:
         cursor.execute('''
-            INSERT INTO history_releitura (module, count, file_hash, timestamp)
-            VALUES (?, ?, ?, ?)
-        ''', (module, count, file_hash, datetime.now()))
-    
+            INSERT INTO history_releitura (user_id, module, count, file_hash, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_id, module, count, file_hash, datetime.now()))
+
     conn.commit()
     conn.close()

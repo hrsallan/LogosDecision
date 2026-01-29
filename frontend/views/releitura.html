@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="../css/v2_modern.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="../js/sidebar_toggle.js"></script>
+    <script src="../js/sidebar_toggle.js"></script>
+    <script src="../js/utils.js"></script>
 </head>
 <body>
     <div class="v2-container">
@@ -332,7 +333,7 @@ function initV2DueChart(labels = [], values = []) {
 
             document.getElementById('v2-upload-text').innerText = "PROCESSANDO...";
 
-            fetch('http://127.0.0.1:5000/api/upload?module=releitura', {
+            authFetch('http://127.0.0.1:5000/api/upload?module=releitura', {
                 method: 'POST',
                 body: formData
             })
@@ -370,7 +371,7 @@ function initV2DueChart(labels = [], values = []) {
                 syncBtn.style.opacity = '0.6';
                 syncBtn.style.pointerEvents = 'none';
                 document.getElementById('v2-upload-text').innerText = "SINCRONIZANDO (PORTAL)...";
-                fetch('http://127.0.0.1:5000/api/sync/releitura', { method: 'POST' })
+                authFetch('http://127.0.0.1:5000/api/sync/releitura', { method: 'POST' })
                     .then(async (res) => {
                         // Evita cair no catch por erro de parse quando o backend devolve HTML/empty body
                         if (!res.ok) {
@@ -429,7 +430,7 @@ document.getElementById('v2-reset-btn').onclick = async () => {
             if (!password) return;
 
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/reset', {
+                const res = await authFetch('http://127.0.0.1:5000/api/reset', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -492,7 +493,7 @@ document.getElementById('v2-reset-btn').onclick = async () => {
         
         function checkV2Status() {
             if (isUploading) return;
-            fetch('http://127.0.0.1:5000/api/status/releitura?date=' + encodeURIComponent(selectedDateISO))
+            authFetch('http://127.0.0.1:5000/api/status/releitura?date=' + encodeURIComponent(selectedDateISO))
                 .then(res => res.json())
                 .then(data => {
                     const pill = document.getElementById('v2-conn');
