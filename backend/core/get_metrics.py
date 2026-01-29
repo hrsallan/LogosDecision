@@ -11,7 +11,7 @@ def get_timestamp_from_iso(iso_string):
     except:
         return None
 
-def calculate_sla_percentage():
+def calculate_sla_percentage_releituras():
     """Calcula % de pendências dentro do SLA (com base em vencimento)"""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -35,7 +35,7 @@ def calculate_sla_percentage():
     sla_pct = int((dentro_sla / total_pendentes) * 100) if total_pendentes > 0 else 0
     return sla_pct
 
-def calculate_aging_buckets():
+def calculate_aging_buckets_releituras():
     """Calcula backlog aging: 0-2h / 2-6h / 6h+"""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -194,8 +194,8 @@ def get_comparison_data():
 def get_dashboard_metrics():
     """Retorna todas as métricas do dashboard (dados honestos, sem fabricação)"""
     
-    sla_pct = calculate_sla_percentage()
-    aging = calculate_aging_buckets()
+    sla_pct = calculate_sla_percentage_releituras()
+    aging = calculate_aging_buckets_releituras()
     last_collection = get_last_collection_time()
     flow_labels, entradas, resolucoes = get_flow_data_24h()
     comparisons = get_comparison_data()

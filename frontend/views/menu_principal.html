@@ -3,60 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VigilaCore | Dashboard </title>
+    <title>VigilaCore | Menu Principal</title>
     <link rel="stylesheet" href="../css/v2_modern.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
- <style>
-    /* ===== ESTRUTURA GLOBAL (MENU / HEADER / FOOTER) ===== */
-
-    .v2-icon-btn{
-        width:34px;
-        height:34px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        border:1px solid var(--v2-border);
-        background: rgba(255,255,255,0.02);
-        color: var(--v2-text-dim);
-        border-radius: 12px;
-        cursor:pointer;
-        transition: opacity .15s ease, transform .15s ease;
-    }
-
-    .v2-icon-btn:hover{
-        opacity: 0.9;
-        transform: translateY(-1px);
-    }
-
-    .v2-icon-btn i{
-        width:18px;
-        height:18px;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    /* Responsividade básica do layout principal */
-    @media (max-width: 1200px) {
-        .v2-content {
-            min-width: 0;
-        }
-    }
-</style>
-
-<script src="../js/sidebar_toggle.js"></script>
 </head>
 <body>
     <div class="v2-container">
         <!-- SIDEBAR -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
-                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
-                <div class="v2-logo-text v2-brand-text"><span class="logo-vigila">Vigila</span><span class="logo-core">Core</span></div>
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">Vigila</span><span class="logo-core">Core</span>
+                </div>
             </div>
 
             <nav class="v2-nav">
@@ -72,7 +35,6 @@
                     <i data-lucide="refresh-cw"></i>
                     <span class="v2-nav-text">Releituras</span>
                 </a>
-
                 <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
                     <i data-lucide="door-open"></i>
                     <span class="v2-nav-text">Porteira</span>
@@ -89,7 +51,7 @@
                     <i data-lucide="brain"></i>
                     <span class="v2-nav-text">Análise IA</span>
                 </a>
-               <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
+                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
                     <i data-lucide="circle-user-round"></i>
                     <span class="v2-nav-text">Área do Usuário</span>
                 </a>
@@ -109,89 +71,122 @@
             <!-- HEADER -->
             <header class="v2-header">
                 <div class="v2-header-left">
-                    <h1 class="v2-header-title">Informações</h1>
-                    <p class="v2-header-subtitle">Bem-Vindo(a) | VigilaCore</p>
+                    <h1 class="v2-header-title">Menu Principal</h1>
+                    <p class="v2-header-subtitle">Acesso rápido às principais funcionalidades do sistema</p>
                 </div>
                 <div class="v2-header-right">
-                    <div id="v-conn" class="v2-status-pill offline">SISTEMA OFFLINE</div>
+                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
                     <div class="v2-clock-widget">
-                        <div class="v2-time-display" id="v-clock-val">--:--</div>
-                        <div class="v2-date-display" id="v-date">--/--/----</div>
+                        <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                        <div class="v2-date-display" id="v2-date">--/--/----</div>
                     </div>
                 </div>
             </header>
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
+                <div class="v2-grid" style="grid-template-columns: 1fr 320px; gap: 20px;">
+                    <!-- Conteúdo principal -->
+                    <section class="v2-card" aria-labelledby="welcome-title">
+                        <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <h2 id="welcome-title" style="margin: 0 0 6px 0;">VigilaCore</h2>
+                                <p class="v2-text-dim" style="margin: 0;">
+                                    VigilaCore é um sistema full‑stack para monitoramento e análise de leituras de utilidades — dashboards interativos, processamento de relatórios Excel, sincronização automatizada via scraping, análise profunda com detecção de duplicados e controle de acesso por função.
+                                </p>
+                            </div>
+                            <div style="width: 80px; display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="monitor" style="width: 40px; height: 40px; color: var(--v2-accent)"></i>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px;">
+                            <div style="display: flex; gap: 8px;">
+                                <button class="v2-icon-btn" type="button" title="PT-BR" data-lang="pt">PT</button>
+                                <button class="v2-icon-btn" type="button" title="EN" data-lang="en">EN</button>
+                            </div>
+
+                            <div style="flex: 1;"></div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <a class="v2-dev-link" href="dashboard.html">Ir para Dashboard</a>
+                                <a class="v2-dev-link" href="releitura.html">Ir para Releituras</a>
+                                <a class="v2-dev-link" href="porteira.html">Ir para Porteira</a>
+                            </div>
+                        </div>
+
+                        <div class="v2-grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
+                            <a href="dashboard.html" class="v2-card" style="display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit;">
+                                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(88, 166, 255, 0.06); display: flex; align-items: center; justify-content: center;">
+                                    <i data-lucide="layout-dashboard" style="width: 22px; height: 22px; color: var(--v2-primary)"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700;">Dashboard</div>
+                                    <div class="v2-text-dim" style="font-size: 0.9rem;">Métricas e gráficos em tempo real</div>
+                                </div>
+                            </a>
+
+                            <a href="releitura.html" class="v2-card" style="display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit;">
+                                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(88, 166, 255, 0.06); display: flex; align-items: center; justify-content: center;">
+                                    <i data-lucide="refresh-cw" style="width: 22px; height: 22px; color: var(--v2-primary)"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700;">Releituras</div>
+                                    <div class="v2-text-dim" style="font-size: 0.9rem;">Processamento e revisão</div>
+                                </div>
+                            </a>
+
+                            <a href="porteira.html" class="v2-card" style="display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit;">
+                                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(88, 166, 255, 0.06); display: flex; align-items: center; justify-content: center;">
+                                    <i data-lucide="door-open" style="width: 22px; height: 22px; color: var(--v2-primary)"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700;">Porteira</div>
+                                    <div class="v2-text-dim" style="font-size: 0.9rem;">Monitoramento de entradas</div>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- Coluna lateral: sobre / autor -->
+                    <aside class="v2-card" aria-labelledby="about-title">
+                        <h3 id="about-title" style="margin: 0;">Sobre este projeto</h3>
+                        <div class="v2-text-dim">Versão experimental — funcionalidades em desenvolvimento. Use em ambientes de teste conforme a licença Non‑Commercial.</div>
+
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                            <img src="../../vigilacore_avatar.png" alt="Autor" style="width: 48px; height: 48px; border-radius: 8px; border: 1px solid var(--v2-border);" onerror="this.style.display='none'">
+                            <div>
+                                <div><strong>Allan Silva</strong></div>
+                                <div class="v2-text-dim">Criador & Desenvolvedor</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: auto; align-items: center;">
+                            <a class="v2-dev-link" href="https://github.com/hrsallan/VigilaCore" target="_blank">Repositório do projeto →</a>
+                        </div>
+                    </aside>
+                </div>
             </main>
 
             <!-- FOOTER -->
             <footer class="v2-footer">
-                <span>VigilaCore  | Desenvolvimento Operacional Estratégico</span>
+                <span>VigilaCore | Desenvolvimento Operacional Estratégico</span>
                 <span>Sistema em desenvolvimento</span>
             </footer>
         </div>
     </div>
 
     <script>
-        // Proteção de rota
-        (function() {
-            const user = localStorage.getItem('vigilacore_user');
-            if (!user) {
-                window.location.href = 'login.html';
-            }
-        })();
-
         lucide.createIcons();
-        let chartEntradas, chartResolucoes;
 
-        // Atualizar relógio
+        // Relógio e data
         setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('v-clock-val').innerText = `${hours}:${minutes}`;
-            document.getElementById('v-date').innerText = now.toLocaleDateString('pt-BR');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
         }, 1000);
-        
-            function checkSystemStatus() {
-            const pill =
-                document.getElementById("v2-conn") ||
-                document.getElementById("v-conn");
-
-            if (!pill) return; // não existe pill nesta página
-
-            const host = window.location.hostname || "127.0.0.1";
-            const dateParam = encodeURIComponent(new Date().toISOString().slice(0, 10));
-
-            const endpoints = [
-                `http://${host}:5000/api/status/releitura?date=${dateParam}`,
-                `http://${host}:5000/api/status/porteira?date=${dateParam}`,
-            ];
-
-            const requests = endpoints.map((url) =>
-                authFetch(url, { cache: "no-store" }).then((res) => {
-                if (!res.ok) throw new Error("offline");
-                return true;
-                })
-            );
-
-            Promise.allSettled(requests).then((results) => {
-                const anyOnline = results.some((r) => r.status === "fulfilled");
-
-                if (anyOnline) {
-                pill.innerText = "SISTEMA ONLINE";
-                pill.className = "v2-status-pill online";
-                } else {
-                pill.innerText = "SISTEMA OFFLINE";
-                pill.className = "v2-status-pill offline";
-                }
-            });
-            }
-
-            setInterval(checkSystemStatus, 5000);
-            checkSystemStatus();
-
     </script>
 </body>
 </html>
