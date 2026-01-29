@@ -1,8 +1,0 @@
-flask
-flask-cors
-python-dotenv
-selenium
-pyautogui
-pandas
-openpyxl
-xlrd>=2.0.1

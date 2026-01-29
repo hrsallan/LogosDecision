@@ -399,44 +399,6 @@ updateTimeline(data.activity_timeline || []);
             });
         }
 
-        // Gráfico de razão
-        const dist = (data.porteira && data.porteira.distribuicao_razao) || [];
-        if (razaoChart) razaoChart.destroy();
-        if (dist.length > 0) {
-            const razaoEl = document.getElementById('razao-chart');
-        if (razaoEl) {
-            razaoChart = new Chart(razaoEl, {
-                type: 'doughnut',
-                data: {
-                    labels: dist.map(d => `Razão ${d.razao}`),
-                    datasets: [{
-                        data: dist.map(d => d.nao_executadas || 0),
-                        backgroundColor: ['#00d1ff', '#238636', '#d29922', '#f85149', '#8b5cf6', '#ec4899', '#6366f1']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'right' } } }
-            });
-        }
-
-        }
-
-        // ULs críticas
-        const criticas = (data.porteira && data.porteira.uls_criticas) || [];
-        const critList = document.getElementById('critical-list');
-        if (critList && criticas.length === 0) {
-            if (critList) critList.innerHTML = '<p style="text-align: center; color: var(--v2-text-dim); padding: 2rem;">Nenhuma UL crítica identificada</p>';
-        } else {
-            if (critList) critList.innerHTML = criticas.slice(0, 10).map(u => `
-                <div class="critical-item">
-                    <div>
-                        <div class="critical-ul">UL ${u.ul}</div>
-                        <div style="font-size: 0.7rem; color: var(--v2-text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Razão ${u.razao}</div>
-                    </div>
-                    <div class="critical-percentage">${(u.percentual || 0).toFixed(1)}%</div>
-                </div>
-            `).join('');
-        }
-
         // Performance horária
         const hourly = data.performance_hourly || {};
         const hours = Object.keys(hourly).sort();
