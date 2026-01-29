@@ -14,6 +14,7 @@ from core.database import (
     save_porteira_table_data, get_porteira_table_data, get_porteira_totals,
     get_porteira_chart_summary, get_porteira_nao_executadas_chart
 )
+from core.get_metrics import get_dashboard_metrics
 
 SECRET_KEY = os.environ.get("JWT_SECRET", "segredo-super-seguro")
 
@@ -72,6 +73,25 @@ def login():
 # -------------------------------------------------------
 
 # Metricas para o Dashboard Geral
+@app.route('/api/dashboard/metrics', methods=['GET'])
+def dashboard_metrics():
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+    
+    try:
+        ciclo = request.args.get('ciclo')
+        metrics = get_dashboard_metrics(user_id, ciclo=ciclo)
+        return jsonify(metrics), 200
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro no dashboard: {error_details}")
+        return jsonify({
+            "error": "Erro ao buscar métricas", 
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
 
 # Rotas para Releitura e Porteira
 @app.route('/api/status/releitura', methods=['GET'])

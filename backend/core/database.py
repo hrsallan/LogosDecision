@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Carregar variáveis do .env
 load_dotenv()
 
-DB_PATH = Path(__file__).parent.parent.parent / 'data' / 'vigilacore.db'
+DB_PATH = Path(__file__).parent.parent / 'data' / 'vigilacore.db'
 
 # --- Ciclos Rurais (Porteira) ---
 CYCLE_RAZOES = {
