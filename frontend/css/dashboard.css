@@ -246,32 +246,3 @@
             font-weight: 600;
             color: var(--v2-text-dim);
         }
-        .ciclo-selector {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .ciclo-selector label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--v2-text);
-        }
-        .ciclo-selector select {
-            background: var(--v2-surface-light);
-            border: 1px solid var(--v2-border);
-            color: var(--v2-text);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .ciclo-selector select:hover {
-            border-color: var(--v2-primary);
-        }
-        .ciclo-selector select:focus {
-            outline: none;
-            border-color: var(--v2-primary);
-            box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
-        }
