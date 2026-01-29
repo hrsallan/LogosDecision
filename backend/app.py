@@ -2,10 +2,9 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import jwt
-from datetime import datetime
-from datetime import timedelta
-
-
+from datetime import datetime, timedelta, timezone
+from core.analytics import deep_scan_excel, deep_scan_porteira_excel, get_file_hash
+from core.portal_scraper import download_releitura_excel, download_porteira_excel
 from core.database import (
     init_db, register_user, authenticate_user, get_user_by_id,
     save_releitura_data, save_porteira_data,
@@ -17,6 +16,10 @@ from core.database import (
 )
 
 SECRET_KEY = os.environ.get("JWT_SECRET", "segredo-super-seguro")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 
 app = Flask(__name__)
 CORS(app)
@@ -58,7 +61,7 @@ def login():
             "user_id": user["id"],
             "username": user["username"],
             "role": user["role"],
-            "exp": (datetime.now(datetime.timezone.utc) + timedelta(hours=24)).timestamp()
+            "exp": (datetime.now(timezone.utc) + timedelta(hours=24)).timestamp()
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
         return jsonify({"success": True, "token": token})
@@ -135,13 +138,14 @@ def upload_releitura():
         return jsonify({"success": False, "error": "Arquivo não enviado"}), 400
 
     # Salve o arquivo temporário, calcule hash e processe como no seu código
-    temp_path = os.path.join(os.getcwd(), 'data', 'temp_' + file.filename)
-    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+    temp_path = os.path.join(DATA_DIR, 'temp_' + file.filename)
+    os.makedirs(DATA_DIR, exist_ok=True)
     file.save(temp_path)
     # Aqui você implementaria get_file_hash, deep_scan_excel etc
-    file_hash = "FINGIR_HASH"
-    details = []  # COLOQUE AQUI o processamento do Excel
-    # Exemplo: details = deep_scan_excel(temp_path)
+    file_hash = get_file_hash(temp_path)
+    details = deep_scan_excel(temp_path) or []
+    if not details:
+        return jsonify({"success": False, "error": "Falha ao processar o Excel (releitura) ou arquivo vazio."}), 400
 
     if is_file_duplicate(file_hash, 'releitura', user_id):
         return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
@@ -171,14 +175,33 @@ def upload_porteira():
     if not file:
         return jsonify({"success": False, "error": "Nenhum arquivo enviado"}), 400
 
-    temp_path = os.path.join(os.getcwd(), 'data', 'temp_porteira_' + file.filename)
-    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+    temp_path = os.path.join(DATA_DIR, 'temp_porteira_' + file.filename)
+    os.makedirs(DATA_DIR, exist_ok=True)
     file.save(temp_path)
-    file_hash = "FINGIR_HASH"
-    details = []  # details = deep_scan_porteira_excel(temp_path)
+
+    file_hash = get_file_hash(temp_path)
+    details = deep_scan_porteira_excel(temp_path)
+    if details is None:
+        return jsonify({"success": False, "error": "Falha ao processar o Excel (porteira)."}), 400
 
     if is_file_duplicate(file_hash, 'porteira', user_id):
         return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
+
+    # Porteira usa a tabela resultados_leitura
+    save_porteira_table_data(details, user_id)
+    save_file_history('porteira', len(details), file_hash, user_id)
+
+    totals = get_porteira_totals(user_id)
+    chart = get_porteira_chart_summary(user_id)
+    table = get_porteira_table_data(user_id)
+
+    return jsonify({
+        "success": True,
+        "totals": totals,
+        "chart": chart,
+        "table": table
+    })
+
 
     save_porteira_data(details, file_hash, user_id)
     save_file_history('porteira', len(details), file_hash, user_id)
@@ -191,6 +214,83 @@ def upload_porteira():
         "metrics": metrics,
         "chart": {"labels": labels, "values": values},
         "details": all_details
+    })
+
+
+
+@app.route('/api/sync/releitura', methods=['POST'])
+def sync_releitura():
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+
+    try:
+        downloaded_path = download_releitura_excel()
+        if not downloaded_path or not os.path.exists(downloaded_path):
+            return jsonify({"success": False, "error": "Relatório não foi baixado (arquivo inexistente)."}), 500
+
+    except Exception as e:
+        return jsonify({"success": False, "error": "Falha ao baixar relatório (releitura).", "detail": str(e)}), 500
+
+    file_hash = get_file_hash(downloaded_path)
+    details = deep_scan_excel(downloaded_path) or []
+    if not details:
+        return jsonify({"success": False, "error": "Falha ao processar o Excel baixado (releitura) ou arquivo vazio."}), 400
+
+    if is_file_duplicate(file_hash, 'releitura', user_id):
+        return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
+
+    save_releitura_data(details, file_hash, user_id)
+    save_file_history('releitura', len(details), file_hash, user_id)
+
+    labels, values = get_releitura_chart_data(user_id)
+    due_labels, due_values = get_releitura_due_chart_data(user_id)
+    metrics = get_releitura_metrics(user_id)
+    all_details = get_releitura_details(user_id)
+
+    return jsonify({
+        "success": True,
+        "metrics": metrics,
+        "chart": {"labels": labels, "values": values},
+        "due_chart": {"labels": due_labels, "values": due_values},
+        "details": all_details
+    })
+
+
+@app.route('/api/sync/porteira', methods=['POST'])
+def sync_porteira():
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+
+    try:
+        downloaded_path = download_porteira_excel()
+        if not downloaded_path or not os.path.exists(downloaded_path):
+            return jsonify({"success": False, "error": "Relatório não foi baixado (arquivo inexistente)."}), 500
+
+    except Exception as e:
+        return jsonify({"success": False, "error": "Falha ao baixar relatório (porteira).", "detail": str(e)}), 500
+
+    file_hash = get_file_hash(downloaded_path)
+    details = deep_scan_porteira_excel(downloaded_path)
+    if details is None:
+        return jsonify({"success": False, "error": "Falha ao processar o Excel baixado (porteira)."}), 400
+
+    if is_file_duplicate(file_hash, 'porteira', user_id):
+        return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
+
+    save_porteira_table_data(details, user_id)
+    save_file_history('porteira', len(details), file_hash, user_id)
+
+    totals = get_porteira_totals(user_id)
+    chart = get_porteira_chart_summary(user_id)
+    table = get_porteira_table_data(user_id)
+
+    return jsonify({
+        "success": True,
+        "totals": totals,
+        "chart": chart,
+        "table": table
     })
 
 
@@ -209,9 +309,16 @@ def porteira_table():
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
+
     ciclo = request.args.get('ciclo')
-    data = get_porteira_table_data(user_id, ciclo=ciclo)
-    return jsonify(data)
+    rows = get_porteira_table_data(user_id, ciclo=ciclo)
+    totals = get_porteira_totals(user_id, ciclo=ciclo)
+
+    return jsonify({
+        "success": True,
+        "data": rows,
+        "totals": totals
+    })
 
 
 @app.route('/api/porteira/nao-executadas-chart', methods=['GET'])
