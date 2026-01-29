@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import jwt
 from datetime import datetime
+from datetime import timedelta
 
 from core.database import (
     init_db, register_user, authenticate_user, get_user_by_id,
@@ -56,7 +57,7 @@ def login():
             "user_id": user["id"],
             "username": user["username"],
             "role": user["role"],
-            "exp": datetime.utcnow().timestamp() + 60*60*24  # 24h expiração (ajuste sua política!)
+            "exp": (datetime.now(datetime.timezone.utc) + timedelta(hours=24)).timestamp()
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
         return jsonify({"success": True, "token": token})
