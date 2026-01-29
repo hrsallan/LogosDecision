@@ -171,7 +171,6 @@ def upload_releitura():
         return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
 
     save_releitura_data(details, file_hash, user_id)
-    save_file_history('releitura', len(details), file_hash, user_id)
     labels, values = get_releitura_chart_data(user_id)
     due_labels, due_values = get_releitura_due_chart_data(user_id)
     metrics = get_releitura_metrics(user_id)
@@ -261,8 +260,6 @@ def sync_releitura():
         return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
 
     save_releitura_data(details, file_hash, user_id)
-    save_file_history('releitura', len(details), file_hash, user_id)
-
     labels, values = get_releitura_chart_data(user_id)
     due_labels, due_values = get_releitura_due_chart_data(user_id)
     metrics = get_releitura_metrics(user_id)

@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import json
 
+# Reuso da lógica de vencimentos já utilizada na aba Releituras
+from core.database import get_releitura_due_chart_data
+
 DB_PATH = Path(__file__).parent.parent / 'data' / 'vigilacore.db'
 
 def get_time_from_iso(iso_str):
@@ -573,6 +576,9 @@ def get_dashboard_metrics(user_id, ciclo=None):
     Returns:
         dict: Todas as métricas consolidadas
     """
+    # Gráfico de prazos (vencimento) igual ao da aba Releituras.
+    due_labels, due_values = get_releitura_due_chart_data(user_id)
+
     return {
         'timestamp': datetime.now().isoformat(),
         'user_id': user_id,
@@ -580,6 +586,7 @@ def get_dashboard_metrics(user_id, ciclo=None):
         'overview': get_system_overview(user_id),
         'releituras': get_releituras_stats(user_id),
         'releituras_trend': get_releituras_trend(user_id, days=30),
+        'releituras_due_chart': {'labels': due_labels, 'values': due_values},
         'porteira': get_porteira_stats(user_id, ciclo=ciclo),
         'porteira_efficiency': get_porteira_efficiency_score(user_id, ciclo=ciclo),
         'performance_hourly': get_performance_by_hour(user_id),

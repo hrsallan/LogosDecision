@@ -89,16 +89,24 @@
             </header>
 
             <main class="v2-main">
-                <div class="ciclo-selector-modern">
-                    <div class="selector-icon">
-                        <i data-lucide="calendar" style="width: 18px; height: 18px;"></i>
+                <!-- Filtro por Ciclo (Rural OSB) - idêntico ao da aba Porteira.
+                     OBS: aqui o filtro afeta SOMENTE as métricas de Abertura de Porteira. -->
+                <div class="v2-card" id="v2-cycle-card" style="margin-bottom: 1rem;">
+                    <div class="v2-cycle-top">
+                        <div>
+                            <div class="v2-card-label">Rural OSB</div>
+                            <div class="v2-cycle-title">Selecionar Ciclo <span class="v2-cycle-sub">(razões rurais por mês)</span></div>
+                        </div>
+
+                        <div class="v2-cycle-segment" role="group" aria-label="Selecionar ciclo">
+                            <button type="button" class="v2-cycle-btn is-active" data-cycle="" id="cycle-btn-all">Todos</button>
+                            <button type="button" class="v2-cycle-btn" data-cycle="97" id="cycle-btn-97">Ciclo 97</button>
+                            <button type="button" class="v2-cycle-btn" data-cycle="98" id="cycle-btn-98">Ciclo 98</button>
+                            <button type="button" class="v2-cycle-btn" data-cycle="99" id="cycle-btn-99">Ciclo 99</button>
+                        </div>
                     </div>
-                    <div class="selector-content">
-                        <label for="ciclo-select" class="selector-label">Período de Análise</label>
-                        <select id="ciclo-select" class="selector-dropdown">
-                            <option value="">Todos os ciclos</option>
-                        </select>
-                    </div>
+
+                    <div class="v2-cycle-ulgrid" id="cycle-ul-cards" aria-label="Razões incluídas no filtro"></div>
                 </div>
 
                 <div class="dashboard-grid">
@@ -152,17 +160,9 @@
                 <div class="charts-row">
                     <div class="chart-container">
                         <h2 class="chart-title">Tendência de Releituras (30 dias)</h2>
-                        <canvas id="trend-chart"></canvas>
+                        <div class="trend-chart-wrap"><canvas id="trend-chart"></canvas></div>
                     </div>
                 </div>
-
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h2 class="chart-title">Performance Horária</h2>
-                        <canvas id="hourly-chart"></canvas>
-                    </div>
-                </div>
-
                 <div class="chart-container">
                     <h2 class="chart-title">Linha do Tempo de Atividades</h2>
                     <div id="activity-timeline" class="activity-timeline"></div>
@@ -173,8 +173,72 @@
 
    <script>
     const API_BASE = 'http://127.0.0.1:5000/api';
-    let trendChart = null, razaoChart = null, hourlyChart = null;
+    let trendChart = null, razaoChart = null;
     let currentCiclo = '';
+
+    // Regras dos ciclos rurais (Razões 89..100): por mês (97/98/99) e a Razão 96 entra sempre.
+    const CYCLE_RAZOES = {
+        "97": [90, 91],
+        "98": [92, 93],
+        "99": [89, 94],
+    };
+    const RURAL_ALWAYS = [96];
+
+    function getAllowedRuralRazoens(cycle) {
+        const c = (cycle || "").toString().trim();
+        const base = (CYCLE_RAZOES[c] || []).slice();
+        const cycNum = (c && String(parseInt(c, 10)) === c) ? [parseInt(c, 10)] : [];
+        return [...base, ...cycNum, ...RURAL_ALWAYS];
+    }
+
+    function updateCycleButtons() {
+        const btnAll = document.getElementById('cycle-btn-all');
+        const btn97 = document.getElementById('cycle-btn-97');
+        const btn98 = document.getElementById('cycle-btn-98');
+        const btn99 = document.getElementById('cycle-btn-99');
+
+        const buttons = [btnAll, btn97, btn98, btn99].filter(Boolean);
+        buttons.forEach(b => b.classList.remove('is-active'));
+
+        const map = {"": btnAll, "97": btn97, "98": btn98, "99": btn99};
+        const activeBtn = map[currentCiclo] || btnAll;
+        if (activeBtn) activeBtn.classList.add('is-active');
+    }
+
+    function renderCycleUniverseInfo() {
+        const cards = document.getElementById('cycle-ul-cards');
+        if (!cards) return;
+
+        let cardModels = [];
+        if (!currentCiclo) {
+            cardModels = [
+                { label: "BASE", value: "R01–R88", tone: "base" },
+                { label: "C97", value: "R90 • R91 • R97", tone: "cycle" },
+                { label: "C98", value: "R92 • R93 • R98", tone: "cycle" },
+                { label: "C99", value: "R89 • R94 • R99", tone: "cycle" },
+                { label: "SEMPRE", value: "R96", tone: "always" },
+            ];
+        } else {
+            const allowed = getAllowedRuralRazoens(currentCiclo).map(r => "R" + String(r).padStart(2, "0"));
+            const cycleNum = "R" + String(parseInt(currentCiclo, 10)).padStart(2, "0");
+            const always = "R96";
+            const rurals = allowed.filter(x => x !== always && x !== cycleNum);
+            cardModels = [
+                { label: "BASE", value: "R01–R88", tone: "base" },
+                { label: "RURAL", value: rurals[0] || "—", tone: "rural" },
+                { label: "RURAL", value: rurals[1] || "—", tone: "rural" },
+                { label: "CICLO", value: cycleNum, tone: "cycle" },
+                { label: "SEMPRE", value: always, tone: "always" },
+            ];
+        }
+
+        cards.innerHTML = cardModels.map(m => `
+            <div class="v2-cycle-ulcard ${m.tone}">
+                <div class="v2-cycle-ulcard-label">${m.label}</div>
+                <div class="v2-cycle-ulcard-value">${m.value}</div>
+            </div>
+        `).join("");
+    }
 
     // Função para buscar token
     function getToken() {
@@ -247,34 +311,6 @@
             // Re-lança o erro para o chamador tratar (com propriedade .status quando aplicável)
             console.error('Erro na requisição:', error);
             throw error;
-        }
-    }
-
-    // Carrega lista de ciclos disponíveis
-    async function loadCiclos() {
-        try {
-            const data = await authenticatedFetch(`${API_BASE}/porteira/table`);
-            if (data && data.data) {
-                const ciclos = [...new Set(data.data.map(r => r.Ciclo))].filter(c => c).sort();
-                const select = document.getElementById('ciclo-select');
-                // limpa opções anteriores (se houver)
-                select.innerHTML = '<option value="">Todos os ciclos</option>';
-                ciclos.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c;
-                    opt.textContent = `Ciclo ${c}`;
-                    select.appendChild(opt);
-                });
-            }
-        } catch (error) {
-            // Se for 401, authenticatedFetch já lançou com status; tratar é opcional aqui
-            console.error('Erro ao carregar ciclos:', error);
-            // não forçar logout aqui; se for 401, chamador principal fará
-            if (error && error.status === 401) {
-                logout();
-                return;
-            }
-            // opcional: mostrar aviso discreto ao usuário
         }
     }
 
@@ -395,32 +431,10 @@ updateTimeline(data.activity_timeline || []);
                         fill: true
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'top' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } } }
             });
         }
 
-        // Performance horária
-        const hourly = data.performance_hourly || {};
-        const hours = Object.keys(hourly).sort();
-        if (hourlyChart) hourlyChart.destroy();
-        if (hours.length > 0) {
-            hourlyChart = new Chart(document.getElementById('hourly-chart'), {
-                type: 'bar',
-                data: {
-                    labels: hours,
-                    datasets: [{
-                        label: 'Média Total',
-                        data: hours.map(h => hourly[h].media_total || 0),
-                        backgroundColor: 'rgba(0, 209, 255, 0.6)'
-                    }, {
-                        label: 'Média Realizadas',
-                        data: hours.map(h => hourly[h].media_realizadas || 0),
-                        backgroundColor: 'rgba(35, 134, 54, 0.6)'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'top' } } }
-            });
-        }
     }
 
     // Event listeners
@@ -429,16 +443,40 @@ updateTimeline(data.activity_timeline || []);
         loadDashboard();
     });
 
-    document.getElementById('ciclo-select').addEventListener('change', (e) => {
-        currentCiclo = e.target.value;
-        document.getElementById('loading').style.display = 'flex';
-        loadDashboard();
-    });
+    // Botões do filtro de ciclo (afeta SOMENTE Abertura de Porteira no backend)
+    function attachCycleEvents() {
+        const ids = ['cycle-btn-all', 'cycle-btn-97', 'cycle-btn-98', 'cycle-btn-99'];
+        ids.forEach(id => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                currentCiclo = (btn.getAttribute('data-cycle') || '').trim();
+                updateCycleButtons();
+                renderCycleUniverseInfo();
+                document.getElementById('loading').style.display = 'flex';
+                loadDashboard();
+            });
+        });
+    }
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
-        loadCiclos();
+
+        // Relógio (mesmo padrão das outras abas)
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const clock = document.getElementById('v2-clock-val');
+            const date = document.getElementById('v2-date');
+            if (clock) clock.innerText = `${hours}:${minutes}`;
+            if (date) date.innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+
+        updateCycleButtons();
+        renderCycleUniverseInfo();
+        attachCycleEvents();
         loadDashboard();
     });
 
