@@ -246,3 +246,111 @@
             font-weight: 600;
             color: var(--v2-text-dim);
         }
+/* Seletor de Ciclo Moderno */
+.ciclo-selector-modern {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, rgba(0, 209, 255, 0.05) 0%, rgba(35, 134, 54, 0.05) 100%);
+    border: 1px solid rgba(0, 209, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.ciclo-selector-modern:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 209, 255, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 209, 255, 0.15);
+}
+
+.selector-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.7) 100%);
+    border-radius: 10px;
+    color: #0a0c10;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 209, 255, 0.3);
+}
+
+.selector-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.selector-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--v2-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.selector-dropdown {
+    background: var(--v2-surface);
+    border: 1px solid var(--v2-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--v2-text);
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300d1ff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+}
+
+.selector-dropdown:hover {
+    border-color: var(--v2-primary);
+    background-color: rgba(0, 209, 255, 0.05);
+}
+
+.selector-dropdown:focus {
+    border-color: var(--v2-primary);
+    box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+}
+
+.selector-dropdown option {
+    background: var(--v2-surface);
+    color: var(--v2-text);
+    padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .ciclo-selector-modern {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .selector-icon {
+        align-self: center;
+    }
+}
+
+/* Melhorias nos gráficos */
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+}

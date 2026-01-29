@@ -89,14 +89,32 @@
             </header>
 
             <main class="v2-main">
-                <div class="ciclo-selector">
-                    <label for="ciclo-select">Ciclo:</label>
-                    <select id="ciclo-select">
-                        <option value="">Todos os Ciclos</option>
-                    </select>
+                <div class="ciclo-selector-modern">
+                    <div class="selector-icon">
+                        <i data-lucide="calendar" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <div class="selector-content">
+                        <label for="ciclo-select" class="selector-label">Período de Análise</label>
+                        <select id="ciclo-select" class="selector-dropdown">
+                            <option value="">Todos os ciclos</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="dashboard-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Releituras</span>
+                            <div class="metric-icon">
+                                <i data-lucide="refresh-cw" style="color: var(--v2-primary); width: 20px; height: 20px;"></i>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="total-releituras">--</div>
+                        <div class="metric-label">
+                            <span id="releituras-concluidas">--</span> concluídas • 
+                            <span id="releituras-pendentes">--</span> pendentes
+                        </div>
+                    </div>
                     <div class="metric-card">
                         <div class="metric-header">
                             <span class="metric-title">Releituras Realizadas</span>
@@ -129,49 +147,6 @@
                             Taxa de execução: <span id="leituras-percentual-value">--%</span>
                         </div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <span class="metric-title">Total Releituras</span>
-                            <div class="metric-icon">
-                                <i data-lucide="refresh-cw" style="color: var(--v2-primary); width: 20px; height: 20px;"></i>
-                            </div>
-                        </div>
-                        <div class="metric-value" id="total-releituras">--</div>
-                        <div class="metric-label">
-                            <span id="releituras-concluidas">--</span> concluídas • 
-                            <span id="releituras-pendentes">--</span> pendentes
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h2 class="chart-title">Score de Eficiência da Porteira</h2>
-                    <p class="chart-subtitle">Avaliação global com base em leituras e releituras executadas</p>
-                    <div class="efficiency-score">
-                        <div class="score-circle" id="score-circle">
-                            <div class="score-value" id="score-value">--</div>
-                            <div class="score-label">SCORE</div>
-                        </div>
-                        <div class="score-classification" id="score-classification">Calculando...</div>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="stat-value" id="score-leituras">--%</div>
-                                <div class="stat-label">Score Leituras</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value" id="score-releituras">--%</div>
-                                <div class="stat-label">Score Releituras</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value" id="uls-criticas-count">--</div>
-                                <div class="stat-label">ULs Críticas</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value" id="penalidade-value">--pts</div>
-                                <div class="stat-label">Penalidade</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="charts-row">
@@ -179,17 +154,9 @@
                         <h2 class="chart-title">Tendência de Releituras (30 dias)</h2>
                         <canvas id="trend-chart"></canvas>
                     </div>
-                    <div class="chart-container">
-                        <h2 class="chart-title">Distribuição por Razão</h2>
-                        <canvas id="razao-chart"></canvas>
-                    </div>
                 </div>
 
                 <div class="charts-row">
-                    <div class="chart-container">
-                        <h2 class="chart-title">ULs Críticas (Top 10)</h2>
-                        <div id="critical-list" class="critical-list"></div>
-                    </div>
                     <div class="chart-container">
                         <h2 class="chart-title">Performance Horária</h2>
                         <canvas id="hourly-chart"></canvas>
@@ -204,286 +171,317 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE = 'http://127.0.0.1:5000/api';
-        let trendChart = null, razaoChart = null, hourlyChart = null;
-        let currentCiclo = '';
+   <script>
+    const API_BASE = 'http://127.0.0.1:5000/api';
+    let trendChart = null, razaoChart = null, hourlyChart = null;
+    let currentCiclo = '';
 
-        // Função para buscar token
-        function getToken() {
-            return localStorage.getItem('token');
+    // Função para buscar token
+    function getToken() {
+        return localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
+    }
+
+    // Função de logout centralizada
+    function logout() {
+        localStorage.removeItem('vigilacore_token');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+    }
+
+    // Função para fazer requisições autenticadas com melhor tratamento de erros
+    async function authenticatedFetch(url, options = {}) {
+        const token = getToken();
+        if (!token) {
+            // Sem token -> redireciona imediatamente para login
+            logout();
+            return null;
         }
 
-        // Função para fazer requisições autenticadas com melhor tratamento de erros
-        async function authenticatedFetch(url, options = {}) {
-            const token = getToken();
-            if (!token) {
-                window.location.href = 'login.html';
-                return null;
+        options.headers = {
+            ...options.headers,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        try {
+            const response = await fetch(url, options);
+
+            // Se não autenticado, remove token e lança erro com status
+            if (response.status === 401) {
+                localStorage.removeItem('vigilacore_token');
+                localStorage.removeItem('token'); // limpa token local
+                const authError = new Error('Usuário não autenticado');
+                authError.status = 401;
+                throw authError;
             }
 
-            options.headers = {
-                ...options.headers,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            };
-
-            try {
-                const response = await fetch(url, options);
-                
-                // Se não autenticado, redireciona para login
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = 'login.html';
-                    return null;
+            // Se a resposta não é OK, tenta ler como JSON para pegar erro detalhado
+            if (!response.ok) {
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    const msg = errorData.error || errorData.detail || JSON.stringify(errorData);
+                    const err = new Error(msg);
+                    err.status = response.status;
+                    throw err;
                 }
-
-                // Se a resposta não é OK, tenta ler como JSON para pegar erro
-                if (!response.ok) {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const errorData = await response.json();
-                        console.error('Erro da API:', errorData);
-                        throw new Error(errorData.error || errorData.detail || 'Erro desconhecido');
-                    }
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                // Verifica se a resposta é realmente JSON
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return await response.json();
-                }
-                
-                // Se não for JSON, retorna texto
                 const text = await response.text();
-                console.warn('Resposta não é JSON:', text.substring(0, 200));
-                throw new Error('Resposta do servidor não está em formato JSON');
-                
-            } catch (error) {
-                console.error('Erro na requisição:', error);
-                throw error;
+                const err = new Error(`HTTP ${response.status}: ${response.statusText} - ${text.substring(0, 200)}`);
+                err.status = response.status;
+                throw err;
             }
-        }
 
-        // Carrega lista de ciclos disponíveis
-        async function loadCiclos() {
-            try {
-                const data = await authenticatedFetch(`${API_BASE}/porteira/table`);
-                if (data && data.data) {
-                    const ciclos = [...new Set(data.data.map(r => r.Ciclo))].filter(c => c).sort();
-                    const select = document.getElementById('ciclo-select');
-                    ciclos.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c;
-                        opt.textContent = `Ciclo ${c}`;
-                        select.appendChild(opt);
-                    });
-                }
-            } catch (error) {
-                console.error('Erro ao carregar ciclos:', error);
+            // Resposta OK: tenta parsear JSON
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                return await response.json();
             }
+
+            // Se não for JSON, retorna o texto (mas indica que não era o esperado)
+            const text = await response.text();
+            const err = new Error('Resposta do servidor não está em formato JSON');
+            err.raw = text;
+            throw err;
+
+        } catch (error) {
+            // Re-lança o erro para o chamador tratar (com propriedade .status quando aplicável)
+            console.error('Erro na requisição:', error);
+            throw error;
         }
+    }
 
-        // Carrega métricas do dashboard
-        async function loadDashboard() {
-            try {
-                const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
-                const data = await authenticatedFetch(`${API_BASE}/dashboard/metrics${params}`);
-                
-                if (!data) {
-                    throw new Error('Nenhum dado retornado da API');
-                }
-
-                updateMetrics(data);
-                updateEfficiencyScore(data.porteira_efficiency || {});
-                updateTimeline(data.activity_timeline || []);
-                updateCharts(data);
-                
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('v2-conn').className = 'v2-status-pill online';
-                document.getElementById('v2-conn').textContent = 'SISTEMA ONLINE';
-            } catch (error) {
-                console.error('Erro ao carregar dashboard:', error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('v2-conn').className = 'v2-status-pill offline';
-                document.getElementById('v2-conn').textContent = 'ERRO DE CONEXÃO';
-                
-                // Mostra erro amigável
-                alert(`Erro ao carregar dashboard: ${error.message}\n\nVerifique se o servidor está rodando e tente novamente.`);
+    // Carrega lista de ciclos disponíveis
+    async function loadCiclos() {
+        try {
+            const data = await authenticatedFetch(`${API_BASE}/porteira/table`);
+            if (data && data.data) {
+                const ciclos = [...new Set(data.data.map(r => r.Ciclo))].filter(c => c).sort();
+                const select = document.getElementById('ciclo-select');
+                // limpa opções anteriores (se houver)
+                select.innerHTML = '<option value="">Todos os ciclos</option>';
+                ciclos.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = `Ciclo ${c}`;
+                    select.appendChild(opt);
+                });
             }
-        }
-
-        // Atualiza métricas principais
-        function updateMetrics(data) {
-            const p = data.porteira || {};
-            const r = data.releituras || {};
-            const o = data.overview || {};
-
-            document.getElementById('releituras-realizadas').textContent = 
-                (p.releituras_executadas || 0).toLocaleString('pt-BR');
-            document.getElementById('leituras-totais').textContent = 
-                (p.total_leituras || 0).toLocaleString('pt-BR');
-            document.getElementById('leituras-realizadas').textContent = 
-                (p.leituras_executadas || 0).toLocaleString('pt-BR');
-            document.getElementById('leituras-percentual-value').textContent = 
-                (p.percentual_execucao || 0).toFixed(1) + '%';
-            document.getElementById('total-releituras').textContent = 
-                (r.total || 0).toLocaleString('pt-BR');
-            document.getElementById('releituras-concluidas').textContent = 
-                (r.concluidas || 0).toLocaleString('pt-BR');
-            document.getElementById('releituras-pendentes').textContent = 
-                (r.pendentes || 0).toLocaleString('pt-BR');
-        }
-
-        // Atualiza score de eficiência
-        function updateEfficiencyScore(e) {
-            document.getElementById('score-value').textContent = Math.round(e.score || 0);
-            document.getElementById('score-classification').textContent = e.classificacao || 'N/A';
-            document.getElementById('score-classification').style.color = e.cor || '#8b949e';
-            
-            const circle = document.getElementById('score-circle');
-            circle.style.background = `conic-gradient(${e.cor} ${(e.score || 0) * 3.6}deg, var(--v2-bg) 0deg)`;
-            circle.style.borderColor = e.cor;
-            circle.style.boxShadow = `0 0 20px ${e.cor}40`;
-            
-            const c = e.componentes || {};
-            document.getElementById('score-leituras').textContent = (c.score_leituras || 0).toFixed(1) + '%';
-            document.getElementById('score-releituras').textContent = (c.score_releituras || 0).toFixed(1) + '%';
-            document.getElementById('uls-criticas-count').textContent = c.uls_criticas || 0;
-            document.getElementById('penalidade-value').textContent = (c.penalidade_criticas || 0) + 'pts';
-        }
-
-        // Atualiza timeline
-        function updateTimeline(timeline) {
-            const container = document.getElementById('activity-timeline');
-            if (!timeline || timeline.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--v2-text-dim); padding: 2rem;">Nenhuma atividade recente</p>';
+        } catch (error) {
+            // Se for 401, authenticatedFetch já lançou com status; tratar é opcional aqui
+            console.error('Erro ao carregar ciclos:', error);
+            // não forçar logout aqui; se for 401, chamador principal fará
+            if (error && error.status === 401) {
+                logout();
                 return;
             }
-            container.innerHTML = timeline.map(a => `
-                <div class="activity-item">
-                    <div class="activity-date">${new Date(a.data).toLocaleDateString('pt-BR')}</div>
-                    <div style="flex: 1;">
-                        <div class="activity-type">${a.tipo}</div>
-                        <div class="activity-count">${a.uploads} upload(s) • ${a.registros} registros</div>
+            // opcional: mostrar aviso discreto ao usuário
+        }
+    }
+
+    // Carrega métricas do dashboard
+    async function loadDashboard() {
+        try {
+            const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
+            const data = await authenticatedFetch(`${API_BASE}/dashboard/metrics${params}`);
+
+            // data === null => authenticatedFetch redirecionou/fez logout por token ausente; aborta
+            if (data === null) return;
+
+            // Trata caso "sem dados" como fluxo normal (não lança exceção)
+            const isEmptyObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length === 0;
+            const isEmpty = !data || (Array.isArray(data) && data.length === 0) || isEmptyObject(data);
+
+            if (isEmpty) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('v2-conn').className = 'v2-status-pill offline';
+                document.getElementById('v2-conn').textContent = 'SEM DADOS';
+                alert('Nenhum dado retornado da API.\n\nVerifique se o servidor está rodando e tente novamente.');
+                return;
+            }
+
+            // Processa e atualiza UI
+            updateMetrics(data);
+updateTimeline(data.activity_timeline || []);
+            updateCharts(data);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('v2-conn').className = 'v2-status-pill online';
+            document.getElementById('v2-conn').textContent = 'SISTEMA ONLINE';
+        } catch (error) {
+            console.error('Erro ao carregar dashboard:', error);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('v2-conn').className = 'v2-status-pill offline';
+            document.getElementById('v2-conn').textContent = 'ERRO DE CONEXÃO';
+
+            // Se for 401, desloga / redireciona explicitamente
+            if (error && error.status === 401) {
+                // opcional: mostrar mensagem curta antes de redirecionar
+                // alert('Sessão expirada. Você será redirecionado para a tela de login.');
+                logout();
+                return;
+            }
+
+            // Para outros erros, mostra alerta sem deslogar
+            alert(`Erro ao carregar dashboard: ${error.message}\n\nVerifique se o servidor está rodando e tente novamente.`);
+        }
+    }
+
+    // Atualiza métricas principais
+    function updateMetrics(data) {
+        const p = data.porteira || {};
+        const r = data.releituras || {};
+        const o = data.overview || {};
+
+        document.getElementById('releituras-realizadas').textContent =
+            (p.releituras_executadas || 0).toLocaleString('pt-BR');
+        document.getElementById('leituras-totais').textContent =
+            (p.total_leituras || 0).toLocaleString('pt-BR');
+        document.getElementById('leituras-realizadas').textContent =
+            (p.leituras_executadas || 0).toLocaleString('pt-BR');
+        document.getElementById('leituras-percentual-value').textContent =
+            (p.percentual_execucao || 0).toFixed(1) + '%';
+        document.getElementById('total-releituras').textContent =
+            (r.total || 0).toLocaleString('pt-BR');
+        document.getElementById('releituras-concluidas').textContent =
+            (r.concluidas || 0).toLocaleString('pt-BR');
+        document.getElementById('releituras-pendentes').textContent =
+            (r.pendentes || 0).toLocaleString('pt-BR');
+    }
+
+    // Atualiza timeline
+    function updateTimeline(timeline) {
+        const container = document.getElementById('activity-timeline');
+        if (!timeline || timeline.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--v2-text-dim); padding: 2rem;">Nenhuma atividade recente</p>';
+            return;
+        }
+        container.innerHTML = timeline.map(a => `
+            <div class="activity-item">
+                <div class="activity-date">${new Date(a.data).toLocaleDateString('pt-BR')}</div>
+                <div style="flex: 1;">
+                    <div class="activity-type">${a.tipo}</div>
+                    <div class="activity-count">${a.uploads} upload(s) • ${a.registros} registros</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Atualiza gráficos
+    function updateCharts(data) {
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = '#30363d';
+
+        // Gráfico de tendência
+        const trend = data.releituras_trend || [];
+        if (trendChart) trendChart.destroy();
+        if (trend.length > 0) {
+            trendChart = new Chart(document.getElementById('trend-chart'), {
+                type: 'line',
+                data: {
+                    labels: trend.map(t => new Date(t.data).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})),
+                    datasets: [{
+                        label: 'Realizadas',
+                        data: trend.map(t => t.media_realizadas || 0),
+                        borderColor: '#238636',
+                        backgroundColor: 'rgba(35, 134, 54, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Pendentes',
+                        data: trend.map(t => t.media_pendentes || 0),
+                        borderColor: '#f85149',
+                        backgroundColor: 'rgba(248, 81, 73, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'top' } } }
+            });
+        }
+
+        // Gráfico de razão
+        const dist = (data.porteira && data.porteira.distribuicao_razao) || [];
+        if (razaoChart) razaoChart.destroy();
+        if (dist.length > 0) {
+            const razaoEl = document.getElementById('razao-chart');
+        if (razaoEl) {
+            razaoChart = new Chart(razaoEl, {
+                type: 'doughnut',
+                data: {
+                    labels: dist.map(d => `Razão ${d.razao}`),
+                    datasets: [{
+                        data: dist.map(d => d.nao_executadas || 0),
+                        backgroundColor: ['#00d1ff', '#238636', '#d29922', '#f85149', '#8b5cf6', '#ec4899', '#6366f1']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'right' } } }
+            });
+        }
+
+        }
+
+        // ULs críticas
+        const criticas = (data.porteira && data.porteira.uls_criticas) || [];
+        const critList = document.getElementById('critical-list');
+        if (critList && criticas.length === 0) {
+            if (critList) critList.innerHTML = '<p style="text-align: center; color: var(--v2-text-dim); padding: 2rem;">Nenhuma UL crítica identificada</p>';
+        } else {
+            if (critList) critList.innerHTML = criticas.slice(0, 10).map(u => `
+                <div class="critical-item">
+                    <div>
+                        <div class="critical-ul">UL ${u.ul}</div>
+                        <div style="font-size: 0.7rem; color: var(--v2-text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Razão ${u.razao}</div>
                     </div>
+                    <div class="critical-percentage">${(u.percentual || 0).toFixed(1)}%</div>
                 </div>
             `).join('');
         }
 
-        // Atualiza gráficos
-        function updateCharts(data) {
-            Chart.defaults.color = '#8b949e';
-            Chart.defaults.borderColor = '#30363d';
-            
-            // Gráfico de tendência
-            const trend = data.releituras_trend || [];
-            if (trendChart) trendChart.destroy();
-            if (trend.length > 0) {
-                trendChart = new Chart(document.getElementById('trend-chart'), {
-                    type: 'line',
-                    data: {
-                        labels: trend.map(t => new Date(t.data).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})),
-                        datasets: [{
-                            label: 'Realizadas',
-                            data: trend.map(t => t.media_realizadas || 0),
-                            borderColor: '#238636',
-                            backgroundColor: 'rgba(35, 134, 54, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }, {
-                            label: 'Pendentes',
-                            data: trend.map(t => t.media_pendentes || 0),
-                            borderColor: '#f85149',
-                            backgroundColor: 'rgba(248, 81, 73, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'top' } } }
-                });
-            }
-
-            // Gráfico de razão
-            const dist = (data.porteira && data.porteira.distribuicao_razao) || [];
-            if (razaoChart) razaoChart.destroy();
-            if (dist.length > 0) {
-                razaoChart = new Chart(document.getElementById('razao-chart'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: dist.map(d => `Razão ${d.razao}`),
-                        datasets: [{
-                            data: dist.map(d => d.nao_executadas || 0),
-                            backgroundColor: ['#00d1ff', '#238636', '#d29922', '#f85149', '#8b5cf6', '#ec4899', '#6366f1']
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'right' } } }
-                });
-            }
-
-            // ULs críticas
-            const criticas = (data.porteira && data.porteira.uls_criticas) || [];
-            const critList = document.getElementById('critical-list');
-            if (criticas.length === 0) {
-                critList.innerHTML = '<p style="text-align: center; color: var(--v2-text-dim); padding: 2rem;">Nenhuma UL crítica identificada</p>';
-            } else {
-                critList.innerHTML = criticas.slice(0, 10).map(u => `
-                    <div class="critical-item">
-                        <div>
-                            <div class="critical-ul">UL ${u.ul}</div>
-                            <div style="font-size: 0.7rem; color: var(--v2-text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Razão ${u.razao}</div>
-                        </div>
-                        <div class="critical-percentage">${(u.percentual || 0).toFixed(1)}%</div>
-                    </div>
-                `).join('');
-            }
-
-            // Performance horária
-            const hourly = data.performance_hourly || {};
-            const hours = Object.keys(hourly).sort();
-            if (hourlyChart) hourlyChart.destroy();
-            if (hours.length > 0) {
-                hourlyChart = new Chart(document.getElementById('hourly-chart'), {
-                    type: 'bar',
-                    data: {
-                        labels: hours,
-                        datasets: [{
-                            label: 'Média Total',
-                            data: hours.map(h => hourly[h].media_total || 0),
-                            backgroundColor: 'rgba(0, 209, 255, 0.6)'
-                        }, {
-                            label: 'Média Realizadas',
-                            data: hours.map(h => hourly[h].media_realizadas || 0),
-                            backgroundColor: 'rgba(35, 134, 54, 0.6)'
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'top' } } }
-                });
-            }
+        // Performance horária
+        const hourly = data.performance_hourly || {};
+        const hours = Object.keys(hourly).sort();
+        if (hourlyChart) hourlyChart.destroy();
+        if (hours.length > 0) {
+            hourlyChart = new Chart(document.getElementById('hourly-chart'), {
+                type: 'bar',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Média Total',
+                        data: hours.map(h => hourly[h].media_total || 0),
+                        backgroundColor: 'rgba(0, 209, 255, 0.6)'
+                    }, {
+                        label: 'Média Realizadas',
+                        data: hours.map(h => hourly[h].media_realizadas || 0),
+                        backgroundColor: 'rgba(35, 134, 54, 0.6)'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'top' } } }
+            });
         }
+    }
 
-        // Event listeners
-        document.getElementById('refresh-btn').addEventListener('click', () => {
-            document.getElementById('loading').style.display = 'flex';
-            loadDashboard();
-        });
+    // Event listeners
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+        document.getElementById('loading').style.display = 'flex';
+        loadDashboard();
+    });
 
-        document.getElementById('ciclo-select').addEventListener('change', (e) => {
-            currentCiclo = e.target.value;
-            document.getElementById('loading').style.display = 'flex';
-            loadDashboard();
-        });
+    document.getElementById('ciclo-select').addEventListener('change', (e) => {
+        currentCiclo = e.target.value;
+        document.getElementById('loading').style.display = 'flex';
+        loadDashboard();
+    });
 
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            loadCiclos();
-            loadDashboard();
-        });
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        loadCiclos();
+        loadDashboard();
+    });
 
-        // Auto-refresh
-        setInterval(loadDashboard, 5 * 60 * 1000);
-    </script>
+    // Auto-refresh
+    setInterval(loadDashboard, 5 * 60 * 1000);
+</script>
 </body>
 </html>
