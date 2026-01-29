@@ -5,7 +5,6 @@ import jwt
 from datetime import datetime
 from datetime import timedelta
 
-from core.get_metrics import calculate_sla_percentage_releituras, calculate_aging_buckets_releituras
 
 from core.database import (
     init_db, register_user, authenticate_user, get_user_by_id,
@@ -70,22 +69,6 @@ def login():
 # -------------------------------------------------------
 
 # Metricas para o Dashboard Geral
-@app.route('/api/metricas', methods=['GET'])
-def get_metrics():
-    user_id = get_user_id_from_token()
-    if not user_id:
-        return jsonify({"error": "Usuário não autenticado"}), 401
-    user = get_user_by_id(user_id)
-    if not user:
-        return jsonify({"error": "Usuário não encontrado"}), 404
-
-    sla_percentage = calculate_sla_percentage_releituras()
-    aging_buckets = calculate_aging_buckets_releituras()
-
-    return jsonify({
-        "sla_percentage": sla_percentage,
-        "aging_buckets": aging_buckets
-    })
 
 # Rotas para Releitura e Porteira
 @app.route('/api/status/releitura', methods=['GET'])

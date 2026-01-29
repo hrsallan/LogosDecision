@@ -8,6 +8,222 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
+    <style>
+        /* Animações suaves */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* Cards interativos melhorados */
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(88, 166, 255, 0.15);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.05) 0%, rgba(88, 166, 255, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Status badge animado */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-badge .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Avatar do desenvolvedor */
+        .dev-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--v2-primary);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+            transition: all 0.3s;
+        }
+
+        .dev-avatar:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 20px rgba(88, 166, 255, 0.4);
+        }
+
+        /* Badge de tecnologia */
+        .tech-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--v2-primary);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+        }
+
+        /* Quick action buttons */
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(88, 166, 255, 0.05);
+            border: 1px solid rgba(88, 166, 255, 0.1);
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .quick-action:hover {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
+            transform: translateX(4px);
+        }
+
+        .quick-action i {
+            width: 20px;
+            height: 20px;
+            color: var(--v2-primary);
+        }
+
+        /* Hero section */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(88, 166, 255, 0.02) 100%);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(88, 166, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Language selector elegante */
+        .lang-selector {
+            display: flex;
+            gap: 8px;
+            padding: 4px;
+            background: rgba(88, 166, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(88, 166, 255, 0.1);
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--v2-text-dim);
+        }
+
+        .lang-btn:hover {
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--v2-primary);
+        }
+
+        .lang-btn.active {
+            background: var(--v2-primary);
+            color: white;
+        }
+
+        /* Social links */
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(88, 166, 255, 0.05);
+            border: 1px solid rgba(88, 166, 255, 0.1);
+            transition: all 0.3s;
+            color: var(--v2-primary);
+        }
+
+        .social-link:hover {
+            background: var(--v2-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
     <div class="v2-container">
@@ -72,9 +288,13 @@
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Menu Principal</h1>
-                    <p class="v2-header-subtitle">Acesso rápido às principais funcionalidades do sistema</p>
+                    <p class="v2-header-subtitle">Central de Monitoramento e Controle</p>
                 </div>
                 <div class="v2-header-right">
+                    <div class="lang-selector">
+                        <button class="lang-btn active" data-lang="pt-BR">🇧🇷 PT</button>
+                        <button class="lang-btn" data-lang="en-US">🇺🇸 EN</button>
+                    </div>
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
                     <div class="v2-clock-widget">
                         <div class="v2-time-display" id="v2-clock-val">--:--</div>
@@ -85,84 +305,155 @@
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
-                <div class="v2-grid" style="grid-template-columns: 1fr 320px; gap: 20px;">
-                    <!-- Conteúdo principal -->
-                    <section class="v2-card" aria-labelledby="welcome-title">
-                        <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;">
+                <!-- Hero Section -->
+                <div class="hero-section animate-fade-in">
+                    <div class="hero-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
                             <div style="flex: 1;">
-                                <h2 id="welcome-title" style="margin: 0 0 6px 0;">VigilaCore</h2>
-                                <p class="v2-text-dim" style="margin: 0;">
-                                    VigilaCore é um sistema full‑stack para monitoramento e análise de leituras de utilidades — dashboards interativos, processamento de relatórios Excel, sincronização automatizada via scraping, análise profunda com detecção de duplicados e controle de acesso por função.
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <h2 style="margin: 0; font-size: 2.2rem;" data-i18n="hero.title">Bem-vindo ao VigilaCore</h2>
+                                    <div class="status-badge">
+                                        <span class="pulse-dot"></span>
+                                        <span data-i18n="hero.status">Ativo</span>
+                                    </div>
+                                </div>
+                                <p class="v2-text-dim" style="margin: 0 0 16px 0; font-size: 1.05rem; line-height: 1.6;" data-i18n="hero.description">
+                                    Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, dashboards em tempo real e controle avançado de operações.
                                 </p>
-                            </div>
-                            <div style="width: 80px; display: flex; align-items: center; justify-content: center;">
-                                <i data-lucide="monitor" style="width: 40px; height: 40px; color: var(--v2-accent)"></i>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px;">
-                            <div style="display: flex; gap: 8px;">
-                                <button class="v2-icon-btn" type="button" title="PT-BR" data-lang="pt">PT</button>
-                                <button class="v2-icon-btn" type="button" title="EN" data-lang="en">EN</button>
-                            </div>
-
-                            <div style="flex: 1;"></div>
-
-                            <div style="display: flex; gap: 8px;">
-                                <a class="v2-dev-link" href="dashboard.html">Ir para Dashboard</a>
-                                <a class="v2-dev-link" href="releitura.html">Ir para Releituras</a>
-                                <a class="v2-dev-link" href="porteira.html">Ir para Porteira</a>
-                            </div>
-                        </div>
-
-                        <div class="v2-grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
-                            <a href="dashboard.html" class="v2-card" style="display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit;">
-                                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(88, 166, 255, 0.06); display: flex; align-items: center; justify-content: center;">
-                                    <i data-lucide="layout-dashboard" style="width: 22px; height: 22px; color: var(--v2-primary)"></i>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="tech-badge"><i data-lucide="code" style="width: 14px; height: 14px;"></i> Python + Flask</span>
+                                    <span class="tech-badge"><i data-lucide="database" style="width: 14px; height: 14px;"></i> MongoDB</span>
+                                    <span class="tech-badge"><i data-lucide="zap" style="width: 14px; height: 14px;"></i> Real-time</span>
+                                    <span class="tech-badge"><i data-lucide="shield" style="width: 14px; height: 14px;"></i> <span data-i18n="tech.secure">Seguro</span></span>
                                 </div>
-                                <div>
-                                    <div style="font-weight: 700;">Dashboard</div>
-                                    <div class="v2-text-dim" style="font-size: 0.9rem;">Métricas e gráficos em tempo real</div>
+                            </div>
+                            <div style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="activity" style="width: 60px; height: 60px; color: var(--v2-primary);"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="v2-grid" style="grid-template-columns: 1fr 360px; gap: 20px;">
+                    <!-- Módulos principais -->
+                    <div>
+                        <h3 style="margin: 0 0 16px 0; font-size: 1.3rem;" data-i18n="modules.title">Módulos Principais</h3>
+                        
+                        <div class="v2-grid animate-fade-in animate-delay-1" style="grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px;">
+                            <a href="dashboard.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
+                                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(88, 166, 255, 0.2) 0%, rgba(88, 166, 255, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="layout-dashboard" style="width: 28px; height: 28px; color: var(--v2-primary)"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.dashboard.title">Dashboard</div>
+                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.dashboard.description">Visualização completa de métricas, gráficos e indicadores em tempo real</div>
+                                    </div>
                                 </div>
                             </a>
 
-                            <a href="releitura.html" class="v2-card" style="display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit;">
-                                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(88, 166, 255, 0.06); display: flex; align-items: center; justify-content: center;">
-                                    <i data-lucide="refresh-cw" style="width: 22px; height: 22px; color: var(--v2-primary)"></i>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 700;">Releituras</div>
-                                    <div class="v2-text-dim" style="font-size: 0.9rem;">Processamento e revisão</div>
+                            <a href="releitura.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
+                                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="refresh-cw" style="width: 28px; height: 28px; color: #22c55e"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.rereading.title">Releituras</div>
+                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.rereading.description">Gestão e análise de releituras não executadas com processamento Excel</div>
+                                    </div>
                                 </div>
                             </a>
 
-                            <a href="porteira.html" class="v2-card" style="display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit;">
-                                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(88, 166, 255, 0.06); display: flex; align-items: center; justify-content: center;">
-                                    <i data-lucide="door-open" style="width: 22px; height: 22px; color: var(--v2-primary)"></i>
+                            <a href="porteira.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
+                                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(251, 146, 60, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="door-open" style="width: 28px; height: 28px; color: #fb923c"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.gate.title">Porteira</div>
+                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.gate.description">Controle de acesso e monitoramento de entradas e saídas do sistema</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div style="font-weight: 700;">Porteira</div>
-                                    <div class="v2-text-dim" style="font-size: 0.9rem;">Monitoramento de entradas</div>
+                            </a>
+
+                            <a href="ia.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
+                                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="brain" style="width: 28px; height: 28px; color: #a855f7"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">
+                                            <span data-i18n="modules.ai.title">Análise IA</span>
+                                            <span style="font-size: 0.7rem; background: rgba(168, 85, 247, 0.2); padding: 2px 6px; border-radius: 4px; margin-left: 6px;" data-i18n="modules.ai.badge">Em breve</span>
+                                        </div>
+                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.ai.description">Inteligência artificial para análise preditiva e detecção de anomalias</div>
+                                    </div>
                                 </div>
                             </a>
                         </div>
-                    </section>
 
-                    <!-- Coluna lateral: sobre / autor -->
-                    <aside class="v2-card" aria-labelledby="about-title">
-                        <h3 id="about-title" style="margin: 0;">Sobre este projeto</h3>
-                        <div class="v2-text-dim">Versão experimental — funcionalidades em desenvolvimento. Use em ambientes de teste conforme a licença Non‑Commercial.</div>
+                        <h3 style="margin: 24px 0 16px 0; font-size: 1.3rem;" data-i18n="actions.title">Ações Rápidas</h3>
+                        <div class="v2-grid animate-fade-in animate-delay-2" style="grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <a href="relatorios.html" class="quick-action">
+                                <i data-lucide="file-text"></i>
+                                <span data-i18n="actions.report">Gerar Relatório</span>
+                            </a>
+                            <a href="usuario.html" class="quick-action">
+                                <i data-lucide="user-plus"></i>
+                                <span data-i18n="actions.users">Área do Usuário</span>
+                            </a>
+                            <a href="administracao.html" class="quick-action">
+                                <i data-lucide="settings"></i>
+                                <span data-i18n="actions.settings">Administração</span>
+                            </a>
+                            <a href="login.html" class="quick-action">
+                                <i data-lucide="log-out"></i>
+                                <span data-i18n="actions.export">Logout</span>
+                            </a>
+                        </div>
+                    </div>
 
-                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-                            <img src="../../vigilacore_avatar.png" alt="Autor" style="width: 48px; height: 48px; border-radius: 8px; border: 1px solid var(--v2-border);" onerror="this.style.display='none'">
-                            <div>
-                                <div><strong>Allan Silva</strong></div>
-                                <div class="v2-text-dim">Criador & Desenvolvedor</div>
+                    <!-- Sidebar do desenvolvedor -->
+                    <aside class="animate-fade-in animate-delay-3">
+                        <div class="v2-card" style="text-align: center;">
+                            <img src="https://github.com/hrsallan.png" alt="Allan Silva" class="dev-avatar" style="margin: 0 auto 16px;">
+                            
+                            <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">Allan Silva</h3>
+                            <p class="v2-text-dim" style="margin: 0 0 16px 0; font-size: 0.95rem;" data-i18n="developer.role">Desenvolvedor Full Stack</p>
+                            
+                            <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
+                                <a href="https://github.com/hrsallan" target="_blank" rel="noopener noreferrer" class="social-link" title="GitHub">
+                                    <i data-lucide="github" style="width: 18px; height: 18px;"></i>
+                                </a>
+                                <a href="https://linkedin.com/in/hrsallan" target="_blank" rel="noopener noreferrer" class="social-link" title="LinkedIn">
+                                    <i data-lucide="linkedin" style="width: 18px; height: 18px;"></i>
+                                </a>
+                                <a href="mailto:contato@example.com" class="social-link" title="Email">
+                                    <i data-lucide="mail" style="width: 18px; height: 18px;"></i>
+                                </a>
                             </div>
-                        </div>
 
-                        <div style="margin-top: auto; align-items: center;">
-                            <a class="v2-dev-link" href="https://github.com/hrsallan/VigilaCore" target="_blank">Repositório do projeto →</a>
+                            <div style="text-align: left; padding: 16px; background: rgba(88, 166, 255, 0.05); border-radius: 8px; margin-bottom: 16px;">
+                                <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                    <i data-lucide="code" style="width: 16px; height: 16px; color: var(--v2-primary);"></i>
+                                    <span data-i18n="developer.stack">Stack Tecnológico</span>
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                    <span class="tech-badge">Python</span>
+                                    <span class="tech-badge">SQLite3</span>
+                                    <span class="tech-badge">Flask</span>
+                                    <span class="tech-badge">MongoDB</span>
+                                    <span class="tech-badge">JavaScript</span>
+                                    <span class="tech-badge">HTML/CSS</span>
+                                    <span class="tech-badge">API REST</span>
+                                </div>
+                            </div>
+
+
+                            <a href="https://github.com/hrsallan/VigilaCore" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--v2-primary); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+                                <i data-lucide="github" style="width: 18px; height: 18px;"></i>
+                                <span data-i18n="developer.github">Ver no GitHub</span>
+                            </a>
                         </div>
                     </aside>
                 </div>
@@ -170,8 +461,8 @@
 
             <!-- FOOTER -->
             <footer class="v2-footer">
-                <span>VigilaCore | Desenvolvimento Operacional Estratégico</span>
-                <span>Sistema em desenvolvimento</span>
+                <span>VigilaCore | <span data-i18n="footer.subtitle">Desenvolvimento Operacional Estratégico</span></span>
+                <span data-i18n="footer.status">Sistema em desenvolvimento</span>
             </footer>
         </div>
     </div>
@@ -180,13 +471,132 @@
         lucide.createIcons();
 
         // Relógio e data
-        setInterval(() => {
+        function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
             document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
-        }, 1000);
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Sistema de tradução
+        const translations = {
+            'pt-BR': {
+                'hero.title': 'Bem-vindo ao VigilaCore',
+                'hero.status': 'Ativo',
+                'hero.description': 'Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, dashboards em tempo real e controle avançado de operações.',
+                'tech.secure': 'Seguro',
+                'modules.title': 'Módulos Principais',
+                'modules.dashboard.title': 'Dashboard',
+                'modules.dashboard.description': 'Visualização completa de métricas, gráficos e indicadores em tempo real',
+                'modules.rereading.title': 'Releituras',
+                'modules.rereading.description': 'Gestão e análise de releituras não executadas com processamento Excel',
+                'modules.gate.title': 'Porteira',
+                'modules.gate.description': 'Controle de acesso e monitoramento de entradas e saídas do sistema',
+                'modules.ai.title': 'Análise IA',
+                'modules.ai.badge': 'Em breve',
+                'modules.ai.description': 'Inteligência artificial para análise preditiva e detecção de anomalias',
+                'actions.title': 'Ações Rápidas',
+                'actions.report': 'Gerar Relatório',
+                'actions.users': 'Área do Usuário',
+                'actions.settings': 'Administração',
+                'actions.export': 'Logout',
+                'developer.role': 'Desenvolvedor Full Stack',
+                'developer.stack': 'Stack Tecnológico',
+                'developer.about.title': 'Sobre o Projeto',
+                'developer.about.description': 'Sistema profissional para monitoramento de utilidades, desenvolvido com foco em performance e usabilidade.',
+                'developer.github': 'Ver no GitHub',
+                'version.license': 'Licença Non-Commercial',
+                'footer.subtitle': 'Desenvolvimento Operacional Estratégico',
+                'footer.status': 'Sistema em desenvolvimento'
+            },
+            'en-US': {
+                'hero.title': 'Welcome to VigilaCore',
+                'hero.status': 'Active',
+                'hero.description': 'Complete system for monitoring and analyzing readings — intelligent data processing, real-time dashboards and advanced operations control.',
+                'tech.secure': 'Secure',
+                'modules.title': 'Main Modules',
+                'modules.dashboard.title': 'Dashboard',
+                'modules.dashboard.description': 'Complete visualization of metrics, charts and real-time indicators',
+                'modules.rereading.title': 'Re-readings',
+                'modules.rereading.description': 'Management and analysis of unexecuted re-readings with Excel processing',
+                'modules.gate.title': 'Gateway',
+                'modules.gate.description': 'Access control and monitoring of system entries and exits',
+                'modules.ai.title': 'AI Analysis',
+                'modules.ai.badge': 'Coming soon',
+                'modules.ai.description': 'Artificial intelligence for predictive analysis and anomaly detection',
+                'actions.title': 'Quick Actions',
+                'actions.report': 'Generate Report',
+                'actions.users': 'User Area',
+                'actions.settings': 'Administration',
+                'actions.export': 'Logout',
+                'developer.role': 'Full Stack Developer',
+                'developer.stack': 'Technology Stack',
+                'developer.about.title': 'About the Project',
+                'developer.about.description': 'Professional system for utility monitoring, developed with focus on performance and usability.',
+                'developer.github': 'View on GitHub',
+                'version.license': 'Non-Commercial License',
+                'footer.subtitle': 'Strategic Operational Development',
+                'footer.status': 'System under development'
+            }
+        };
+
+        // Função para aplicar tradução
+        function applyTranslation(lang) {
+            const texts = translations[lang];
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (texts[key]) {
+                    element.textContent = texts[key];
+                }
+            });
+            
+            // Atualiza o atributo lang do HTML
+            document.documentElement.lang = lang === 'pt-BR' ? 'pt-BR' : 'en';
+            
+            // Salva preferência no localStorage
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Seletor de idioma
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active de todos os botões
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                
+                // Adiciona active no botão clicado
+                this.classList.add('active');
+                
+                // Aplica a tradução
+                const lang = this.getAttribute('data-lang');
+                applyTranslation(lang);
+            });
+        });
+
+        // Verifica se há idioma salvo e aplica
+        const savedLang = localStorage.getItem('preferredLanguage');
+        if (savedLang) {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                if (btn.getAttribute('data-lang') === savedLang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            applyTranslation(savedLang);
+        }
+
+        // Efeito de hover nos cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.borderColor = 'rgba(88, 166, 255, 0.4)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.borderColor = '';
+            });
+        });
     </script>
 </body>
 </html>
