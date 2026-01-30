@@ -48,6 +48,8 @@ def _clear_download_dir(download_dir: Path) -> None:
         except Exception:
             pass
 
+def switch_to_main_tab(driver):
+    driver.switch_to.window(driver.window_handles[0])
 
 def _latest_file(download_dir: Path) -> Path | None:
     files = [p for p in download_dir.iterdir() if p.is_file()]
@@ -92,6 +94,7 @@ def download_releitura_excel(
     try:
         import pyautogui  # type: ignore
         from selenium import webdriver  # type: ignore
+        from selenium.webdriver.common.window import WindowTypes  # type: ignore
         from selenium.webdriver.common.by import By  # type: ignore
         from selenium.webdriver.support.ui import WebDriverWait  # type: ignore
         from selenium.webdriver.support import expected_conditions as EC  # type: ignore
@@ -102,7 +105,7 @@ def download_releitura_excel(
             "Dependências do sincronizador não instaladas. Instale: selenium, pyautogui, python-dotenv. "
             f"Detalhe: {e}"
         )
-
+    
     # Load .env from project root
     project_root = _find_project_root()
     env_path = project_root / ".env"
@@ -171,7 +174,7 @@ def download_releitura_excel(
 
     try:
         driver.get(URL_PORTAL)
-
+        switch_to_main_tab(driver)
         # Login
         wait.until(EC.element_to_be_clickable(LOC_USER)).send_keys(user)
         driver.find_element(*LOC_PASS).send_keys(password)
@@ -227,6 +230,7 @@ def download_porteira_excel(
         import pyautogui  # type: ignore
         from selenium import webdriver  # type: ignore
         from selenium.webdriver.common.by import By  # type: ignore
+        from selenium.webdriver.common.window import WindowTypes  # type: ignore
         from selenium.webdriver.support.ui import WebDriverWait  # type: ignore
         from selenium.webdriver.support import expected_conditions as EC  # type: ignore
         from selenium.webdriver.chrome.options import Options  # type: ignore
@@ -301,6 +305,7 @@ def download_porteira_excel(
 
     try:
         driver.get(URL_PORTAL)
+        switch_to_main_tab(driver)
 
         # Login
         wait.until(EC.element_to_be_clickable(LOC_USER)).send_keys(user)
