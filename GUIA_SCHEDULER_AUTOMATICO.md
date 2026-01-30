@@ -7,6 +7,7 @@ O VigilaCore agora possui um **sistema de automação** que baixa automaticament
 ### ✨ Funcionalidades
 
 - ⏰ **Downloads automáticos** de hora em hora (ou intervalo personalizado)
+- 🔁 **Execução sequencial (Releitura → Porteira)** para evitar abrir duas abas/janelas ao mesmo tempo
 - 🕐 **Horário configurável** (ex: apenas das 07h às 17h)
 - 🔄 **Sincronização inteligente** de Releitura e Porteira
 - 🚫 **Detecção de duplicatas** (não processa o mesmo arquivo 2x)

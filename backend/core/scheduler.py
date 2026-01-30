@@ -14,6 +14,7 @@ Configuração via .env:
 
 import os
 import logging
+import threading
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
@@ -40,7 +41,10 @@ class AutoScheduler:
         self.user_id = None
         self.is_running = False
         
-        # Carregar configurações do .env
+        
+        # Evita que duas rotinas de scraping rodem ao mesmo tempo
+        self._run_lock = threading.Lock()
+# Carregar configurações do .env
         self._load_config()
     
     def _load_config(self):
@@ -230,6 +234,39 @@ class AutoScheduler:
         except Exception as e:
             logger.error(f"❌ Erro no sync de porteira: {e}", exc_info=True)
     
+
+    def _execute_all_sync(self):
+        """Executa as rotinas automáticas de forma SEQUENCIAL (Releitura -> Porteira).
+
+        Motivo:
+            Em hora "cheia", dois jobs disparando ao mesmo tempo podem abrir duas abas/janelas
+            do Chrome (Selenium) simultaneamente, causando confusão no desktop.
+
+        Estratégia:
+            - Um único job do APScheduler chama este método.
+            - Um lock impede concorrência caso haja 'misfire' ou se uma execução demorar.
+        """
+        if not (self.auto_releitura or self.auto_porteira):
+            return
+
+        # Se já estiver rodando, não inicia outra execução em paralelo
+        if not self._run_lock.acquire(blocking=False):
+            logger.warning("⚠️ Sync automático já em execução. Ignorando disparo concorrente.")
+            return
+
+        try:
+            logger.info("🧩 Iniciando execução SEQUENCIAL: Releitura -> Porteira")
+            if self.auto_releitura:
+                self._execute_releitura_sync()
+            if self.auto_porteira:
+                self._execute_porteira_sync()
+            logger.info("✅ Execução sequencial finalizada.")
+        finally:
+            try:
+                self._run_lock.release()
+            except Exception:
+                pass
+
     def start(self):
         """Inicia o scheduler"""
         if not self.enabled:
@@ -260,36 +297,23 @@ class AutoScheduler:
         # - Dentro do horário configurado (start_hour <= hora < end_hour)
         # - Sempre alinhado para minuto/segundo 00
         trigger = self._build_cron_trigger()
-        
-        # Adicionar job de releitura
-        if self.auto_releitura:
-            self.scheduler.add_job(
-                self._execute_releitura_sync,
-                trigger=trigger,
-                id='releitura_sync',
-                name='Sync Automático - Releitura',
-                max_instances=1,
-                replace_existing=True,
-                coalesce=True,
-                misfire_grace_time=300,
-            )
-            logger.info("✅ Job de RELEITURA agendado (cron alinhado para hora/minuto redondos)")
-        
-        # Adicionar job de porteira
-        if self.auto_porteira:
-            self.scheduler.add_job(
-                self._execute_porteira_sync,
-                trigger=trigger,
-                id='porteira_sync',
-                name='Sync Automático - Porteira',
-                max_instances=1,
-                replace_existing=True,
-                coalesce=True,
-                misfire_grace_time=300,
-            )
-            logger.info("✅ Job de PORTEIRA agendado (cron alinhado para hora/minuto redondos)")
-        
+
+        # Um único job para executar as rotinas de forma sequencial.
+        # Assim, em hora fechada, não abre duas abas/janelas do Chrome ao mesmo tempo.
+        self.scheduler.add_job(
+            self._execute_all_sync,
+            trigger=trigger,
+            id='auto_sync_sequencial',
+            name='Sync Automático (Sequencial) - Releitura -> Porteira',
+            max_instances=1,
+            replace_existing=True,
+            coalesce=True,
+            misfire_grace_time=300,
+        )
+        logger.info("✅ Job SEQUENCIAL agendado (Releitura -> Porteira)")
+
         # Iniciar scheduler
+
         self.scheduler.start()
         self.is_running = True
         
