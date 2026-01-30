@@ -9,16 +9,545 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
+    
+    <style>
+        /* ==================== PORTEIRA PAGE ENHANCEMENTS ==================== */
+        
+        .page-porteira .v2-main {
+            padding: 24px;
+        }
+
+        /* Enhanced Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .metric-card.warning::before {
+            background: radial-gradient(circle, rgba(210, 153, 34, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.danger::before {
+            background: radial-gradient(circle, rgba(248, 81, 73, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(0, 209, 255, 0.1);
+        }
+
+        .metric-icon i {
+            width: 20px;
+            height: 20px;
+            color: var(--v2-primary);
+        }
+
+        .metric-card.warning .metric-icon {
+            background: rgba(210, 153, 34, 0.1);
+        }
+
+        .metric-card.warning .metric-icon i {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.danger .metric-icon {
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .metric-card.danger .metric-icon i {
+            color: var(--v2-danger);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--v2-text);
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric-card.warning .metric-value {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.danger .metric-value {
+            color: var(--v2-danger);
+        }
+
+        /* Cycle Selector Card */
+        .cycle-selector-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .cycle-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cycle-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .cycle-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--v2-primary);
+            margin-bottom: 6px;
+        }
+
+        .cycle-title {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--v2-text);
+            margin-bottom: 4px;
+        }
+
+        .cycle-subtitle {
+            font-size: 0.85rem;
+            color: var(--v2-text-dim);
+        }
+
+        .cycle-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+        }
+
+        .cycle-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--v2-text-dim);
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .cycle-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .cycle-btn.is-active {
+            background: rgba(35, 134, 54, 0.15);
+            color: var(--v2-success);
+            box-shadow: 0 0 0 1px rgba(35, 134, 54, 0.3) inset;
+        }
+
+        .cycle-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .cycle-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .cycle-card.base {
+            border-color: rgba(88, 166, 255, 0.3);
+        }
+
+        .cycle-card.rural {
+            border-color: rgba(35, 134, 54, 0.3);
+        }
+
+        .cycle-card.cycle {
+            border-color: rgba(210, 153, 34, 0.3);
+        }
+
+        .cycle-card.always {
+            border-color: rgba(248, 81, 73, 0.3);
+        }
+
+        .cycle-card-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            margin-bottom: 8px;
+        }
+
+        .cycle-card-value {
+            font-size: 1rem;
+            font-weight: 900;
+            color: var(--v2-text);
+        }
+
+        /* Chart Cards */
+        .chart-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .chart-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-title i {
+            width: 24px;
+            height: 24px;
+            color: var(--v2-primary);
+        }
+
+        .chart-title h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            margin-top: 4px;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 400px;
+            padding: 16px 0;
+        }
+
+        .chart-canvas.large {
+            height: 500px;
+        }
+
+        /* Table Card */
+        .table-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--v2-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .table-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-title i {
+            width: 22px;
+            height: 22px;
+            color: var(--v2-primary);
+        }
+
+        .table-title h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .table-filters {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            font-weight: 600;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--v2-primary);
+            background: rgba(0, 209, 255, 0.05);
+        }
+
+        .filter-input {
+            min-width: 250px;
+        }
+
+        .table-scroll {
+            max-height: 600px;
+            overflow: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--v2-surface-light);
+        }
+
+        .data-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            border-bottom: 2px solid var(--v2-border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(0, 209, 255, 0.05);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--v2-text-dim);
+        }
+
+        .empty-state i {
+            width: 64px;
+            height: 64px;
+            color: var(--v2-text-dim);
+            opacity: 0.3;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        /* Action Buttons in Header */
+        .header-actions-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .action-btn i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.8) 100%);
+            color: #0a0c10;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0, 209, 255, 0.25);
+        }
+
+        .action-btn.primary:hover {
+            box-shadow: 0 6px 16px rgba(0, 209, 255, 0.35);
+        }
+
+        .action-btn.danger {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border-color: rgba(248, 81, 73, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(248, 81, 73, 0.15);
+            border-color: rgba(248, 81, 73, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cycle-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-canvas {
+                height: 300px;
+            }
+
+            .chart-canvas.large {
+                height: 350px;
+            }
+
+            .table-filters {
+                width: 100%;
+            }
+
+            .filter-input {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .header-actions-group {
+                width: 100%;
+            }
+
+            .action-btn {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
+    </style>
 </head>
 <body class="page-porteira">
-<div class="v2-container">
+    <div class="v2-container">
         <!-- SIDEBAR -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
-                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
                 <div class="v2-logo-text v2-brand-text">
-                    <span class="logo-vigila">Vigila</span>
-                    <span class="logo-core">Core</span>
+                    <span class="logo-vigila">Vigila</span><span class="logo-core">Core</span>
                 </div>
             </div>
 
@@ -39,6 +568,10 @@
                     <i data-lucide="door-open"></i>
                     <span class="v2-nav-text">Porteira</span>
                 </a>
+                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
+                    <i data-lucide="circle-user-round"></i>
+                    <span class="v2-nav-text">Área do Usuário</span>
+                </a>
 
                 <div class="v2-nav-divider"></div>
                 <div class="v2-nav-section-label">Em breve</div>
@@ -50,10 +583,6 @@
                 <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
                     <i data-lucide="brain"></i>
                     <span class="v2-nav-text">Análise IA</span>
-                </a>
-               <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
-                    <i data-lucide="circle-user-round"></i>
-                    <span class="v2-nav-text">Área do Usuário</span>
                 </a>
                 <a href="administracao.html" class="v2-nav-item" data-title="Administração">
                     <i data-lucide="settings"></i>
@@ -75,23 +604,25 @@
                     <p class="v2-header-subtitle">Análise de Leituras e Releituras | CEMIG SGL</p>
                 </div>
                 <div class="v2-header-right">
-                    <button id="v2-reset-btn" class="v2-status-pill offline" style="cursor:pointer; border:1px solid var(--v3-danger); background: rgba(248, 81, 73, 0.1);">ZERAR BANCO</button>
-
+                    <div class="header-actions-group">
+                        <button id="v2-upload-btn" type="button" class="action-btn primary" title="Carregar relatório">
+                            <i data-lucide="cloud-upload"></i>
+                            <span>Upload</span>
+                        </button>
+                        <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
+                        
+                        <button id="v2-sync-btn" type="button" class="action-btn" title="Sincronizar dados">
+                            <i data-lucide="cloud-download"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                        
+                        <button id="v2-reset-btn" class="action-btn danger" title="Zerar banco de dados">
+                            <i data-lucide="trash-2"></i>
+                            <span>Zerar</span>
+                        </button>
+                    </div>
+                    
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
-
-                    <button id="v2-upload-btn" type="button" class="v2-icon-btn" title="Carregar relatório">
-                        <i data-lucide="cloud-upload"></i>
-                    </button>
-                    <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
-                    <span id="v2-upload-text" class="sr-only">CARREGAR RELATÓRIO</span>
-
-                    <button id="v2-sync-btn" type="button" class="v2-icon-btn" title="Baixar do portal">
-                        <i data-lucide="cloud-download"></i>
-                    </button>
-
-                    <button id="v2-refresh-btn" type="button" class="v2-icon-btn" title="Atualizar dados">
-                        <i data-lucide="refresh-ccw"></i>
-                    </button>
                     
                     <div class="v2-clock-widget">
                         <div class="v2-time-display" id="v2-clock-val">--:--</div>
@@ -102,100 +633,154 @@
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
-                <div class="v2-grid-layout">
-                    <!-- Métricas - Full Width -->
-                    <div class="v2-metrics-row">
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Total de Leituras</span>
-                            <span class="v2-card-value" id="v2-total-leituras">0</span>
-                        </div>
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Leituras Não Executadas</span>
-                            <span class="v2-card-value warning" id="v2-leituras-nao-exec">0</span>
-                        </div>
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Total de Releituras</span>
-                            <span class="v2-card-value" id="v2-total-releituras">0</span>
-                        </div>
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Releituras Não Executadas</span>
-                            <span class="v2-card-value danger" id="v2-releituras-nao-exec">0</span>
-                        </div>
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">% Releituras Não Executadas</span>
-                            <span class="v2-card-value danger" id="v2-perc-releituras-nao-exec">0%</span>
-                        </div>
-
-                        <!-- Filtro por Ciclo (Rural OSB) -->
-                        
-<div class="v2-card" id="v2-cycle-card" style="grid-column: span 3;">
-    <div class="v2-cycle-top">
-        <div>
-            <div class="v2-card-label">Rural OSB</div>
-            <div class="v2-cycle-title">Selecionar Ciclo <span class="v2-cycle-sub">(razões rurais por mês)</span></div>
-        </div>
-
-        <div class="v2-cycle-segment" role="group" aria-label="Selecionar ciclo">
-            <button type="button" class="v2-cycle-btn is-active" data-cycle="" id="cycle-btn-all">Todos</button>
-            <button type="button" class="v2-cycle-btn" data-cycle="97" id="cycle-btn-97">Ciclo 97</button>
-            <button type="button" class="v2-cycle-btn" data-cycle="98" id="cycle-btn-98">Ciclo 98</button>
-            <button type="button" class="v2-cycle-btn" data-cycle="99" id="cycle-btn-99">Ciclo 99</button>
-        </div>
-    </div>
-
-    <div class="v2-cycle-ulgrid" id="cycle-ul-cards" aria-label="Razões incluídas no filtro"></div>
-</div>
-<!-- Gráfico de Barras - Full Width -->
-                    <div class="v2-card v2-card-chart v2-chart-large">
-                        <div class="v2-card-header">
-                            <h3>Gráfico de Leituras e Releituras (Executadas vs Não Executadas)</h3>
-                        </div>
-                        <div class="v2-canvas-container v2-canvas-large">
-                            <canvas id="porteiraChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Gráfico de Não Executadas por Razão - Full Width -->
-                    <div class="v2-card v2-card-chart">
-                        <div class="v2-card-header">
-                            <h3>Leituras Não Executadas por Razão</h3>
-                        </div>
-                        <div class="v2-canvas-container">
-                            <canvas id="naoExecutadasChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Tabela de Detalhes - Full Width -->
-                    <div class="v2-card v2-table-area">
-                        <div class="v2-card-header">
-                            <h3>Pendências Separadas por Contrato</h3>
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <label for="razao-filter" style="color: var(--v3-text-secondary); font-size: 0.875rem;">Filtrar por Razão:</label>
-                                <select id="razao-filter" style="background: var(--v3-card-bg); border: 1px solid var(--v3-border); color: var(--v3-text); padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem;">
-                                    <option value="">Todas as Razões</option>
-                                </select>
-                                <input type="text" id="search-input" placeholder="Buscar (UL / Tipo UL / Contrato / Razão)" style="background: var(--v3-card-bg); border: 1px solid var(--v3-border); color: var(--v3-text); padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; flex: 1; max-width: 300px;">
+                <!-- METRICS -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="book-open"></i>
                             </div>
+                            <span class="metric-label">Total Leituras</span>
                         </div>
-                        <div class="v2-table-scroll">
-                            <table class="v2-table">
-                                <thead>
-                                    <tr>
-                                        <th>Contrato</th>
-                                        <th>UL</th>
-                                        <th>Tipo UL</th>
-                                        <th>Razão</th>
-                                        <th>Total Leituras</th>
-                                        <th>Não Executadas</th>
-                                        <th>Releituras</th>
-                                        <th>Releituras Não Executadas</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="v2-table-body">
-                                    <tr><td colspan="8" class="v2-empty">Nenhum dado carregado</td></tr>
-                                </tbody>
-                            </table>
+                        <div class="metric-value" id="v2-total-leituras">0</div>
+                    </div>
+                    
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="x-circle"></i>
+                            </div>
+                            <span class="metric-label">Leituras Não Exec.</span>
                         </div>
+                        <div class="metric-value" id="v2-leituras-nao-exec">0</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="refresh-cw"></i>
+                            </div>
+                            <span class="metric-label">Total Releituras</span>
+                        </div>
+                        <div class="metric-value" id="v2-total-releituras">0</div>
+                    </div>
+                    
+                    <div class="metric-card danger">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                            <span class="metric-label">Releituras Não Exec.</span>
+                        </div>
+                        <div class="metric-value" id="v2-releituras-nao-exec">0</div>
+                    </div>
+                    
+                    <div class="metric-card danger">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="percent"></i>
+                            </div>
+                            <span class="metric-label">% Releit. Não Exec.</span>
+                        </div>
+                        <div class="metric-value" id="v2-perc-releituras-nao-exec">0%</div>
+                    </div>
+                </div>
+
+                <!-- CYCLE SELECTOR -->
+                <div class="cycle-selector-card">
+                    <div class="cycle-header">
+                        <div class="cycle-info">
+                            <div class="cycle-label">Rural OSB</div>
+                            <div class="cycle-title">Selecionar Ciclo</div>
+                            <p class="cycle-subtitle">Razões rurais por mês de vencimento</p>
+                        </div>
+                        
+                        <div class="cycle-buttons">
+                            <button type="button" class="cycle-btn is-active" data-cycle="" id="cycle-btn-all">Todos</button>
+                            <button type="button" class="cycle-btn" data-cycle="97" id="cycle-btn-97">Ciclo 97</button>
+                            <button type="button" class="cycle-btn" data-cycle="98" id="cycle-btn-98">Ciclo 98</button>
+                            <button type="button" class="cycle-btn" data-cycle="99" id="cycle-btn-99">Ciclo 99</button>
+                        </div>
+                    </div>
+
+                    <div class="cycle-cards-grid" id="cycle-ul-cards"></div>
+                </div>
+
+                <!-- MAIN CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="bar-chart-4"></i>
+                                <h3>Leituras e Releituras por Tipo</h3>
+                            </div>
+                            <p class="chart-subtitle">Comparativo entre executadas e não executadas</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas large">
+                        <canvas id="porteiraChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- NAO EXECUTADAS CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="pie-chart"></i>
+                                <h3>Leituras Não Executadas por Razão</h3>
+                            </div>
+                            <p class="chart-subtitle">Distribuição das pendências por categoria</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="naoExecutadasChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TABLE -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i data-lucide="table"></i>
+                            <h3>Pendências Separadas por Contrato</h3>
+                        </div>
+                        
+                        <div class="table-filters">
+                            <label for="razao-filter" class="filter-label">Razão:</label>
+                            <select id="razao-filter" class="filter-select">
+                                <option value="">Todas</option>
+                            </select>
+                            
+                            <input type="text" id="search-input" class="filter-input" 
+                                   placeholder="Buscar UL, Contrato, Tipo UL...">
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Contrato</th>
+                                    <th>UL</th>
+                                    <th>Tipo UL</th>
+                                    <th>Razão</th>
+                                    <th>Total Leituras</th>
+                                    <th>Não Executadas</th>
+                                    <th>Releituras</th>
+                                    <th>Releit. Não Exec.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="v2-table-body">
+                                <tr>
+                                    <td colspan="8">
+                                        <div class="empty-state">
+                                            <i data-lucide="inbox"></i>
+                                            <p>Nenhum dado carregado</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </main>
@@ -209,16 +794,20 @@
     </div>
 
     <script>
-        // Inicializa ícones Lucide
         lucide.createIcons();
 
+        // Global variables
         let porteiraChart = null;
         let naoExecutadasChart = null;
         let allTableData = [];
         let filteredTableData = [];
-        let selectedCycle = ""; // "" = todos
-        let cacheBust = 0; // usado para forçar refresh e evitar cache
-        // Regras dos ciclos rurais (Razões 89..100): por mês (97/98/99) e a Razão 96 entra sempre.
+        let selectedCycle = "";
+        let cacheBust = 0;
+        let isUploading = false;
+        let universeNeedsRefresh = true;
+        let universeRows = [];
+
+        // Cycle rules
         const CYCLE_RAZOES = {
             "97": [90, 91],
             "98": [92, 93],
@@ -226,19 +815,22 @@
         };
         const RURAL_ALWAYS = [96];
 
-        
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+
+        // Helper functions
         function getAllowedRuralRazoens(cycle) {
             const c = (cycle || "").toString().trim();
             const base = (CYCLE_RAZOES[c] || []).slice();
-            // além das razões do ciclo, a própria Razão do ciclo (97/98/99) entra,
-            // e a Razão 96 entra sempre.
             const cycNum = (c && String(parseInt(c,10)) === c) ? [parseInt(c,10)] : [];
             return [...base, ...cycNum, ...RURAL_ALWAYS];
         }
-
-        let universeNeedsRefresh = true;
-        let universeRows = [];
-        let isUploading = false;
 
         function buildUrl(path, includeCycle = true) {
             const base = "http://127.0.0.1:5000";
@@ -252,17 +844,26 @@
             return url.toString();
         }
 
+        function updateConnectionStatus(isOnline) {
+            const pill = document.getElementById('v2-conn');
+            if (isOnline) {
+                pill.innerText = "SISTEMA ONLINE";
+                pill.className = "v2-status-pill online";
+            } else {
+                pill.innerText = "SISTEMA OFFLINE";
+                pill.className = "v2-status-pill offline";
+            }
+        }
+
         function setCycle(cycle) {
             selectedCycle = (cycle || "").toString().trim();
             updateCycleButtons();
 
-            // Resetar filtros visuais para refletir imediatamente o novo ciclo
             const razaoSel = document.getElementById('razao-filter');
-            if (razaoSel) razaoSel.value = "all";
+            if (razaoSel) razaoSel.value = "";
             const search = document.getElementById('search-input');
             if (search) search.value = "";
 
-            // Força refresh (evita cache e recarrega tudo)
             refreshAll(true);
         }
 
@@ -280,18 +881,13 @@
             if (activeBtn) activeBtn.classList.add('is-active');
         }
 
-
-        
         function renderCycleUniverseInfo() {
             const cards = document.getElementById('cycle-ul-cards');
             if (!cards) return;
 
-            // Modelo dos cards (agora com 5 blocos quando um ciclo está selecionado:
-            // Base (01–88) + 2 razões do ciclo + a própria razão do ciclo (97/98/99) + R96 (sempre).
             let cardModels = [];
 
             if (!selectedCycle) {
-                // "Todos": resumo dos ciclos
                 cardModels = [
                     {label: "BASE", value: "R01–R88", tone: "base"},
                     {label: "C97", value: "R90 • R91 • R97", tone: "cycle"},
@@ -301,13 +897,10 @@
                 ];
             } else {
                 const allowed = getAllowedRuralRazoens(selectedCycle).map(r => "R" + String(r).padStart(2,"0"));
-                // allowed já inclui: [razões do ciclo] + [ciclo] + [96]
-                // Vamos separar para exibir bonitinho:
                 const cycleNum = "R" + String(parseInt(selectedCycle,10)).padStart(2,"0");
                 const always = "R96";
                 const rurals = allowed.filter(x => x !== always && x !== cycleNum);
 
-                // rurals deve ter 2 itens
                 cardModels = [
                     {label: "BASE", value: "R01–R88", tone: "base"},
                     {label: "RURAL", value: rurals[0] || "—", tone: "rural"},
@@ -318,16 +911,255 @@
             }
 
             cards.innerHTML = cardModels.map(m => `
-                <div class="v2-cycle-ulcard ${m.tone}">
-                    <div class="v2-cycle-ulcard-label">${m.label}</div>
-                    <div class="v2-cycle-ulcard-value">${m.value}</div>
+                <div class="cycle-card ${m.tone}">
+                    <div class="cycle-card-label">${m.label}</div>
+                    <div class="cycle-card-value">${m.value}</div>
                 </div>
             `).join("");
         }
 
+        // Chart rendering
+        async function renderChart() {
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/chart"));
+                const payload = await res.json();
+
+                const ctx = document.getElementById("porteiraChart");
+
+                if (porteiraChart) porteiraChart.destroy();
+
+                porteiraChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: payload.labels,
+                        datasets: payload.datasets.map((ds, idx) => ({
+                            ...ds,
+                            backgroundColor: idx === 0 
+                                ? 'rgba(35, 134, 54, 0.2)' 
+                                : 'rgba(248, 81, 73, 0.2)',
+                            borderColor: idx === 0 
+                                ? 'rgba(35, 134, 54, 1)' 
+                                : 'rgba(248, 81, 73, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: "top",
+                                labels: {
+                                    color: '#c9d1d9',
+                                    font: { size: 13, weight: '600' },
+                                    padding: 20,
+                                    usePointStyle: true,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                                titleColor: '#00d1ff',
+                                bodyColor: '#c9d1d9',
+                                borderColor: '#30363d',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+
+                updateConnectionStatus(true);
+            } catch (error) {
+                console.error("Erro ao renderizar gráfico:", error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        async function renderNaoExecutadasChart() {
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/nao-executadas-chart"));
+                const text = await res.text().catch(() => "");
+                let data = null;
+                try { data = JSON.parse(text || '{}'); } catch { data = { success: res.ok }; }
+                
+                if (!res.ok) {
+                    throw new Error((data && data.error) ? data.error : (`HTTP ${res.status}`));
+                }
+
+                const ctx = document.getElementById("naoExecutadasChart");
+
+                if (naoExecutadasChart) naoExecutadasChart.destroy();
+
+                naoExecutadasChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: "Leituras Não Executadas",
+                            data: data.values,
+                            backgroundColor: 'rgba(248, 81, 73, 0.2)',
+                            borderColor: 'rgba(248, 81, 73, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                                titleColor: '#f85149',
+                                bodyColor: '#c9d1d9',
+                                borderColor: '#30363d',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Erro ao renderizar gráfico de não executadas:", error);
+            }
+        }
+
+        // Table functions
+        async function loadTableData() {
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/table"));
+                const data = await res.json();
+
+                if (data.success) {
+                    allTableData = (data.data || []).filter(r =>
+                        (Number(r.Leituras_Nao_Executadas || 0) > 0) || (Number(r.Releituras_Nao_Executadas || 0) > 0)
+                    );
+                    filteredTableData = [...allTableData];
+                    
+                    updateMetrics(data.totals);
+                    updateRazaoFilter();
+                    renderTable();
+                    renderCycleUniverseInfo();
+                    
+                    updateConnectionStatus(true);
+                } else {
+                    console.error("Erro ao carregar dados:", data.error);
+                    updateConnectionStatus(false);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados da tabela:", error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        function updateMetrics(totals) {
+            document.getElementById('v2-total-leituras').innerText = totals.total_leituras || 0;
+            document.getElementById('v2-leituras-nao-exec').innerText = totals.leituras_nao_exec || 0;
+            document.getElementById('v2-total-releituras').innerText = totals.total_releituras || 0;
+            document.getElementById('v2-releituras-nao-exec').innerText = totals.releituras_nao_exec || 0;
+            const totalRel = Number(totals.total_releituras || 0);
+            const naoExecRel = Number(totals.releituras_nao_exec || 0);
+            const perc = totalRel > 0 ? ((naoExecRel / totalRel) * 100) : 0;
+            const percEl = document.getElementById('v2-perc-releituras-nao-exec');
+            if (percEl) percEl.innerText = `${perc.toFixed(1)}%`;
+        }
+
+        function updateRazaoFilter() {
+            const razoes = [...new Set(allTableData.map(row => row.Razao))].sort();
+            const select = document.getElementById('razao-filter');
+            
+            select.innerHTML = '<option value="">Todas</option>';
+            
+            razoes.forEach(razao => {
+                const option = document.createElement('option');
+                option.value = razao;
+                option.textContent = `R${razao}`;
+                select.appendChild(option);
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('v2-table-body');
+            
+            if (filteredTableData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i data-lucide="inbox"></i>
+                                <p>Nenhuma pendência encontrada para os filtros atuais</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            tbody.innerHTML = filteredTableData.map(row => {
+                const totalLeit = Number(row.Total_Leituras || 0);
+                const naoExec = Number(row.Leituras_Nao_Executadas || 0);
+                const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
+                
+                return `
+                    <tr>
+                        <td><strong>${row.Conjunto_Contrato}</strong></td>
+                        <td>${row.UL}</td>
+                        <td>${row.Tipo_UL || '-'}</td>
+                        <td><strong>R${row.Razao}</strong></td>
+                        <td>${Math.round(row.Total_Leituras)}</td>
+                        <td><span style="color: var(--v2-warning);">${Math.round(row.Leituras_Nao_Executadas)}</span></td>
+                        <td>${Math.round(row.Releituras_Totais)}</td>
+                        <td><span style="color: var(--v2-danger);">${Math.round(row.Releituras_Nao_Executadas)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterTable() {
+            const razaoValue = document.getElementById('razao-filter').value;
+            const searchValue = document.getElementById('search-input').value.toLowerCase();
+
+            filteredTableData = allTableData.filter(row => {
+                const matchRazao = !razaoValue || row.Razao === razaoValue;
+                const matchSearch = !searchValue || 
+                    String(row.UL || '').toLowerCase().includes(searchValue) ||
+                    String(row.Razao || '').toLowerCase().includes(searchValue) ||
+                    String(row.Tipo_UL || '').toLowerCase().includes(searchValue) ||
+                    String(row.Conjunto_Contrato || '').toLowerCase().includes(searchValue);
+                
+                return matchRazao && matchSearch;
+            });
+
+            renderTable();
+        }
+
         async function loadUniverse() {
-            // usado só para identificar quais ULs rurais existem em cada ciclo (97/98/99)
-            // IMPORTANTE: não pode quebrar o JS se o backend devolver corpo vazio
             try {
                 const res = await authFetch(buildUrl('/api/porteira/table', false));
                 const txt = await res.text();
@@ -345,7 +1177,6 @@
                     return;
                 }
 
-                // Se respondeu OK mas não veio JSON, não travar a tela
                 if (res.ok && !data) {
                     universeRows = [];
                     renderCycleUniverseInfo();
@@ -370,453 +1201,101 @@
             await Promise.all([renderChart(), renderNaoExecutadasChart(), loadTableData()]);
         }
 
-        // Relógio
-        setInterval(() => {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
-            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
-        }, 1000);
-
-        // Função para renderizar o gráfico principal
-        async function renderChart() {
-            try {
-                const res = await authFetch(buildUrl("/api/porteira/chart"));
-                const payload = await res.json();
-
-                const ctx = document.getElementById("porteiraChart");
-
-                if (porteiraChart) {
-                    porteiraChart.destroy();
-                }
-
-                porteiraChart = new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: payload.labels,
-                        datasets: payload.datasets.map((ds, idx) => ({
-                            ...ds,
-                            backgroundColor: idx === 0 
-                                ? 'rgba(34, 197, 94, 0.7)' 
-                                : 'rgba(248, 81, 73, 0.7)',
-                            borderColor: idx === 0 
-                                ? 'rgba(34, 197, 94, 1)' 
-                                : 'rgba(248, 81, 73, 1)',
-                            borderWidth: 2
-                        }))
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: "top",
-                                labels: {
-                                    color: 'rgba(255, 255, 255, 0.9)',
-                                    font: { size: 13 }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.05)'
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.7)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.7)'
-                                }
-                            }
-                        }
-                    }
-                });
-
-                updateConnectionStatus(true);
-            } catch (error) {
-                console.error("Erro ao renderizar gráfico:", error);
-                updateConnectionStatus(false);
-            }
-        }
-
-        // Função para renderizar o gráfico de não executadas
-        async function renderNaoExecutadasChart() {
-            try {
-                const res = await authFetch(buildUrl("/api/porteira/nao-executadas-chart"));
-                let data = null;
-                const text = await res.text().catch(() => "");
-                try { data = JSON.parse(text || '{}'); } catch { data = { success: res.ok }; }
-                if (!res.ok) {
-                    throw new Error((data && data.error) ? data.error : (`HTTP ${res.status}`));
-                }
-const ctx = document.getElementById("naoExecutadasChart");
-
-                if (naoExecutadasChart) {
-                    naoExecutadasChart.destroy();
-                }
-
-                naoExecutadasChart = new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: "Leituras Não Executadas",
-                            data: data.values,
-                            backgroundColor: 'rgba(248, 81, 73, 0.7)',
-                            borderColor: 'rgba(248, 81, 73, 1)',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.05)'
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.7)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    color: 'rgba(255, 255, 255, 0.7)'
-                                }
-                            }
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("Erro ao renderizar gráfico de não executadas:", error);
-            }
-        }
-
-        // Função para carregar dados da tabela
-        async function loadTableData() {
-            try {
-                const res = await authFetch(buildUrl("/api/porteira/table"));
-                const data = await res.json();
-
-                if (data.success) {
-                    // Só exibir linhas com pendência (leitura OU releitura não executada)
-                    allTableData = (data.data || []).filter(r =>
-                        (Number(r.Leituras_Nao_Executadas || 0) > 0) || (Number(r.Releituras_Nao_Executadas || 0) > 0)
-                    );
-                    filteredTableData = [...allTableData];
-                    
-                    // Atualizar métricas
-                    updateMetrics(data.totals);
-                    
-                    // Atualizar opções do filtro de razão
-                    updateRazaoFilter();
-                    
-                    // Renderizar tabela
-                    renderTable();
-
-                    // Atualizar texto do filtro de ciclos
-                    renderCycleUniverseInfo();
-                    
-                    updateConnectionStatus(true);
-                } else {
-                    console.error("Erro ao carregar dados:", data.error);
-                    updateConnectionStatus(false);
-                }
-            } catch (error) {
-                console.error("Erro ao carregar dados da tabela:", error);
-                updateConnectionStatus(false);
-            }
-        }
-
-        // Atualizar métricas
-        function updateMetrics(totals) {
-            document.getElementById('v2-total-leituras').innerText = totals.total_leituras || 0;
-            document.getElementById('v2-leituras-nao-exec').innerText = totals.leituras_nao_exec || 0;
-            document.getElementById('v2-total-releituras').innerText = totals.total_releituras || 0;
-            document.getElementById('v2-releituras-nao-exec').innerText = totals.releituras_nao_exec || 0;
-            const totalRel = Number(totals.total_releituras || 0);
-            const naoExecRel = Number(totals.releituras_nao_exec || 0);
-            const perc = totalRel > 0 ? ((naoExecRel / totalRel) * 100) : 0;
-            const percEl = document.getElementById('v2-perc-releituras-nao-exec');
-            if (percEl) percEl.innerText = `${perc.toFixed(1)}%`;
-        }
-
-        // Atualizar filtro de razão
-        function updateRazaoFilter() {
-            const razoes = [...new Set(allTableData.map(row => row.Razao))].sort();
-            const select = document.getElementById('razao-filter');
-            
-            // Manter a opção "Todas as Razões"
-            select.innerHTML = '<option value="">Todas as Razões</option>';
-            
-            razoes.forEach(razao => {
-                const option = document.createElement('option');
-                option.value = razao;
-                option.textContent = `Razão ${razao}`;
-                select.appendChild(option);
-            });
-        }
-
-        // Renderizar tabela
-        function renderTable() {
-            const tbody = document.getElementById('v2-table-body');
-            
-            if (filteredTableData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="v2-empty">Nenhuma pendência encontrada para os filtros atuais.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = filteredTableData.map(row => {
-                const totalLeit = Number(row.Total_Leituras || 0);
-                const naoExec = Number(row.Leituras_Nao_Executadas || 0);
-                const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
-                const statusClass = percNaoExec > 10 ? 'danger' : percNaoExec > 5 ? 'warning' : 'success';
-                
-                return `
-                    <tr>
-                        <td>${row.Conjunto_Contrato}</td>
-                        <td><strong>${row.UL}</strong></td>
-                        <td>${row.Tipo_UL || ''}</td>
-                        <td><span class="v2-status-tag ${statusClass}">R${row.Razao}</span></td>
-                        <td>${Math.round(row.Total_Leituras)}</td>
-                        <td><span style="color: var(--v3-warning);">${Math.round(row.Leituras_Nao_Executadas)}</span></td>
-                        <td>${Math.round(row.Releituras_Totais)}</td>
-                        <td><span style="color: var(--v3-danger);">${Math.round(row.Releituras_Nao_Executadas)}</span></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Filtrar tabela
-        function filterTable() {
-            const razaoValue = document.getElementById('razao-filter').value;
-            const searchValue = document.getElementById('search-input').value.toLowerCase();
-
-            filteredTableData = allTableData.filter(row => {
-                const matchRazao = !razaoValue || row.Razao === razaoValue;
-                const matchSearch = !searchValue || 
-                    String(row.UL || '').toLowerCase().includes(searchValue) ||
-                    String(row.Razao || '').toLowerCase().includes(searchValue) ||
-                    String(row.Tipo_UL || '').toLowerCase().includes(searchValue) ||
-                    String(row.Conjunto_Contrato || '').toLowerCase().includes(searchValue);
-                
-                return matchRazao && matchSearch;
-            });
-
-            renderTable();
-        }
-
-        // Event listeners para filtros
+        // Event listeners
         document.getElementById('razao-filter').addEventListener('change', filterTable);
         document.getElementById('search-input').addEventListener('input', filterTable);
 
-        // Ciclos
         document.getElementById('cycle-btn-all').addEventListener('click', () => setCycle(''));
         document.getElementById('cycle-btn-97').addEventListener('click', () => setCycle('97'));
         document.getElementById('cycle-btn-98').addEventListener('click', () => setCycle('98'));
         document.getElementById('cycle-btn-99').addEventListener('click', () => setCycle('99'));
 
-                // Botão de atualizar (força recarregar gráficos/tabela)
-        const refreshBtn = document.getElementById('v2-refresh-btn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => refreshAll(true));
-        }
-
-// Botão de sincronização
-        async function syncPorteiraFromPortal() {
-            if (isUploading) return;
-            isUploading = true;
-
-            const syncBtn = document.getElementById('v2-sync-btn');
-            const uploadBtn = document.getElementById('v2-upload-btn');
-
-            syncBtn.style.opacity = '0.6';
-            syncBtn.style.pointerEvents = 'none';
-            uploadBtn.style.opacity = '0.6';
-            uploadBtn.style.pointerEvents = 'none';
-
-            // feedback
-            const uploadText = document.getElementById('v2-upload-text');
-            if (uploadText) uploadText.innerText = "SINCRONIZANDO (PORTAL)...";
-
-                        authFetch('http://127.0.0.1:5000/api/sync/porteira', { method: 'POST' })
-                .then(async (res) => {
-                    const text = await res.text().catch(() => "");
-                    if (!res.ok) {
-                        throw new Error(`HTTP ${res.status} em /api/sync/porteira: ${text.slice(0, 200)}`);
-                    }
-                    // alguns ambientes podem devolver corpo vazio mesmo com sucesso; nesse caso, só recarrega a tela
-                    try { return JSON.parse(text || '{}'); } catch { return { success: true }; }
-                })
-                .then(async (data) => {
-                    // tratar duplicado / falhas reais
-                    if (data && data.error === "DUPLICADO") {
-                        alert(data.message || "Relatório duplicado.");
-                        return;
-                    }
-
-                    if (data && data.success === false) {
-                        throw new Error(data.error || "Falha ao sincronizar.");
-                    }
-
-                    // Atualizar métricas
-                    if (data.totals) updateMetrics(data.totals);
-
-                    universeNeedsRefresh = true;
-                    await refreshAll();
-
-                    updateConnectionStatus(true);
-                })
-                .catch((error) => {
-                    console.error("Erro ao sincronizar (porteira):", err);
-                    alert("Falha ao sincronizar pelo portal. Verifique se o backend está rodando e se as dependências do sincronizador estão instaladas.");
-                    updateConnectionStatus(false);
-                })
-                .finally(() => {
-                    isUploading = false;
-                    syncBtn.style.opacity = '';
-                    syncBtn.style.pointerEvents = '';
-                    uploadBtn.style.opacity = '';
-                    uploadBtn.style.pointerEvents = '';
-                    if (uploadText) uploadText.innerText = "";
-                });
-        }
-
-        // Botões de sincronização (header e card da tabela)
-        document.getElementById('v2-sync-btn').addEventListener('click', syncPorteiraFromPortal);
-        // Upload de arquivo
+        // Upload
         document.getElementById('v2-upload-btn').addEventListener('click', () => {
             document.getElementById('v2-file-input').click();
         });
 
-        document.getElementById('v2-file-input').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file || isUploading) return;
-
+        document.getElementById('v2-file-input').addEventListener('change', function(e) {
+            if (!this.files.length || isUploading) return;
             isUploading = true;
-            const uploadBtn = document.getElementById('v2-upload-btn');
-            const syncBtn = document.getElementById('v2-sync-btn');
             
-            uploadBtn.style.opacity = '0.5';
-            uploadBtn.style.pointerEvents = 'none';
-            syncBtn.style.opacity = '0.5';
-            syncBtn.style.pointerEvents = 'none';
-
+            const file = this.files[0];
             const formData = new FormData();
             formData.append('file', file);
 
-            try {
-                const res = await authFetch('http://127.0.0.1:5000/api/upload/porteira', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                // alguns ambientes podem devolver corpo vazio / não-JSON mesmo com sucesso
-                const text = await res.text().catch(() => "");
-                let data = {};
-                try { data = JSON.parse(text || '{}'); } catch { data = { success: res.ok }; }
-
+            authFetch('http://127.0.0.1:5000/api/upload/porteira', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
                 if (data.success) {
-                    // Atualizar UI
-                    if (data.totals) updateMetrics(data.totals);
-                    if (data.chart) {
-                        const ctx = document.getElementById("porteiraChart");
-                        if (porteiraChart) porteiraChart.destroy();
-                        porteiraChart = new Chart(ctx, {
-                            type: "bar",
-                            data: {
-                                labels: data.chart.labels,
-                                datasets: data.chart.datasets.map((ds, idx) => ({
-                                    ...ds,
-                                    backgroundColor: idx === 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(248, 81, 73, 0.7)',
-                                    borderColor: idx === 0 ? 'rgba(34, 197, 94, 1)' : 'rgba(248, 81, 73, 1)',
-                                    borderWidth: 2
-                                }))
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { position: "top", labels: { color: 'rgba(255, 255, 255, 0.9)', font: { size: 13 } } } },
-                                scales: {
-                                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } },
-                                    x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } }
-                                }
-                            }
-                        });
-                    }
-                    if (data.nao_exec_chart) {
-                        const ctx2 = document.getElementById("naoExecutadasChart");
-                        if (naoExecutadasChart) naoExecutadasChart.destroy();
-                        naoExecutadasChart = new Chart(ctx2, {
-                            type: "bar",
-                            data: {
-                                labels: data.nao_exec_chart.labels,
-                                datasets: [{
-                                    label: "Leituras Não Executadas",
-                                    data: data.nao_exec_chart.values,
-                                    backgroundColor: 'rgba(248, 81, 73, 0.7)',
-                                    borderColor: 'rgba(248, 81, 73, 1)',
-                                    borderWidth: 2
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { display: false } },
-                                scales: {
-                                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } },
-                                    x: { grid: { display: false }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } }
-                                }
-                            }
-                        });
-                    }
-                    
-                    universeNeedsRefresh = true;
-                    await refreshAll();
-                    const loaded = (data && typeof data.count !== 'undefined') ? data.count : '';
-                    alert(`✅ Arquivo processado com sucesso!${loaded !== '' ? `
-${loaded} registros carregados.` : ''}`);
-} else if (data.error === "DUPLICADO") {
-                    alert(data.message);
+                    alert('✅ Upload realizado com sucesso!');
+                    refreshAll(true);
                 } else {
-                    alert("❌ Erro: " + (data.error || "Erro desconhecido"));
+                    alert(data.error || "Erro ao fazer upload");
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("❌ Erro ao conectar com o servidor");
+            })
+            .finally(() => {
+                this.value = '';
+                isUploading = false;
+            });
+        });
+
+        // Sync
+        document.getElementById('v2-sync-btn').addEventListener('click', async function() {
+            if (isUploading) return;
+            isUploading = true;
+            
+            this.style.opacity = '0.5';
+            this.style.pointerEvents = 'none';
+
+            try {
+                const res = await authFetch('http://127.0.0.1:5000/api/sync/porteira', { method: 'POST' });
+                const text = await res.text().catch(() => "");
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                
+                let data = null;
+                try { data = JSON.parse(text || '{}'); } catch { data = { success: true }; }
+                
+                if (data && data.error === "DUPLICADO") {
+                    alert(data.message || "Relatório duplicado.");
+                    return;
+                }
+
+                if (data && data.success === false) {
+                    throw new Error(data.error || "Falha ao sincronizar.");
+                }
+
+                if (data.totals) updateMetrics(data.totals);
+
+                universeNeedsRefresh = true;
+                await refreshAll();
+                
+                alert('✅ Sincronização concluída!');
+                updateConnectionStatus(true);
             } catch (error) {
-                console.error("Erro no upload:", error);
-                alert("❌ Erro ao enviar arquivo. Verifique o console.");
+                console.error("Erro ao sincronizar:", error);
+                alert("❌ Erro ao sincronizar. Verifique o backend.");
                 updateConnectionStatus(false);
             } finally {
                 isUploading = false;
-                uploadBtn.style.opacity = '';
-                uploadBtn.style.pointerEvents = '';
-                syncBtn.style.opacity = '';
-                syncBtn.style.pointerEvents = '';
-                e.target.value = '';
+                this.style.opacity = '';
+                this.style.pointerEvents = '';
             }
         });
 
-        // Botão de reset
-        document.getElementById('v2-reset-btn').addEventListener('click', async () => {
-            const ok = confirm("Deseja realmente ZERAR todo o banco de dados da Porteira?");
-            if (!ok) return;
-
+        // Reset
+        document.getElementById('v2-reset-btn').onclick = async () => {
+            if (!confirm("Deseja realmente ZERAR todo o banco de dados?")) return;
+            
             const username = prompt("Confirme o usuário ADMIN:");
             if (!username) return;
 
@@ -824,7 +1303,7 @@ ${loaded} registros carregados.` : ''}`);
             if (!password) return;
 
             try {
-                const res = await authFetch('http://127.0.0.1:5000/api/reset/porteira', {
+                const res = await authFetch('http://127.0.0.1:5000/api/reset', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -837,54 +1316,36 @@ ${loaded} registros carregados.` : ''}`);
                     return;
                 }
 
-                // Limpa UI
-                allTableData = [];
-                filteredTableData = [];
-                
+                // Reset UI
                 document.getElementById('v2-total-leituras').innerText = '0';
                 document.getElementById('v2-leituras-nao-exec').innerText = '0';
                 document.getElementById('v2-total-releituras').innerText = '0';
                 document.getElementById('v2-releituras-nao-exec').innerText = '0';
-                const percEl = document.getElementById('v2-perc-releituras-nao-exec');
-                if (percEl) percEl.innerText = '0%';
+                document.getElementById('v2-perc-releituras-nao-exec').innerText = '0%';
 
-                document.getElementById('v2-table-body').innerHTML =
-                    '<tr><td colspan="8" class="v2-empty">Nenhum dado carregado</td></tr>';
+                document.getElementById('v2-table-body').innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i data-lucide="inbox"></i>
+                                <p>Nenhum dado carregado</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
 
-                if (porteiraChart) porteiraChart.destroy();
-                if (naoExecutadasChart) naoExecutadasChart.destroy();
-
-                universeNeedsRefresh = true;
-                await refreshAll();
-
-                alert("✅ Banco da Porteira zerado com sucesso!");
+                lucide.createIcons();
+                alert("✅ Banco zerado com sucesso!");
+                
+                refreshAll(true);
             } catch (e) {
                 console.error(e);
                 alert("❌ Erro ao comunicar com o backend.");
             }
-        });
+        };
 
-        // Atualizar status de conexão
-        function updateConnectionStatus(online) {
-            const pill = document.getElementById('v2-conn');
-            if (online) {
-                pill.innerText = "SISTEMA ONLINE";
-                pill.className = "v2-status-pill online";
-            } else {
-                pill.innerText = "SISTEMA OFFLINE";
-                pill.className = "v2-status-pill offline";
-            }
-        }
-
-        // Inicialização
-        refreshAll();
-        
-        // Atualiza automaticamente a cada 30 segundos
-        setInterval(() => {
-            if (!isUploading) {
-                refreshAll();
-            }
-        }, 30000);
+        // Initial load
+        refreshAll(true);
     </script>
 </body>
 </html>

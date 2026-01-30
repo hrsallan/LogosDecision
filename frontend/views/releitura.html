@@ -9,13 +9,424 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
+    
+    <style>
+        /* ==================== RELEITURA PAGE ENHANCEMENTS ==================== */
+        
+        .page-releitura .v2-main {
+            padding: 24px;
+        }
+
+        /* Enhanced Header Actions */
+        .header-actions-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .action-btn i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.8) 100%);
+            color: #0a0c10;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0, 209, 255, 0.25);
+        }
+
+        .action-btn.primary:hover {
+            box-shadow: 0 6px 16px rgba(0, 209, 255, 0.35);
+        }
+
+        .action-btn.danger {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border-color: rgba(248, 81, 73, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(248, 81, 73, 0.15);
+            border-color: rgba(248, 81, 73, 0.5);
+        }
+
+        /* Enhanced Metrics Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .metric-card.primary::before {
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.warning::before {
+            background: radial-gradient(circle, rgba(210, 153, 34, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.success::before {
+            background: radial-gradient(circle, rgba(35, 134, 54, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.danger::before {
+            background: radial-gradient(circle, rgba(248, 81, 73, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(0, 209, 255, 0.1);
+        }
+
+        .metric-icon i {
+            width: 20px;
+            height: 20px;
+            color: var(--v2-primary);
+        }
+
+        .metric-card.warning .metric-icon {
+            background: rgba(210, 153, 34, 0.1);
+        }
+
+        .metric-card.warning .metric-icon i {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.success .metric-icon {
+            background: rgba(35, 134, 54, 0.1);
+        }
+
+        .metric-card.success .metric-icon i {
+            color: var(--v2-success);
+        }
+
+        .metric-card.danger .metric-icon {
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .metric-card.danger .metric-icon i {
+            color: var(--v2-danger);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--v2-text);
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric-card.warning .metric-value {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.success .metric-value {
+            color: var(--v2-success);
+        }
+
+        .metric-card.danger .metric-value {
+            color: var(--v2-danger);
+        }
+
+        /* Enhanced Chart Cards */
+        .chart-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .chart-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-title i {
+            width: 24px;
+            height: 24px;
+            color: var(--v2-primary);
+        }
+
+        .chart-title h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            margin-top: 4px;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 400px;
+            padding: 16px 0;
+        }
+
+        .chart-canvas.large {
+            height: 500px;
+        }
+
+        /* Enhanced Table */
+        .table-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--v2-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-title i {
+            width: 22px;
+            height: 22px;
+            color: var(--v2-primary);
+        }
+
+        .table-title h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .table-scroll {
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--v2-surface-light);
+        }
+
+        .data-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            border-bottom: 2px solid var(--v2-border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(0, 209, 255, 0.05);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .status-tag.pendente {
+            background: rgba(210, 153, 34, 0.15);
+            color: var(--v2-warning);
+            border: 1px solid rgba(210, 153, 34, 0.3);
+        }
+
+        .status-tag.atrasado {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--v2-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .status-tag i {
+            width: 12px;
+            height: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--v2-text-dim);
+        }
+
+        .empty-state i {
+            width: 64px;
+            height: 64px;
+            color: var(--v2-text-dim);
+            opacity: 0.3;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-canvas {
+                height: 300px;
+            }
+
+            .chart-canvas.large {
+                height: 350px;
+            }
+
+            .header-actions-group {
+                width: 100%;
+            }
+
+            .action-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="page-releitura">
     <div class="v2-container">
         <!-- SIDEBAR -->
         <aside class="v2-sidebar">
-            <div class="v2-logo-section"><button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
-                <div class="v2-logo-text v2-brand-text"><span class="logo-vigila">Vigila</span><span class="logo-core">Core</span></div>
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">Vigila</span><span class="logo-core">Core</span>
+                </div>
             </div>
 
             <nav class="v2-nav">
@@ -35,7 +446,10 @@
                     <i data-lucide="door-open"></i>
                     <span class="v2-nav-text">Porteira</span>
                 </a>
-
+                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
+                    <i data-lucide="circle-user-round"></i>
+                    <span class="v2-nav-text">Área do Usuário</span>
+                </a>
                 <div class="v2-nav-divider"></div>
                 <div class="v2-nav-section-label">Em breve</div>
 
@@ -47,9 +461,6 @@
                     <i data-lucide="brain"></i>
                     <span class="v2-nav-text">Análise IA</span>
                 </a>
-                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
-                      <i data-lucide="circle-user-round"></i>
-                      <span class="v2-nav-text">Área do Usuário</span>
                 <a href="administracao.html" class="v2-nav-item" data-title="Administração">
                     <i data-lucide="settings"></i>
                     <span class="v2-nav-text">Administração</span>
@@ -70,28 +481,26 @@
                     <p class="v2-header-subtitle">Análise das Releituras Não Executadas | CEMIG SGL</p>
                 </div>
                 <div class="v2-header-right">
-                    <button id="v2-reset-btn" class="v2-status-pill offline" style="cursor:pointer; border:1px solid var(--v3-danger); background: rgba(248, 81, 73, 0.1);">ZERAR BANCO</button>
-
-                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
-
-                    <button id="v2-upload-btn" type="button" class="v2-icon-btn" title="Carregar relatório">
-                        <i data-lucide="cloud-upload"></i>
-                    </button>
-                    <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
-                    <span id="v2-upload-text" class="sr-only">CARREGAR RELATÓRIO</span>
-
-
-                    <button id="v2-sync-btn" type="button" class="v2-icon-btn">
-                        <i data-lucide="cloud-download"></i>
-                    </button>
-                    
-                    <div class="v2-calendar-wrap">
-                        <button id="v2-cal-btn" type="button" class="v2-icon-btn" title="Selecionar data do gráfico">
-                            <i data-lucide="calendar-days"></i>
+                    <div class="header-actions-group">
+                        <button id="v2-upload-btn" type="button" class="action-btn primary" title="Carregar relatório">
+                            <i data-lucide="cloud-upload"></i>
+                            <span>Upload</span>
                         </button>
-                        <span id="v2-cal-badge" class="v2-date-badge" style="display:none"></span>
-                        <input id="v2-cal-input" class="v2-date-input" type="date" aria-label="Selecionar data do gráfico" />
+                        <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
+                        
+                        <button id="v2-sync-btn" type="button" class="action-btn" title="Sincronizar dados">
+                            <i data-lucide="cloud-download"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                        
+                        <button id="v2-reset-btn" class="action-btn danger" title="Zerar banco de dados">
+                            <i data-lucide="trash-2"></i>
+                            <span>Zerar</span>
+                        </button>
                     </div>
+                    
+                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
+                    
                     <div class="v2-clock-widget">
                         <div class="v2-time-display" id="v2-clock-val">--:--</div>
                         <div class="v2-date-display" id="v2-date">--/--/----</div>
@@ -101,76 +510,120 @@
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
-                <div class="v2-grid-layout">
-                    <!-- Métricas - Full Width -->
-                    <div class="v2-metrics-row">
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Releituras Totais</span>
-                            <span class="v2-card-value" id="v2-total">0</span>
+                <!-- METRICS -->
+                <div class="metrics-grid">
+                    <div class="metric-card primary">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="database"></i>
+                            </div>
+                            <span class="metric-label">Releituras Totais</span>
                         </div>
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Pendências</span>
-                            <span class="v2-card-value warning" id="v2-pend">0</span>
-                        </div>
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Realizadas</span>
-                            <span class="v2-card-value success" id="v2-realizadas">0</span>
-                        </div>
-                        <div class="v2-card v2-card-metric">
-                            <span class="v2-card-label">Atrasadas</span>
-                            <span class="v2-card-value danger" id="v2-atrasadas">0</span>
-                        </div>
+                        <div class="metric-value" id="v2-total">0</div>
                     </div>
-<!-- Gráfico Interativo - Full Width com maior altura -->
-                    <div class="v2-card v2-card-chart v2-chart-large">
-                        <div class="v2-card-header">
-                            <h3>Gráfico de Releituras Não Executadas (Real-Time DB)</h3>
+                    
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <span class="metric-label">Pendências</span>
                         </div>
-                        <div class="v2-canvas-container v2-canvas-large">
-                            <canvas id="v2-chart"></canvas>
-                        </div>
+                        <div class="metric-value" id="v2-pend">0</div>
                     </div>
+                    
+                    <div class="metric-card success">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="check-circle"></i>
+                            </div>
+                            <span class="metric-label">Realizadas</span>
+                        </div>
+                        <div class="metric-value" id="v2-realizadas">0</div>
+                    </div>
+                    
+                    <div class="metric-card danger">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                            <span class="metric-label">Atrasadas</span>
+                        </div>
+                        <div class="metric-value" id="v2-atrasadas">0</div>
+                    </div>
+                </div>
 
-                    <!-- Gráfico por Vencimento - Full Width -->
-                    <div class="v2-card v2-card-chart">
-                        <div class="v2-card-header">
-                            <h3>Gráfico por Data de Vencimento (Pendências)</h3>
-                        </div>
-                        <div class="v2-canvas-container">
-                            <canvas id="v2-due-chart"></canvas>
+                <!-- MAIN CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="bar-chart-3"></i>
+                                <h3>Releituras Não Executadas em Tempo Real</h3>
+                            </div>
+                            <p class="chart-subtitle">Análise por hora do dia selecionado</p>
                         </div>
                     </div>
+                    <div class="chart-canvas large">
+                        <canvas id="v2-chart"></canvas>
+                    </div>
+                </div>
 
-                    <!-- Tabela de Detalhes - Full Width -->
-                    <div class="v2-card v2-table-area">
-                        <div class="v2-card-header">
+                <!-- DUE DATE CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="calendar-clock"></i>
+                                <h3>Gráfico por Data de Vencimento</h3>
+                            </div>
+                            <p class="chart-subtitle">Distribuição de pendências por prazo</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="v2-due-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- DETAILS TABLE -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i data-lucide="table"></i>
                             <h3>Detalhes das Releituras (Deep-Scan)</h3>
                         </div>
-                        <div class="v2-table-scroll">
-                            <table class="v2-table">
-                                <thead>
-                                    <tr>
-                                        <th>Status</th>
-                                        <th>UL</th>
-                                        <th>Instalação</th>
-                                        <th>Endereço</th>
-                                        <th>Razão</th>
-                                        <th>Reg.</th>
-                                        <th>Vencimento</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="v2-table-body">
-                                    <tr><td colspan="7" class="v2-empty">Nenhum dado carregado</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>UL</th>
+                                    <th>Instalação</th>
+                                    <th>Endereço</th>
+                                    <th>Razão</th>
+                                    <th>Reg.</th>
+                                    <th>Vencimento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="v2-table-body">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <i data-lucide="inbox"></i>
+                                            <p>Nenhum dado carregado</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </main>
 
             <!-- FOOTER -->
-                    <footer class="v2-footer">
-                <span>VigilaCore  | Desenvolvimento Operacional Estratégico</span>
+            <footer class="v2-footer">
+                <span>VigilaCore | Desenvolvimento Operacional Estratégico</span>
                 <span>Sistema em desenvolvimento</span>
             </footer>
         </div>
@@ -178,255 +631,212 @@
 
     <script>
         lucide.createIcons();
-        // --- Calendar (snapshot day selector) ---
-        const calBtn = document.getElementById('v2-cal-btn');
-        const calInput = document.getElementById('v2-cal-input');
-        const calBadge = document.getElementById('v2-cal-badge');
 
-        let selectedDateISO = new Date().toISOString().slice(0, 10);
-        calInput.value = selectedDateISO;
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
 
-        function updateCalBadge() {
-            const todayISO = new Date().toISOString().slice(0, 10);
-            if (!selectedDateISO || selectedDateISO === todayISO) {
-                calBadge.style.display = 'none';
-                calBadge.textContent = '';
-                return;
-            }
-            calBadge.style.display = 'inline-flex';
-            calBadge.textContent = new Date(selectedDateISO + 'T00:00:00').toLocaleDateString('pt-BR');
-        }
-        updateCalBadge();
+        // Charts initialization
+        let v2ChartInstance = null;
+        let v2DueChartInstance = null;
 
-        calBtn.addEventListener('click', () => {
-            // showPicker() funciona em navegadores modernos; fallback: focus/click
-            if (calInput.showPicker) calInput.showPicker();
-            else { calInput.focus(); calInput.click(); }
-        });
-
-        calInput.addEventListener('change', () => {
-            if (calInput.value) selectedDateISO = calInput.value;
-            updateCalBadge();
-            checkV2Status(true); // recarrega gráfico do dia escolhido
-        });
-
-        let v2Chart;
-        let v2DueChart;
-        const ctx = document.getElementById('v2-chart').getContext('2d');
-        const dueCtx = document.getElementById('v2-due-chart').getContext('2d');
-        let isUploading = false;
-
-        function initV2Chart(labels = [], values = []) {
-            if (v2Chart) v2Chart.destroy();
-            v2Chart = new Chart(ctx, {
-                type: 'line',
+        function initV2Chart(labels, values) {
+            const ctx = document.getElementById('v2-chart').getContext('2d');
+            if (v2ChartInstance) v2ChartInstance.destroy();
+            
+            v2ChartInstance = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Releituras',
+                        label: 'Releituras Não Executadas',
                         data: values,
-                        borderColor: '#00d1ff',
-                        backgroundColor: 'rgba(0, 209, 255, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#00d1ff'
+                        backgroundColor: 'rgba(0, 209, 255, 0.2)',
+                        borderColor: 'rgba(0, 209, 255, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                            titleColor: '#00d1ff',
+                            bodyColor: '#c9d1d9',
+                            borderColor: '#30363d',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    },
                     scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            grid: { color: 'rgba(255,255,255,0.05)' },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(48, 54, 61, 0.3)' },
                             ticks: { color: '#8b949e' }
                         },
-                        x: { 
+                        x: {
                             grid: { display: false },
                             ticks: { color: '#8b949e' }
                         }
-                    },
-                    plugins: { legend: { display: false } }
+                    }
                 }
             });
         }
 
-
-function initV2DueChart(labels = [], values = []) {
-    if (v2DueChart) v2DueChart.destroy();
-    v2DueChart = new Chart(dueCtx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Pendências',
-                data: values,
-                borderColor: '#00d1ff',
-                backgroundColor: 'rgba(0, 209, 255, 0.1)',
-                fill: true,
-                tension: 0.35,
-                pointRadius: 4,
-                pointBackgroundColor: '#00d1ff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { 
-                    beginAtZero: true, 
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: '#8b949e' }
+        function initV2DueChart(labels, values) {
+            const ctx = document.getElementById('v2-due-chart').getContext('2d');
+            if (v2DueChartInstance) v2DueChartInstance.destroy();
+            
+            v2DueChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pendências por Vencimento',
+                        data: values,
+                        backgroundColor: 'rgba(210, 153, 34, 0.1)',
+                        borderColor: 'rgba(210, 153, 34, 1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#d29922',
+                        pointBorderColor: '#0a0c10',
+                        pointBorderWidth: 2,
+                    }]
                 },
-                x: { 
-                    grid: { display: false },
-                    ticks: { color: '#8b949e' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                            titleColor: '#d29922',
+                            bodyColor: '#c9d1d9',
+                            borderColor: '#30363d',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                            ticks: { color: '#8b949e' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8b949e' }
+                        }
+                    }
                 }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-}
-
-        function updateUI(data) {
-            if (data.metrics) {
-                document.getElementById('v2-total').innerText = data.metrics.total;
-                document.getElementById('v2-pend').innerText = data.metrics.pendentes;
-                document.getElementById('v2-realizadas').innerText = data.metrics.realizadas;
-                const atrasadasEl = document.getElementById('v2-atrasadas');
-                if (atrasadasEl && data.metrics.atrasadas !== undefined) {
-                    atrasadasEl.innerText = data.metrics.atrasadas;
-                }
-            }
-            if (data.chart) initV2Chart(data.chart.labels, data.chart.values);
-            if (data.due_chart) initV2DueChart(data.due_chart.labels, data.due_chart.values);
-            if (data.details && data.details.length > 0) {
-                const tbody = document.getElementById('v2-table-body');
-                tbody.innerHTML = data.details.map(row => `
-                    <tr>
-                        <td><span class="v2-status-tag ${row.status.toLowerCase().includes('atrasado') ? 'atrasado' : 'pendente'}">${row.status}</span></td>
-                        <td>${row.ul}</td>
-                        <td>${row.inst}</td>
-                        <td>${row.endereco}</td>
-                        <td>${row.razao}</td>
-                        <td>${row.reg || '03'}</td>
-                        <td>${row.venc}</td>
-                    </tr>
-                `).join('');
-            } else {
-                document.getElementById('v2-table-body').innerHTML = '<tr><td colspan="7" class="v2-empty">Nenhum dado carregado</td></tr>';
-            }
-            if (data.server_time) document.getElementById('v2-sync-val').innerText = data.server_time.substring(0, 5);
+            });
         }
 
-        const uploadBtn = document.getElementById('v2-upload-btn');
-        const fileInput = document.getElementById('v2-file-input');
+        // Initialize with empty data
+        initV2Chart(
+            Array.from({ length: 12 }, (_, i) => String(i + 7).padStart(2, '0') + 'h'),
+            Array.from({ length: 12 }, () => 0)
+        );
+        
+        initV2DueChart(
+            ['--/--','--/--','--/--','--/--','--/--','--/--','--/--'],
+            [0,0,0,0,0,0,0]
+        );
 
-        if (uploadBtn && fileInput) {
-            uploadBtn.onclick = () => fileInput.click();
-        }
+        // Date selection - mantém data atual para o sistema
+        let selectedDateISO = new Date().toISOString().slice(0, 10);
 
-        if (fileInput) fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        // File upload
+        let isUploading = false;
+        
+        document.getElementById('v2-upload-btn').addEventListener('click', () => {
+            document.getElementById('v2-file-input').click();
+        });
 
+        document.getElementById('v2-file-input').addEventListener('change', function(e) {
+            if (!this.files.length || isUploading) return;
             isUploading = true;
+            
+            const file = this.files[0];
             const formData = new FormData();
             formData.append('file', file);
 
-            document.getElementById('v2-upload-text').innerText = "PROCESSANDO...";
+            const syncBtn = document.getElementById('v2-sync-btn');
+            syncBtn.style.opacity = '0.5';
+            syncBtn.style.pointerEvents = 'none';
 
-            authFetch('http://127.0.0.1:5000/api/upload?module=releitura', {
+            authFetch('http://127.0.0.1:5000/api/upload/releitura', {
                 method: 'POST',
                 body: formData
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    updateUI(data);
-                    document.getElementById('v2-upload-text').innerText = "✅ SUCESSO!";
+                    alert('✅ Upload realizado com sucesso!');
+                    checkV2Status(true);
                 } else if (data.error === "DUPLICADO") {
                     alert(data.message);
-                    document.getElementById('v2-upload-text').innerText = "⚠️ DUPLICADO";
                 } else {
-                    alert(data.error || "Erro no processamento");
-                    document.getElementById('v2-upload-text').innerText = "❌ ERRO";
+                    alert(data.error || "Erro ao fazer upload");
                 }
-                setTimeout(() => {
-                    document.getElementById('v2-upload-text').innerText = "CARREGAR RELATÓRIO CEMIG (.XLS)";
-                    isUploading = false;
-                }, 3000);
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('v2-upload-text').innerText = "❌ ERRO DE CONEXÃO";
+                alert("❌ Erro ao conectar com o servidor");
+            })
+            .finally(() => {
+                this.value = '';
                 isUploading = false;
+                syncBtn.style.opacity = '';
+                syncBtn.style.pointerEvents = '';
             });
-        };
+        });
 
-        
-        // --- Portal Sync (download + process) ---
-        const syncBtn = document.getElementById('v2-sync-btn');
-        if (syncBtn) {
-            syncBtn.addEventListener('click', () => {
-                if (isUploading) return;
-                isUploading = true;
-                syncBtn.style.opacity = '0.6';
-                syncBtn.style.pointerEvents = 'none';
-                document.getElementById('v2-upload-text').innerText = "SINCRONIZANDO (PORTAL)...";
-                authFetch('http://127.0.0.1:5000/api/sync/releitura', { method: 'POST' })
-                    .then(async (res) => {
-                        // Evita cair no catch por erro de parse quando o backend devolve HTML/empty body
-                        if (!res.ok) {
-                            const body = await res.text().catch(() => "");
-                            throw new Error(`HTTP ${res.status} em /api/sync/releitura: ${body.slice(0, 200)}`);
-                        }
-                        // Se não for JSON válido, retorna null para tratarmos abaixo
-                        try { return await res.json(); } catch { return null; }
-                    })
-                    .then(data => {
-                        if (!data) {
-                            throw new Error("Resposta inválida do backend (JSON).");
-                        }
-                        if (data.success) {
-                            updateUI(data);
-                            // após sync, o gráfico do dia selecionado pode ser diferente (se selecionar outra data)
-                            checkV2Status(true);
-                            document.getElementById('v2-upload-text').innerText = "✅ ATUALIZADO!";
-                        } else if (data.error === "DUPLICADO") {
-                            alert(data.message);
-                            document.getElementById('v2-upload-text').innerText = "⚠️ DUPLICADO";
-                        } else {
-                            alert(data.error || "Erro ao sincronizar");
-                            document.getElementById('v2-upload-text').innerText = "❌ ERRO";
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        // Não trava a experiência com popup: só sinaliza no status da tela
-                        document.getElementById('v2-upload-text').innerText = "❌ ERRO (verifique o backend)";
-                        const pill = document.getElementById('v2-conn');
-                        if (pill) {
-                            pill.innerText = "SISTEMA OFFLINE";
-                            pill.className = "v2-status-pill offline";
-                        }
-                    })
-                    .finally(() => {
-                        setTimeout(() => {
-                            document.getElementById('v2-upload-text').innerText = "CARREGAR RELATÓRIO CEMIG (.XLS)";
-                            isUploading = false;
-                            syncBtn.style.opacity = '';
-                            syncBtn.style.pointerEvents = '';
-                        }, 1500);
-                    });
-            });
-        }
+        // Sync button
+        document.getElementById('v2-sync-btn').addEventListener('click', async function() {
+            if (isUploading) return;
+            isUploading = true;
+            
+            this.style.opacity = '0.5';
+            this.style.pointerEvents = 'none';
 
-document.getElementById('v2-reset-btn').onclick = async () => {
-            const ok = confirm("Deseja realmente ZERAR todo o banco de dados?");
-            if (!ok) return;
+            try {
+                const res = await authFetch('http://127.0.0.1:5000/api/sync/releitura', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('✅ Sincronização concluída!');
+                    checkV2Status(true);
+                } else {
+                    alert(data.error || "Erro ao sincronizar");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("❌ Erro ao conectar com o servidor");
+            } finally {
+                isUploading = false;
+                this.style.opacity = '';
+                this.style.pointerEvents = '';
+            }
+        });
 
+        // Reset button
+        document.getElementById('v2-reset-btn').onclick = async () => {
+            if (!confirm("Deseja realmente ZERAR todo o banco de dados?")) return;
+            
             const username = prompt("Confirme o usuário ADMIN:");
             if (!username) return;
 
@@ -447,19 +857,22 @@ document.getElementById('v2-reset-btn').onclick = async () => {
                     return;
                 }
 
-                // Limpa caches e zera UI imediatamente (evita gráfico "persistir" visualmente)
-                lastChartData = null;
-                lastDueChartData = null;
-                lastTableData = null;
-
+                // Reset UI
                 document.getElementById('v2-total').innerText = '0';
                 document.getElementById('v2-pend').innerText = '0';
                 document.getElementById('v2-realizadas').innerText = '0';
-                const atrasadasEl = document.getElementById('v2-atrasadas');
-                if (atrasadasEl) atrasadasEl.innerText = '0';
+                document.getElementById('v2-atrasadas').innerText = '0';
 
-                document.getElementById('v2-table-body').innerHTML =
-                    '<tr><td colspan="7" class="v2-empty">Nenhum dado carregado</td></tr>';
+                document.getElementById('v2-table-body').innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i data-lucide="inbox"></i>
+                                <p>Nenhum dado carregado</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
 
                 initV2Chart(
                     Array.from({ length: 12 }, (_, i) => String(i + 7).padStart(2, '0') + 'h'),
@@ -471,32 +884,22 @@ document.getElementById('v2-reset-btn').onclick = async () => {
                     [0,0,0,0,0,0,0]
                 );
 
-                selectedDateISO = new Date().toISOString().slice(0, 10);
-                calInput.value = selectedDateISO;
-                updateCalBadge();
-                checkV2Status(true);
-
-                alert("Banco zerado com sucesso!");
+                lucide.createIcons();
+                alert("✅ Banco zerado com sucesso!");
             } catch (e) {
                 console.error(e);
-                alert("Erro ao comunicar com o backend.");
+                alert("❌ Erro ao comunicar com o backend.");
             }
         };
 
-        setInterval(() => {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
-            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
-        }, 1000);
-
+        // Status check
         let lastChartData = null;
         let lastDueChartData = null;
         let lastTableData = null;
         
         function checkV2Status() {
             if (isUploading) return;
+            
             authFetch('http://127.0.0.1:5000/api/status/releitura?date=' + encodeURIComponent(selectedDateISO))
                 .then(res => res.json())
                 .then(data => {
@@ -509,12 +912,18 @@ document.getElementById('v2-reset-btn').onclick = async () => {
                         document.getElementById('v2-pend').innerText = data.metrics.pendentes;
                         const realizadas = (data.metrics.realizadas !== undefined) ? data.metrics.realizadas : (data.metrics.total - data.metrics.pendentes);
                         document.getElementById('v2-realizadas').innerText = realizadas || 0;
+                        
+                        const atrasadasEl = document.getElementById('v2-atrasadas');
+                        if (atrasadasEl && data.metrics.atrasadas !== undefined) {
+                            atrasadasEl.innerText = data.metrics.atrasadas;
+                        }
                     }
                     
                     if (data.chart && JSON.stringify(data.chart) !== JSON.stringify(lastChartData)) {
                         lastChartData = data.chart;
                         initV2Chart(data.chart.labels, data.chart.values);
                     }
+                    
                     if (data.due_chart && JSON.stringify(data.due_chart) !== JSON.stringify(lastDueChartData)) {
                         lastDueChartData = data.due_chart;
                         initV2DueChart(data.due_chart.labels, data.due_chart.values);
@@ -525,7 +934,12 @@ document.getElementById('v2-reset-btn').onclick = async () => {
                         const tbody = document.getElementById('v2-table-body');
                         tbody.innerHTML = data.details.map(row => `
                             <tr>
-                                <td><span class="v2-status-tag ${row.status.toLowerCase().includes('atrasado') ? 'atrasado' : 'pendente'}">${row.status}</span></td>
+                                <td>
+                                    <span class="status-tag ${row.status.toLowerCase().includes('atrasado') ? 'atrasado' : 'pendente'}">
+                                        <i data-lucide="${row.status.toLowerCase().includes('atrasado') ? 'alert-triangle' : 'clock'}"></i>
+                                        ${row.status}
+                                    </span>
+                                </td>
                                 <td>${row.ul}</td>
                                 <td>${row.inst}</td>
                                 <td>${row.endereco || '-'}</td>
@@ -534,6 +948,7 @@ document.getElementById('v2-reset-btn').onclick = async () => {
                                 <td>${row.venc}</td>
                             </tr>
                         `).join('');
+                        lucide.createIcons();
                     }
                 })
                 .catch(() => {
@@ -542,6 +957,7 @@ document.getElementById('v2-reset-btn').onclick = async () => {
                     pill.className = "v2-status-pill offline";
                 });
         }
+        
         setInterval(checkV2Status, 5000);
         checkV2Status();
     </script>

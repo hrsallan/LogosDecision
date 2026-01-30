@@ -78,16 +78,33 @@ def authenticate_user(username: str, password: str) -> Optional[Dict]:
         return None
     
     user_id, username_db, hashed_password, role = user
-    
-    # Verifica a senha
-    if verify_password(password, hashed_password):
+
+    # Verifica a senha (bcrypt). Se o banco tiver senha legada em texto puro,
+    # fazemos fallback, autenticamos e fazemos upgrade para hash.
+    if isinstance(hashed_password, str) and hashed_password.startswith("$2"):
+        ok = verify_password(password, hashed_password)
+    else:
+        ok = (password == hashed_password)
+        if ok:
+            try:
+                # upgrade para bcrypt
+                conn2 = sqlite3.connect(str(DB_PATH))
+                cur2 = conn2.cursor()
+                cur2.execute('UPDATE users SET password = ? WHERE id = ?', (hash_password(password), user_id))
+                conn2.commit()
+                conn2.close()
+            except Exception:
+                pass
+
+    if ok:
         return {
             "id": user_id,
             "username": username_db,
             "role": role
         }
-    
+
     return None
+
 
 
 def register_user(username: str, password: str, role: str = 'user') -> bool:

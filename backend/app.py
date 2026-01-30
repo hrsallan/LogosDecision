@@ -12,7 +12,8 @@ from core.database import (
     get_releitura_due_chart_data, reset_database, is_file_duplicate, save_file_history,
     get_porteira_chart_data, get_porteira_metrics, reset_porteira_database,
     save_porteira_table_data, get_porteira_table_data, get_porteira_totals,
-    get_porteira_chart_summary, get_porteira_nao_executadas_chart
+    get_porteira_chart_summary, get_porteira_nao_executadas_chart,
+    set_portal_credentials, get_portal_credentials, get_portal_credentials_status, clear_portal_credentials
 )
 from core.get_metrics import get_dashboard_metrics
 from core.scheduler import init_scheduler, get_scheduler
@@ -69,6 +70,40 @@ def login():
         return jsonify({"success": True, "token": token})
     return jsonify({"success": False, "msg": "Credenciais inválidas"}), 401
 
+
+
+# -------------------------------------------------------
+# Rotas protegidas: Credenciais do Portal (por usuário)
+# -------------------------------------------------------
+@app.route('/api/user/portal-credentials', methods=['GET'])
+def portal_credentials_status():
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+    return jsonify(get_portal_credentials_status(user_id))
+
+@app.route('/api/user/portal-credentials', methods=['PUT'])
+def portal_credentials_set():
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+    data = request.json or {}
+    portal_user = (data.get("portal_user") or "").strip()
+    portal_password = data.get("portal_password") or ""
+    try:
+        set_portal_credentials(user_id, portal_user, portal_password)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+@app.route('/api/user/portal-credentials', methods=['DELETE'])
+def portal_credentials_clear():
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+    clear_portal_credentials(user_id)
+    return jsonify({"success": True})
+
 # -------------------------------------------------------
 # Rotas protegidas: Sempre exigem autenticação
 # -------------------------------------------------------
@@ -93,6 +128,12 @@ def dashboard_metrics():
             "detail": str(e),
             "type": type(e).__name__
         }), 500
+
+
+# Healthcheck simples (usado pelo indicador ONLINE/OFFLINE no frontend)
+@app.get('/api/ping')
+def api_ping():
+    return jsonify({'ok': True})
 
 # Rotas para Releitura e Porteira
 @app.route('/api/status/releitura', methods=['GET'])
@@ -245,7 +286,20 @@ def sync_releitura():
         return jsonify({"error": "Usuário não autenticado"}), 401
 
     try:
-        downloaded_path = download_releitura_excel()
+        creds = get_portal_credentials(user_id)
+        if not creds:
+            user = get_user_by_id(user_id)
+            is_admin = bool(user and (user.get("role") == "admin"))
+            if is_admin:
+                env_user = (os.environ.get("PORTAL_USERNAME") or os.environ.get("PORTAL_USER") or "").strip()
+                env_pass = os.environ.get("PORTAL_PASSWORD") or ""
+                if env_user and env_pass:
+                    creds = {"portal_user": env_user, "portal_password": env_pass}
+                else:
+                    return jsonify({"success": False, "error": "Admin sem credenciais do portal cadastradas. Configure em 'Área do Usuário' ou defina PORTAL_USERNAME e PORTAL_PASSWORD no .env."}), 400
+            else:
+                return jsonify({"success": False, "error": "Credenciais do portal não configuradas. Vá em 'Área do Usuário' e cadastre seu portal."}), 400
+        downloaded_path = download_releitura_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
         if not downloaded_path or not os.path.exists(downloaded_path):
             return jsonify({"success": False, "error": "Relatório não foi baixado (arquivo inexistente)."}), 500
 
@@ -282,7 +336,20 @@ def sync_porteira():
         return jsonify({"error": "Usuário não autenticado"}), 401
 
     try:
-        downloaded_path = download_porteira_excel()
+        creds = get_portal_credentials(user_id)
+        if not creds:
+            user = get_user_by_id(user_id)
+            is_admin = bool(user and (user.get("role") == "admin"))
+            if is_admin:
+                env_user = (os.environ.get("PORTAL_USERNAME") or os.environ.get("PORTAL_USER") or "").strip()
+                env_pass = os.environ.get("PORTAL_PASSWORD") or ""
+                if env_user and env_pass:
+                    creds = {"portal_user": env_user, "portal_password": env_pass}
+                else:
+                    return jsonify({"success": False, "error": "Admin sem credenciais do portal cadastradas. Configure em 'Área do Usuário' ou defina PORTAL_USERNAME e PORTAL_PASSWORD no .env."}), 400
+            else:
+                return jsonify({"success": False, "error": "Credenciais do portal não configuradas. Vá em 'Área do Usuário' e cadastre seu portal."}), 400
+        downloaded_path = download_porteira_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
         if not downloaded_path or not os.path.exists(downloaded_path):
             return jsonify({"success": False, "error": "Relatório não foi baixado (arquivo inexistente)."}), 500
 

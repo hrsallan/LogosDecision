@@ -1,5 +1,6 @@
 import sqlite3
 from core.auth import hash_password, authenticate_user as secure_authenticate
+from core.crypto_utils import encrypt_text, decrypt_text
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -53,10 +54,21 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            portal_user TEXT,
+            portal_password TEXT,
             role TEXT DEFAULT 'user',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Garantir colunas de credenciais do portal (migração segura)
+    cursor.execute("PRAGMA table_info(users)")
+    cols = {row[1] for row in cursor.fetchall()}
+    if "portal_user" not in cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN portal_user TEXT")
+    if "portal_password" not in cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN portal_password TEXT")
+
 
     # Releituras - com user_id
     cursor.execute('''
@@ -196,6 +208,107 @@ def get_user_by_id(user_id):
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
+
+def set_portal_credentials(user_id: int, portal_user: str, portal_password_plain: str) -> None:
+    """Salva as credenciais do portal para o usuário.
+
+    portal_password é armazenada criptografada (Fernet).
+    """
+    if not portal_user:
+        raise ValueError("portal_user é obrigatório")
+    if portal_password_plain is None or portal_password_plain == "":
+        raise ValueError("portal_password é obrigatório")
+
+    enc = encrypt_text(portal_password_plain)
+    conn = sqlite3.connect(str(DB_PATH))
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE users SET portal_user = ?, portal_password = ? WHERE id = ?",
+        (portal_user, enc, int(user_id)),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clear_portal_credentials(user_id: int) -> None:
+    conn = sqlite3.connect(str(DB_PATH))
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE users SET portal_user = NULL, portal_password = NULL WHERE id = ?",
+        (int(user_id),),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_portal_credentials(user_id: int) -> dict | None:
+    """Retorna {portal_user, portal_password} descriptografado para uso interno.
+
+    Retorna None se não estiver configurado.
+    """
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT portal_user, portal_password FROM users WHERE id = ?",
+        (int(user_id),),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    pu = row["portal_user"]
+    pp = row["portal_password"]
+    if not pu or not pp:
+        return None
+
+    # If the Fernet key was rotated/lost, old encrypted values cannot be decrypted.
+    # In that case, reset the stored credentials for this user so they can re-register,
+    # instead of crashing the scraping flow.
+    try:
+        plain = decrypt_text(pp)
+    except Exception:
+        try:
+            clear_portal_credentials(int(user_id))
+        except Exception:
+            pass
+        return None
+
+    return {"portal_user": pu, "portal_password": plain}
+
+
+def get_portal_credentials_status(user_id: int) -> dict:
+    """Retorna status seguro para o frontend (sem vazar a senha)."""
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT portal_user, portal_password FROM users WHERE id = ?",
+        (int(user_id),),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return {"configured": False}
+
+    pu = row["portal_user"]
+    pp = row["portal_password"]
+    if not pu or not pp:
+        return {"configured": False, "portal_user": pu or ""}
+
+    # Validate decryptability without exposing the password.
+    try:
+        _ = decrypt_text(pp)
+        ok = True
+    except Exception:
+        ok = False
+        try:
+            clear_portal_credentials(int(user_id))
+        except Exception:
+            pass
+
+    return {"configured": ok, "portal_user": pu or ""}
+
 
 
 def reset_database(user_id):

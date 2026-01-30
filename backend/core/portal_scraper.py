@@ -80,6 +80,8 @@ def _wait_download_finished(download_dir: Path, timeout: int = 120) -> bool:
 
 
 def download_releitura_excel(
+    portal_user: str | None = None,
+    portal_pass: str | None = None,
     download_dir: str | os.PathLike | None = None,
     unidade_de: str | None = None,
     unidade_ate: str | None = None,
@@ -112,8 +114,8 @@ def download_releitura_excel(
     if env_path.exists():
         load_dotenv(dotenv_path=str(env_path))
 
-    user = os.getenv("PORTAL_USER")
-    password = os.getenv("PORTAL_PASS")
+    user = portal_user or os.getenv("PORTAL_USER")
+    password = portal_pass or os.getenv("PORTAL_PASS")
     if not user or not password:
         raise RuntimeError(
             "Credenciais não encontradas. Configure PORTAL_USER e PORTAL_PASS no arquivo .env na raiz do projeto."
@@ -217,6 +219,8 @@ def download_releitura_excel(
 
 
 def download_porteira_excel(
+    portal_user: str | None = None,
+    portal_pass: str | None = None,
     download_dir: str | os.PathLike | None = None,
     unidade_de: str | None = None,
     unidade_ate: str | None = None,
@@ -246,8 +250,8 @@ def download_porteira_excel(
     if env_path.exists():
         load_dotenv(dotenv_path=str(env_path))
 
-    user = os.getenv("PORTAL_USER")
-    password = os.getenv("PORTAL_PASS")
+    user = portal_user or os.getenv("PORTAL_USER")
+    password = portal_pass or os.getenv("PORTAL_PASS")
     if not user or not password:
         raise RuntimeError(
             "Credenciais não encontradas. Configure PORTAL_USER e PORTAL_PASS no arquivo .env na raiz do projeto."
