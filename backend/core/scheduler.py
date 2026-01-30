@@ -33,7 +33,7 @@ class AutoScheduler:
         self.scheduler = None
         self.enabled = False
         self.start_hour = 7
-        self.end_hour = 17
+        self.end_hour = 18
         self.interval_minutes = 60
         self.auto_releitura = True
         self.auto_porteira = True
@@ -60,7 +60,7 @@ class AutoScheduler:
         # Ler configurações
         self.enabled = os.getenv("SCHEDULER_ENABLED", "0") == "1"
         self.start_hour = int(os.getenv("SCHEDULER_START_HOUR", "7"))
-        self.end_hour = int(os.getenv("SCHEDULER_END_HOUR", "17"))
+        self.end_hour = int(os.getenv("SCHEDULER_END_HOUR", "18"))
         self.interval_minutes = int(os.getenv("SCHEDULER_INTERVAL_MINUTES", "60"))
         self.auto_releitura = os.getenv("SCHEDULER_AUTO_RELEITURA", "1") == "1"
         self.auto_porteira = os.getenv("SCHEDULER_AUTO_PORTEIRA", "1") == "1"
@@ -90,6 +90,49 @@ class AutoScheduler:
             # Intervalo que cruza meia-noite (ex: 22h às 6h)
             return current_hour >= self.start_hour or current_hour < self.end_hour
     
+    
+    def _build_cron_trigger(self):
+        """Monta um CronTrigger alinhado em horários 'redondos'.
+
+        Exemplo padrão (interval_minutes=60):
+            07:00, 08:00, ..., 16:00 (start_hour <= hora < end_hour)
+
+        Se interval_minutes for múltiplo de 60:
+            executa de N em N horas, sempre no minuto 0.
+        Se interval_minutes dividir 60:
+            executa a cada N minutos, sempre alinhado a 00 (ex.: */15).
+        Caso contrário:
+            faz o melhor esforço usando '*/N' (APScheduler aceita), mas pode não alinhar perfeitamente.
+        """
+        from apscheduler.triggers.cron import CronTrigger
+
+        # Horas permitidas (end_hour é exclusivo, como no _is_within_schedule)
+        if self.start_hour <= self.end_hour:
+            start = self.start_hour
+            end_inclusive = max(self.start_hour, self.end_hour - 1)
+            hour_expr_base = f"{start}-{end_inclusive}"
+        else:
+            # Intervalo cruzando meia-noite (ex.: 22-6) -> duas faixas
+            # OBS: CronTrigger aceita lista separada por vírgula.
+            end_inclusive = max(0, self.end_hour - 1)
+            hour_expr_base = f"{self.start_hour}-23,0-{end_inclusive}"
+
+        minutes = int(self.interval_minutes)
+
+        # Caso 1: múltiplo de 60 => passo em horas, minuto fixo 0
+        if minutes % 60 == 0:
+            step_h = max(1, minutes // 60)
+            hour_expr = f"{hour_expr_base}/{step_h}" if step_h > 1 else hour_expr_base
+            return CronTrigger(minute=0, second=0, hour=hour_expr)
+
+        # Caso 2: divisor de 60 => passo em minutos dentro das horas
+        if 60 % minutes == 0:
+            minute_expr = f"*/{minutes}" if minutes != 60 else "0"
+            return CronTrigger(minute=minute_expr, second=0, hour=hour_expr_base)
+
+        # Fallback (melhor esforço)
+        return CronTrigger(minute=f"*/{minutes}", second=0, hour=hour_expr_base)
+
     def _execute_releitura_sync(self):
         """Executa download e processamento de releitura"""
         if not self.auto_releitura:
@@ -208,50 +251,52 @@ class AutoScheduler:
             logger.error("❌ SCHEDULER_USER_ID não configurado no .env - scheduler não iniciado")
             return
         
-        self.scheduler = BackgroundScheduler()
+        self.scheduler = BackgroundScheduler(timezone=os.getenv("SCHEDULER_TIMEZONE", "America/Sao_Paulo"))
+        
+        # Para executar somente em horários "redondos" (ex.: 09:00, 10:00, ...),
+        # usamos CronTrigger em vez de 'interval' (interval dispara a partir do momento que o app inicia).
+        #
+        # Regras:
+        # - Dentro do horário configurado (start_hour <= hora < end_hour)
+        # - Sempre alinhado para minuto/segundo 00
+        trigger = self._build_cron_trigger()
         
         # Adicionar job de releitura
         if self.auto_releitura:
-            # Executa a cada X minutos dentro do horário configurado
             self.scheduler.add_job(
                 self._execute_releitura_sync,
-                'interval',
-                minutes=self.interval_minutes,
+                trigger=trigger,
                 id='releitura_sync',
                 name='Sync Automático - Releitura',
                 max_instances=1,
-                replace_existing=True
+                replace_existing=True,
+                coalesce=True,
+                misfire_grace_time=300,
             )
-            logger.info(f"✅ Job de RELEITURA agendado (a cada {self.interval_minutes} min)")
+            logger.info("✅ Job de RELEITURA agendado (cron alinhado para hora/minuto redondos)")
         
         # Adicionar job de porteira
         if self.auto_porteira:
             self.scheduler.add_job(
                 self._execute_porteira_sync,
-                'interval',
-                minutes=self.interval_minutes,
+                trigger=trigger,
                 id='porteira_sync',
                 name='Sync Automático - Porteira',
                 max_instances=1,
-                replace_existing=True
+                replace_existing=True,
+                coalesce=True,
+                misfire_grace_time=300,
             )
-            logger.info(f"✅ Job de PORTEIRA agendado (a cada {self.interval_minutes} min)")
+            logger.info("✅ Job de PORTEIRA agendado (cron alinhado para hora/minuto redondos)")
         
         # Iniciar scheduler
         self.scheduler.start()
         self.is_running = True
         
         logger.info("🚀 Scheduler automático iniciado com sucesso!")
-        logger.info(f"⏰ Execuções programadas: {self.start_hour}h às {self.end_hour}h")
-        
-        # Executar imediatamente se estiver no horário
-        if self._is_within_schedule():
-            logger.info("⚡ Executando sync inicial imediatamente...")
-            if self.auto_releitura:
-                self._execute_releitura_sync()
-            if self.auto_porteira:
-                self._execute_porteira_sync()
-    
+        logger.info(f"⏰ Execuções programadas: {self.start_hour}h às {self.end_hour}h (minutos 'redondos')")
+
+
     def stop(self):
         """Para o scheduler"""
         if self.scheduler and self.is_running:
