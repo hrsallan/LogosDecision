@@ -15,6 +15,7 @@ from core.database import (
     get_porteira_chart_summary, get_porteira_nao_executadas_chart
 )
 from core.get_metrics import get_dashboard_metrics
+from core.scheduler import init_scheduler, get_scheduler
 
 SECRET_KEY = os.environ.get("JWT_SECRET", "segredo-super-seguro")
 
@@ -351,10 +352,55 @@ def porteira_nao_executadas_chart():
     })
 
 # -------------------------------------------------------
+# Endpoint do Scheduler
+# -------------------------------------------------------
+@app.route('/api/scheduler/status', methods=['GET'])
+def scheduler_status():
+    """Retorna status do scheduler automático"""
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+    
+    scheduler = get_scheduler()
+    status = scheduler.get_status()
+    return jsonify(status)
+
+@app.route('/api/scheduler/toggle', methods=['POST'])
+def scheduler_toggle():
+    """Liga/desliga o scheduler (apenas admin)"""
+    user_id = get_user_id_from_token()
+    if not user_id:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+    
+    # Verificar se é admin
+    user = get_user_by_id(user_id)
+    if not user or user.get('role') != 'admin':
+        return jsonify({"error": "Apenas administradores podem controlar o scheduler"}), 403
+    
+    data = request.json
+    action = data.get('action')  # 'start' ou 'stop'
+    
+    scheduler = get_scheduler()
+    
+    if action == 'start':
+        scheduler.start()
+        return jsonify({"success": True, "message": "Scheduler iniciado"})
+    elif action == 'stop':
+        scheduler.stop()
+        return jsonify({"success": True, "message": "Scheduler parado"})
+    else:
+        return jsonify({"error": "Ação inválida. Use 'start' ou 'stop'"}), 400
+
+# -------------------------------------------------------
 # Inicialização automática do banco se necessário
 # -------------------------------------------------------
 with app.app_context():
     init_db()
+    # Inicializar scheduler automático
+    try:
+        init_scheduler()
+    except Exception as e:
+        print(f"⚠️ Scheduler não iniciado: {e}")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

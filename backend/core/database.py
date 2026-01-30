@@ -254,36 +254,76 @@ def is_file_duplicate(file_hash, module, user_id):
 
 
 def save_releitura_data(details, file_hash, user_id):
-    """Salva dados de releitura para o usuário especificado"""
+    """Salva dados de releitura para o usuário especificado usando merge inteligente"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     now = datetime.now().isoformat()
 
-    # Limpar apenas os dados DESTE USUÁRIO
-    cursor.execute('DELETE FROM releituras WHERE user_id = ?', (user_id,))
-    conn.commit()
-
-    # Inserir TODOS os registros
+    # Ao invés de deletar tudo, vamos fazer um merge inteligente:
+    # 1. Novas instalações que não existem → INSERT como PENDENTE
+    # 2. Instalações que já existem e estão CONCLUÍDAS → mantém CONCLUÍDAS
+    # 3. Instalações que estavam no banco mas não vieram no novo relatório → pode ter sido realizada, mantém
+    
+    # Primeiro, pega todas as instalações que já existem no banco
+    cursor.execute('SELECT instalacao, status FROM releituras WHERE user_id = ?', (user_id,))
+    existing = {row[0]: row[1] for row in cursor.fetchall()}
+    
+    # Conjunto de instalações que vieram no novo relatório
+    new_instalacoes = {item['inst'] for item in details}
+    
+    # Inserir ou atualizar cada registro do novo relatório
     for item in details:
         endereco = item.get('endereco', '')
         reg = item.get('reg', '03')
+        instalacao = item['inst']
+        
+        if instalacao in existing:
+            # Instalação já existe no banco
+            if existing[instalacao] == 'CONCLUÍDA':
+                # Se já foi concluída, não sobrescreve - mantém como CONCLUÍDA
+                continue
+            else:
+                # Se estava PENDENTE, atualiza os dados (pode ter mudado vencimento, etc)
+                cursor.execute('''
+                    UPDATE releituras 
+                    SET ul = ?, endereco = ?, razao = ?, vencimento = ?, reg = ?, upload_time = ?
+                    WHERE user_id = ? AND instalacao = ?
+                ''', (item['ul'], endereco, item['ul'][:2], item['venc'], reg, now, user_id, instalacao))
+        else:
+            # Instalação nova, insere como PENDENTE
+            cursor.execute('''
+                INSERT INTO releituras (user_id, ul, instalacao, endereco, razao, vencimento, reg, status, upload_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDENTE', ?)
+            ''', (user_id, item['ul'], instalacao, endereco, item['ul'][:2], item['venc'], reg, now))
+    
+    # Instalações que estavam no banco mas não vieram no novo relatório
+    # assumimos que foram realizadas (mudamos status de PENDENTE para CONCLUÍDA)
+    instalacoes_removidas = set(existing.keys()) - new_instalacoes
+    for inst_removida in instalacoes_removidas:
+        if existing[inst_removida] == 'PENDENTE':
+            cursor.execute('''
+                UPDATE releituras 
+                SET status = 'CONCLUÍDA'
+                WHERE user_id = ? AND instalacao = ?
+            ''', (user_id, inst_removida))
 
-        cursor.execute('''
-            INSERT INTO releituras (user_id, ul, instalacao, endereco, razao, vencimento, reg, upload_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (user_id, item['ul'], item['inst'], endereco, item['ul'][:2], item['venc'], reg, now))
-
+    # Salva histórico do upload
     cursor.execute('''
         INSERT INTO history_releitura (user_id, module, count, file_hash, timestamp)
         VALUES (?, ?, ?, ?, ?)
     ''', (user_id, 'releitura', len(details), file_hash, now))
 
-    # Snapshot para gráfico
-    total = len(details)
-    pendentes = len(details)
-    realizadas = 0
-
     conn.commit()
+    
+    # Calcula métricas atualizadas para o snapshot
+    cursor.execute('SELECT COUNT(*) FROM releituras WHERE user_id = ?', (user_id,))
+    total = int(cursor.fetchone()[0] or 0)
+    
+    cursor.execute("SELECT COUNT(*) FROM releituras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
+    pendentes = int(cursor.fetchone()[0] or 0)
+    
+    realizadas = max(total - pendentes, 0)
+    
     conn.close()
     _save_grafico_snapshot('releitura', total, pendentes, realizadas, file_hash, now, user_id)
     return

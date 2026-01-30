@@ -1,0 +1,399 @@
+<!-- 
+    Componente de Status e Controle do Scheduler
+    Cole este código na página de Administração (administracao.html)
+-->
+
+<!-- CSS do Scheduler Widget -->
+<style>
+.scheduler-widget {
+    background: rgba(22, 27, 34, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(48, 54, 61, 0.5);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.scheduler-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.scheduler-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #c9d1d9;
+}
+
+.scheduler-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.scheduler-status-badge.running {
+    background: rgba(46, 160, 67, 0.15);
+    color: #3fb950;
+    border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.scheduler-status-badge.stopped {
+    background: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+    border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.scheduler-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.scheduler-info-item {
+    background: rgba(13, 17, 23, 0.3);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(48, 54, 61, 0.4);
+}
+
+.scheduler-info-label {
+    font-size: 0.75rem;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.scheduler-info-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #c9d1d9;
+}
+
+.scheduler-jobs {
+    margin-top: 20px;
+}
+
+.scheduler-jobs-title {
+    font-size: 0.9rem;
+    color: #8b949e;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.scheduler-job-item {
+    background: rgba(13, 17, 23, 0.3);
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(48, 54, 61, 0.4);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.scheduler-job-name {
+    font-weight: 500;
+    color: #c9d1d9;
+}
+
+.scheduler-job-next {
+    font-size: 0.85rem;
+    color: #8b949e;
+}
+
+.scheduler-controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(48, 54, 61, 0.5);
+}
+
+.scheduler-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scheduler-btn-start {
+    background: rgba(46, 160, 67, 0.15);
+    color: #3fb950;
+    border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.scheduler-btn-start:hover {
+    background: rgba(46, 160, 67, 0.25);
+    border-color: rgba(63, 185, 80, 0.5);
+}
+
+.scheduler-btn-stop {
+    background: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+    border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.scheduler-btn-stop:hover {
+    background: rgba(248, 81, 73, 0.25);
+    border-color: rgba(248, 81, 73, 0.5);
+}
+
+.scheduler-btn-refresh {
+    background: rgba(0, 209, 255, 0.12);
+    color: #00d1ff;
+    border: 1px solid rgba(0, 209, 255, 0.3);
+}
+
+.scheduler-btn-refresh:hover {
+    background: rgba(0, 209, 255, 0.18);
+    border-color: rgba(0, 209, 255, 0.5);
+}
+
+.scheduler-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.scheduler-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3fb950;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+</style>
+
+<!-- HTML do Scheduler Widget -->
+<div class="scheduler-widget" id="schedulerWidget">
+    <div class="scheduler-header">
+        <div class="scheduler-title">
+            <i data-lucide="clock" style="width: 24px; height: 24px; color: #00d1ff;"></i>
+            <span>Scheduler Automático</span>
+        </div>
+        <div id="schedulerStatus" class="scheduler-status-badge stopped">
+            <div class="scheduler-pulse" style="display: none;"></div>
+            <span>Carregando...</span>
+        </div>
+    </div>
+
+    <div class="scheduler-info-grid">
+        <div class="scheduler-info-item">
+            <div class="scheduler-info-label">Horário</div>
+            <div class="scheduler-info-value" id="schedulerSchedule">--</div>
+        </div>
+        <div class="scheduler-info-item">
+            <div class="scheduler-info-label">Intervalo</div>
+            <div class="scheduler-info-value" id="schedulerInterval">--</div>
+        </div>
+        <div class="scheduler-info-item">
+            <div class="scheduler-info-label">Releitura</div>
+            <div class="scheduler-info-value" id="schedulerReleitura">--</div>
+        </div>
+        <div class="scheduler-info-item">
+            <div class="scheduler-info-label">Porteira</div>
+            <div class="scheduler-info-value" id="schedulerPorteira">--</div>
+        </div>
+    </div>
+
+    <div class="scheduler-jobs" id="schedulerJobs" style="display: none;">
+        <div class="scheduler-jobs-title">Próximas Execuções</div>
+        <div id="schedulerJobsList"></div>
+    </div>
+
+    <div class="scheduler-controls">
+        <button class="scheduler-btn scheduler-btn-start" id="btnStartScheduler" disabled>
+            <i data-lucide="play" style="width: 16px; height: 16px;"></i>
+            <span>Iniciar</span>
+        </button>
+        <button class="scheduler-btn scheduler-btn-stop" id="btnStopScheduler" disabled>
+            <i data-lucide="square" style="width: 16px; height: 16px;"></i>
+            <span>Parar</span>
+        </button>
+        <button class="scheduler-btn scheduler-btn-refresh" id="btnRefreshScheduler">
+            <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+            <span>Atualizar</span>
+        </button>
+    </div>
+</div>
+
+<!-- JavaScript do Scheduler Widget -->
+<script>
+(function() {
+    const API_BASE = 'http://localhost:5000/api';
+    
+    // Elementos DOM
+    const statusBadge = document.getElementById('schedulerStatus');
+    const scheduleEl = document.getElementById('schedulerSchedule');
+    const intervalEl = document.getElementById('schedulerInterval');
+    const releituraEl = document.getElementById('schedulerReleitura');
+    const porteiraEl = document.getElementById('schedulerPorteira');
+    const jobsContainer = document.getElementById('schedulerJobs');
+    const jobsList = document.getElementById('schedulerJobsList');
+    const btnStart = document.getElementById('btnStartScheduler');
+    const btnStop = document.getElementById('btnStopScheduler');
+    const btnRefresh = document.getElementById('btnRefreshScheduler');
+    
+    // Buscar token
+    function getToken() {
+        return localStorage.getItem('vigilacore_token');
+    }
+    
+    // Formatar data/hora
+    function formatDateTime(isoString) {
+        if (!isoString) return '--';
+        const date = new Date(isoString);
+        return date.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    // Atualizar status do scheduler
+    async function updateSchedulerStatus() {
+        try {
+            const token = getToken();
+            if (!token) {
+                console.error('Token não encontrado');
+                return;
+            }
+            
+            const response = await fetch(`${API_BASE}/scheduler/status`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Erro ao buscar status');
+            }
+            
+            const data = await response.json();
+            renderSchedulerStatus(data);
+            
+        } catch (error) {
+            console.error('Erro ao atualizar status do scheduler:', error);
+            statusBadge.innerHTML = '<span>Erro ao carregar</span>';
+            statusBadge.className = 'scheduler-status-badge stopped';
+        }
+    }
+    
+    // Renderizar status
+    function renderSchedulerStatus(data) {
+        // Status badge
+        const pulse = statusBadge.querySelector('.scheduler-pulse');
+        if (data.running && data.enabled) {
+            statusBadge.className = 'scheduler-status-badge running';
+            statusBadge.innerHTML = `
+                <div class="scheduler-pulse"></div>
+                <span>Em Execução</span>
+            `;
+        } else if (!data.enabled) {
+            statusBadge.className = 'scheduler-status-badge stopped';
+            statusBadge.innerHTML = '<span>Desabilitado</span>';
+        } else {
+            statusBadge.className = 'scheduler-status-badge stopped';
+            statusBadge.innerHTML = '<span>Parado</span>';
+        }
+        
+        // Info grid
+        scheduleEl.textContent = data.schedule || '--';
+        intervalEl.textContent = data.interval_minutes ? `${data.interval_minutes} min` : '--';
+        releituraEl.textContent = data.auto_releitura ? '✓ Ativo' : '✗ Inativo';
+        porteiraEl.textContent = data.auto_porteira ? '✓ Ativo' : '✗ Inativo';
+        
+        // Jobs list
+        if (data.jobs && data.jobs.length > 0) {
+            jobsContainer.style.display = 'block';
+            jobsList.innerHTML = data.jobs.map(job => `
+                <div class="scheduler-job-item">
+                    <span class="scheduler-job-name">${job.name}</span>
+                    <span class="scheduler-job-next">Próxima: ${formatDateTime(job.next_run)}</span>
+                </div>
+            `).join('');
+        } else {
+            jobsContainer.style.display = 'none';
+        }
+        
+        // Botões
+        btnStart.disabled = data.running || !data.enabled;
+        btnStop.disabled = !data.running || !data.enabled;
+        
+        // Atualizar ícones Lucide
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+    
+    // Controlar scheduler
+    async function toggleScheduler(action) {
+        try {
+            const token = getToken();
+            if (!token) {
+                alert('Você precisa estar logado');
+                return;
+            }
+            
+            const response = await fetch(`${API_BASE}/scheduler/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(data.message);
+                updateSchedulerStatus();
+            } else {
+                alert(data.error || 'Erro ao controlar scheduler');
+            }
+            
+        } catch (error) {
+            console.error('Erro ao controlar scheduler:', error);
+            alert('Erro de conexão');
+        }
+    }
+    
+    // Event listeners
+    btnStart.addEventListener('click', () => toggleScheduler('start'));
+    btnStop.addEventListener('click', () => toggleScheduler('stop'));
+    btnRefresh.addEventListener('click', updateSchedulerStatus);
+    
+    // Carregar status inicial
+    updateSchedulerStatus();
+    
+    // Auto-refresh a cada 30 segundos
+    setInterval(updateSchedulerStatus, 30000);
+    
+})();
+</script>
