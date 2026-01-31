@@ -242,9 +242,11 @@
 </div>
 
 <!-- JavaScript do Scheduler Widget -->
+<script src="../js/utils.js"></script>
+
 <script>
 (function() {
-    const API_BASE = 'http://localhost:5000/api';
+    const API_BASE = '/api';
     
     // Elementos DOM
     const statusBadge = document.getElementById('schedulerStatus');
@@ -284,7 +286,7 @@
                 return;
             }
             
-            const response = await fetch(`${API_BASE}/scheduler/status`, {
+            const response = await authFetch(`${API_BASE}/scheduler/status`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -360,7 +362,7 @@
                 return;
             }
             
-            const response = await fetch(`${API_BASE}/scheduler/toggle`, {
+            const response = await authFetch(`${API_BASE}/scheduler/toggle`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

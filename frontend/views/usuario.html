@@ -3,18 +3,407 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VigilaCore | Área do Usuári</title>
+    <title>VigilaCore | Área do Usuário</title>
     <link rel="stylesheet" href="../css/v2_modern.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
+
+    <style>
+        /* ==================== USER PAGE ENHANCEMENTS ==================== */
+        
+        .user-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .user-header-card {
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.08) 0%, rgba(0, 209, 255, 0.02) 100%);
+            border: 1px solid rgba(0, 209, 255, 0.2);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .user-header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.6) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 209, 255, 0.2);
+        }
+
+        .user-avatar i {
+            width: 40px;
+            height: 40px;
+            color: #0a0c10;
+        }
+
+        .user-info h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: var(--v2-text);
+        }
+
+        .user-info p {
+            font-size: 0.9rem;
+            color: var(--v2-text-dim);
+            line-height: 1.5;
+        }
+
+        /* CREDENTIALS SECTION */
+        .credentials-section {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .credentials-header {
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--v2-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .credentials-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .credentials-title i {
+            width: 28px;
+            height: 28px;
+            color: var(--v2-primary);
+        }
+
+        .credentials-title-text h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: var(--v2-text);
+        }
+
+        .credentials-title-text p {
+            font-size: 0.85rem;
+            color: var(--v2-text-dim);
+            line-height: 1.4;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 24px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge.configured {
+            background: rgba(35, 134, 54, 0.15);
+            color: var(--v2-success);
+            border: 1px solid rgba(35, 134, 54, 0.3);
+        }
+
+        .status-badge.not-configured {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--v2-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .status-badge i {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* FORM STYLES */
+        .credentials-form {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group label i {
+            width: 16px;
+            height: 16px;
+            color: var(--v2-primary);
+        }
+
+        .form-input {
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--v2-primary);
+            background: rgba(0, 209, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--v2-text-dim);
+            opacity: 0.6;
+        }
+
+        /* BUTTON STYLES */
+        .form-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 12px;
+            border-top: 1px solid var(--v2-border);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .btn i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.8) 100%);
+            color: #0a0c10;
+            box-shadow: 0 4px 12px rgba(0, 209, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 209, 255, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(248, 81, 73, 0.15);
+            border-color: rgba(248, 81, 73, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* MESSAGE AREA */
+        .form-message {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .form-message.success {
+            background: rgba(35, 134, 54, 0.1);
+            color: var(--v2-success);
+            border: 1px solid rgba(35, 134, 54, 0.3);
+        }
+
+        .form-message.error {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .form-message.info {
+            background: rgba(0, 209, 255, 0.1);
+            color: var(--v2-primary);
+            border: 1px solid rgba(0, 209, 255, 0.3);
+        }
+
+        /* INFO BOX */
+        .info-box {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(0, 209, 255, 0.05);
+            border: 1px solid rgba(0, 209, 255, 0.2);
+            display: flex;
+            gap: 12px;
+        }
+
+        .info-box i {
+            width: 20px;
+            height: 20px;
+            color: var(--v2-primary);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .info-box-content {
+            flex: 1;
+        }
+
+        .info-box-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--v2-primary);
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .info-box-text {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            line-height: 1.5;
+        }
+
+        /* SECURITY BADGE */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(35, 134, 54, 0.1);
+            border: 1px solid rgba(35, 134, 54, 0.3);
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--v2-success);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .security-badge i {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .user-header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .credentials-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-message {
+                min-width: auto;
+            }
+        }
+
+        /* LOADING STATE */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+
 </head>
 <body>
     <div class="v2-container">
         <!-- SIDEBAR -->
         <aside class="v2-sidebar">
-            <div class="v2-logo-section"><button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
-                <div class="v2-logo-text v2-brand-text"><span class="logo-vigila">Vigila</span><span class="logo-core">Core</span></div>
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">Vigila</span><span class="logo-core">Core</span>
+                </div>
             </div>
 
             <nav class="v2-nav">
@@ -30,10 +419,13 @@
                     <i data-lucide="refresh-cw"></i>
                     <span class="v2-nav-text">Releituras</span>
                 </a>
-
                 <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
                     <i data-lucide="door-open"></i>
                     <span class="v2-nav-text">Porteira</span>
+                </a>
+                <a href="usuario.html" class="v2-nav-item v2-nav-item active" data-title="Área do Usuário">
+                    <i data-lucide="circle-user-round"></i>
+                    <span class="v2-nav-text">Área do Usuário</span>
                 </a>
         
                 <div class="v2-nav-divider"></div>
@@ -47,9 +439,6 @@
                     <i data-lucide="brain"></i>
                     <span class="v2-nav-text">Análise IA</span>
                 </a>
-                <a href="usuario.html" class="v2-nav-item active" data-title="Área do Usuário">
-                      <i data-lucide="circle-user-round"></i>
-                      <span class="v2-nav-text">Área do Usuário</span>
                 <a href="administracao.html" class="v2-nav-item" data-title="Administração">
                     <i data-lucide="settings"></i>
                     <span class="v2-nav-text">Administração</span>
@@ -80,11 +469,92 @@
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
-                <div class="v2-dev-page">
-                    <i data-lucide="circle-user-round" class="v2-dev-icon"></i>
-                    <h2 class="v2-dev-title">Em Breve</h2>
-                    <p class="v2-dev-subtitle">Área destinada ao gerenciamento de perfil, preferências e configurações do usuário, permitindo maior controle e personalização da experiência no VigilaCore.</p>
-                    <a href="menu_principal.html" class="v2-dev-link">← Voltar ao Menu Principal</a>
+                <div class="user-container">
+                    <!-- USER HEADER -->
+                    <div class="user-header-card">
+                        <div class="user-header-content">
+                            <div class="user-avatar">
+                                <i data-lucide="user"></i>
+                            </div>
+                            <div class="user-info">
+                                <h1>Bem-vindo ao VigilaCore</h1>
+                                <p>Gerencie suas configurações de acesso ao portal CEMIG SGL e personalize sua experiência.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CREDENTIALS SECTION -->
+                    <section class="credentials-section">
+                        <div class="credentials-header">
+                            <div class="credentials-title">
+                                <i data-lucide="key-round"></i>
+                                <div class="credentials-title-text">
+                                    <h2>Credenciais do Portal CEMIG SGL</h2>
+                                    <p>Configure suas credenciais para que o VigilaCore possa realizar o web-scraping automaticamente <span class="security-badge"><i data-lucide="shield-check"></i> Criptografado</span></p>
+                                </div>
+                            </div>
+                            <div id="portal-status-badge" class="status-badge not-configured">
+                                <i data-lucide="x-circle"></i>
+                                <span>Não Configurado</span>
+                            </div>
+                        </div>
+
+                        <form id="portal-form" class="credentials-form" autocomplete="off">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="portal_user">
+                                        <i data-lucide="user"></i>
+                                        Usuário do Portal
+                                    </label>
+                                    <input 
+                                        id="portal_user" 
+                                        name="portal_user" 
+                                        type="text" 
+                                        class="form-input"
+                                        placeholder="Digite seu usuário do portal CEMIG" 
+                                        required
+                                    >
+                                </div>
+                                <div class="form-group">
+                                    <label for="portal_password">
+                                        <i data-lucide="lock"></i>
+                                        Senha do Portal
+                                    </label>
+                                    <input 
+                                        id="portal_password" 
+                                        name="portal_password" 
+                                        type="password" 
+                                        class="form-input"
+                                        placeholder="Digite sua senha do portal CEMIG" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    <span>Salvar Credenciais</span>
+                                </button>
+                                <button type="button" id="portal-clear" class="btn btn-secondary">
+                                    <i data-lucide="trash-2"></i>
+                                    <span>Remover Credenciais</span>
+                                </button>
+                                <div id="portal-msg" class="form-message" style="display: none;"></div>
+                            </div>
+
+                            <div class="info-box">
+                                <i data-lucide="info"></i>
+                                <div class="info-box-content">
+                                    <div class="info-box-title">Importante</div>
+                                    <div class="info-box-text">
+                                        Se você alterar sua senha no portal CEMIG SGL, não esqueça de atualizar aqui também. 
+                                        Todas as senhas são armazenadas de forma criptografada em nosso banco de dados para garantir a segurança das suas informações.
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </section>
                 </div>
             </main>
 
@@ -99,6 +569,7 @@
     <script>
         lucide.createIcons();
 
+        // Clock update
         setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -106,6 +577,98 @@
             document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
             document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
         }, 1000);
+
+        // Portal credentials management
+        async function loadPortalStatus() {
+            const msgEl = document.getElementById('portal-msg');
+            msgEl.style.display = 'none';
+            
+            try {
+                const res = await authFetch('/api/user/portal-credentials', { method: 'GET' });
+                const data = await res.json();
+                const badge = document.getElementById('portal-status-badge');
+                
+                if (data && data.configured) {
+                    badge.className = 'status-badge configured';
+                    badge.innerHTML = '<i data-lucide="check-circle"></i><span>Configurado</span>';
+                    if (data.portal_user) {
+                        document.getElementById('portal_user').value = data.portal_user;
+                    }
+                } else {
+                    badge.className = 'status-badge not-configured';
+                    badge.innerHTML = '<i data-lucide="x-circle"></i><span>Não Configurado</span>';
+                }
+                lucide.createIcons();
+            } catch (e) {
+                showMessage('Falha ao carregar status das credenciais.', 'error');
+            }
+        }
+
+        function showMessage(text, type = 'info') {
+            const msgEl = document.getElementById('portal-msg');
+            msgEl.textContent = text;
+            msgEl.className = `form-message ${type}`;
+            msgEl.style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPortalStatus();
+
+            // Form submit
+            const form = document.getElementById('portal-form');
+            form.addEventListener('submit', async (ev) => {
+                ev.preventDefault();
+                showMessage('Salvando credenciais...', 'info');
+
+                const portal_user = document.getElementById('portal_user').value.trim();
+                const portal_password = document.getElementById('portal_password').value;
+
+                try {
+                    const res = await authFetch('/api/user/portal-credentials', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ portal_user, portal_password })
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok && data.success) {
+                        showMessage('✓ Credenciais salvas com sucesso!', 'success');
+                        document.getElementById('portal_password').value = '';
+                        await loadPortalStatus();
+                    } else {
+                        showMessage((data && (data.error || data.msg)) || 'Erro ao salvar credenciais.', 'error');
+                    }
+                } catch (e) {
+                    showMessage('Erro de conexão com o servidor.', 'error');
+                }
+            });
+
+            // Clear credentials
+            document.getElementById('portal-clear').addEventListener('click', async () => {
+                if (!confirm('Tem certeza que deseja remover suas credenciais?')) {
+                    return;
+                }
+
+                showMessage('Removendo credenciais...', 'info');
+                
+                try {
+                    const res = await authFetch('/api/user/portal-credentials', { method: 'DELETE' });
+                    const data = await res.json();
+                    
+                    if (res.ok && data.success) {
+                        showMessage('✓ Credenciais removidas com sucesso.', 'success');
+                        document.getElementById('portal_user').value = '';
+                        document.getElementById('portal_password').value = '';
+                        await loadPortalStatus();
+                    } else {
+                        showMessage((data && (data.error || data.msg)) || 'Erro ao remover credenciais.', 'error');
+                    }
+                } catch (e) {
+                    showMessage('Erro de conexão com o servidor.', 'error');
+                }
+            });
+        });
     </script>
+
 </body>
 </html>

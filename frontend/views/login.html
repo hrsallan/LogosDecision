@@ -315,8 +315,11 @@
         </div>
     </div>
 
+    <script src="../js/utils.js"></script>
+
+
     <script>
-        lucide.createIcons();
+lucide.createIcons();
 
         const togglePassword = document.getElementById('togglePassword');
         const password = document.getElementById('password');
@@ -346,7 +349,7 @@
             btn.textContent = 'Autenticando...';
 
             try {
-                const response = await fetch('http://localhost:5000/api/login', {
+                const response = await authFetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })

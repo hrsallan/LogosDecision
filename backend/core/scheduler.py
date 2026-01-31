@@ -151,14 +151,19 @@ class AutoScheduler:
         try:
             from core.portal_scraper import download_releitura_excel
             from core.analytics import get_file_hash, deep_scan_excel
-            from core.database import is_file_duplicate, save_releitura_data
+            from core.database import is_file_duplicate, save_releitura_data, get_portal_credentials
             
             if not self.user_id:
                 logger.error("❌ SCHEDULER_USER_ID não configurado no .env")
                 return
             
             # Download
-            downloaded_path = download_releitura_excel()
+            creds = get_portal_credentials(int(self.user_id))
+            if not creds:
+                logger.error("❌ Credenciais do portal não configuradas para o usuário do scheduler")
+                return
+
+            downloaded_path = download_releitura_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
             if not downloaded_path or not os.path.exists(downloaded_path):
                 logger.error("❌ Falha no download do relatório de releitura")
                 return
@@ -199,14 +204,19 @@ class AutoScheduler:
         try:
             from core.portal_scraper import download_porteira_excel
             from core.analytics import get_file_hash, deep_scan_porteira_excel
-            from core.database import is_file_duplicate, save_porteira_table_data, save_file_history
+            from core.database import is_file_duplicate, save_porteira_table_data, save_file_history, get_portal_credentials
             
             if not self.user_id:
                 logger.error("❌ SCHEDULER_USER_ID não configurado no .env")
                 return
             
             # Download
-            downloaded_path = download_porteira_excel()
+            creds = get_portal_credentials(int(self.user_id))
+            if not creds:
+                logger.error("❌ Credenciais do portal não configuradas para o usuário do scheduler")
+                return
+
+            downloaded_path = download_porteira_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
             if not downloaded_path or not os.path.exists(downloaded_path):
                 logger.error("❌ Falha no download do relatório de porteira")
                 return

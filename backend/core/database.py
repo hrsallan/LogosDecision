@@ -1,5 +1,6 @@
 import sqlite3
 from core.auth import hash_password, authenticate_user as secure_authenticate
+from core.crypto_utils import encrypt_text, decrypt_text
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -53,10 +54,21 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            portal_user TEXT,
+            portal_password TEXT,
             role TEXT DEFAULT 'user',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Garantir colunas de credenciais do portal (migração segura)
+    cursor.execute("PRAGMA table_info(users)")
+    cols = {row[1] for row in cursor.fetchall()}
+    if "portal_user" not in cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN portal_user TEXT")
+    if "portal_password" not in cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN portal_password TEXT")
+
 
     # Releituras - com user_id
     cursor.execute('''
@@ -197,6 +209,107 @@ def get_user_by_id(user_id):
     conn.close()
     return dict(row) if row else None
 
+def set_portal_credentials(user_id: int, portal_user: str, portal_password_plain: str) -> None:
+    """Salva as credenciais do portal para o usuário.
+
+    portal_password é armazenada criptografada (Fernet).
+    """
+    if not portal_user:
+        raise ValueError("portal_user é obrigatório")
+    if portal_password_plain is None or portal_password_plain == "":
+        raise ValueError("portal_password é obrigatório")
+
+    enc = encrypt_text(portal_password_plain)
+    conn = sqlite3.connect(str(DB_PATH))
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE users SET portal_user = ?, portal_password = ? WHERE id = ?",
+        (portal_user, enc, int(user_id)),
+    )
+    conn.commit()
+    conn.close()
+
+
+def clear_portal_credentials(user_id: int) -> None:
+    conn = sqlite3.connect(str(DB_PATH))
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE users SET portal_user = NULL, portal_password = NULL WHERE id = ?",
+        (int(user_id),),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_portal_credentials(user_id: int) -> dict | None:
+    """Retorna {portal_user, portal_password} descriptografado para uso interno.
+
+    Retorna None se não estiver configurado.
+    """
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT portal_user, portal_password FROM users WHERE id = ?",
+        (int(user_id),),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    pu = row["portal_user"]
+    pp = row["portal_password"]
+    if not pu or not pp:
+        return None
+
+    # If the Fernet key was rotated/lost, old encrypted values cannot be decrypted.
+    # In that case, reset the stored credentials for this user so they can re-register,
+    # instead of crashing the scraping flow.
+    try:
+        plain = decrypt_text(pp)
+    except Exception:
+        try:
+            clear_portal_credentials(int(user_id))
+        except Exception:
+            pass
+        return None
+
+    return {"portal_user": pu, "portal_password": plain}
+
+
+def get_portal_credentials_status(user_id: int) -> dict:
+    """Retorna status seguro para o frontend (sem vazar a senha)."""
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT portal_user, portal_password FROM users WHERE id = ?",
+        (int(user_id),),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return {"configured": False}
+
+    pu = row["portal_user"]
+    pp = row["portal_password"]
+    if not pu or not pp:
+        return {"configured": False, "portal_user": pu or ""}
+
+    # Validate decryptability without exposing the password.
+    try:
+        _ = decrypt_text(pp)
+        ok = True
+    except Exception:
+        ok = False
+        try:
+            clear_portal_credentials(int(user_id))
+        except Exception:
+            pass
+
+    return {"configured": ok, "portal_user": pu or ""}
+
+
 
 def reset_database(user_id):
     """Reseta apenas os dados do usuário especificado"""
@@ -254,94 +367,108 @@ def is_file_duplicate(file_hash, module, user_id):
 
 
 def save_releitura_data(details, file_hash, user_id):
-    """Salva dados de releitura para o usuário especificado usando merge inteligente"""
+    """Salva dados de releitura para o usuário especificado usando merge inteligente (otimizado)."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     now = datetime.now().isoformat()
 
-    # Ao invés de deletar tudo, vamos fazer um merge inteligente:
-    # 1. Novas instalações que não existem → INSERT como PENDENTE
-    # 2. Instalações que já existem e estão CONCLUÍDAS → mantém CONCLUÍDAS
-    # 3. Instalações que estavam no banco mas não vieram no novo relatório → pode ter sido realizada, mantém
-    
-    # Primeiro, pega todas as instalações que já existem no banco
+    # Performance: uma transação única + batch operations
+    cursor.execute("BEGIN")
+
+    # Pega instalações existentes (somente o necessário)
     cursor.execute('SELECT instalacao, status FROM releituras WHERE user_id = ?', (user_id,))
     existing = {row[0]: row[1] for row in cursor.fetchall()}
-    
-    # Conjunto de instalações que vieram no novo relatório
-    new_instalacoes = {item['inst'] for item in details}
-    
-    # Inserir ou atualizar cada registro do novo relatório
+
+    new_instalacoes = set()
+    inserts = []
+    updates = []
+
     for item in details:
+        instalacao = item['inst']
+        new_instalacoes.add(instalacao)
+
         endereco = item.get('endereco', '')
         reg = item.get('reg', '03')
-        instalacao = item['inst']
-        
-        if instalacao in existing:
-            # Instalação já existe no banco
-            if existing[instalacao] == 'CONCLUÍDA':
-                # Se já foi concluída, não sobrescreve - mantém como CONCLUÍDA
-                continue
-            else:
-                # Se estava PENDENTE, atualiza os dados (pode ter mudado vencimento, etc)
-                cursor.execute('''
-                    UPDATE releituras 
-                    SET ul = ?, endereco = ?, razao = ?, vencimento = ?, reg = ?, upload_time = ?
-                    WHERE user_id = ? AND instalacao = ?
-                ''', (item['ul'], endereco, item['ul'][:2], item['venc'], reg, now, user_id, instalacao))
-        else:
-            # Instalação nova, insere como PENDENTE
-            cursor.execute('''
-                INSERT INTO releituras (user_id, ul, instalacao, endereco, razao, vencimento, reg, status, upload_time)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDENTE', ?)
-            ''', (user_id, item['ul'], instalacao, endereco, item['ul'][:2], item['venc'], reg, now))
-    
-    # Instalações que estavam no banco mas não vieram no novo relatório
-    # assumimos que foram realizadas (mudamos status de PENDENTE para CONCLUÍDA)
-    instalacoes_removidas = set(existing.keys()) - new_instalacoes
-    for inst_removida in instalacoes_removidas:
-        if existing[inst_removida] == 'PENDENTE':
-            cursor.execute('''
-                UPDATE releituras 
-                SET status = 'CONCLUÍDA'
-                WHERE user_id = ? AND instalacao = ?
-            ''', (user_id, inst_removida))
+        ul = item['ul']
+        razao = ul[:2]
+        venc = item.get('venc', '')
 
-    # Salva histórico do upload
+        if instalacao in existing:
+            # mantém CONCLUÍDA
+            if existing[instalacao] == 'CONCLUÍDA':
+                continue
+            updates.append((ul, endereco, razao, venc, reg, now, user_id, instalacao))
+        else:
+            inserts.append((user_id, ul, instalacao, endereco, razao, venc, reg, now))
+
+    if updates:
+        cursor.executemany('''
+            UPDATE releituras
+            SET ul = ?, endereco = ?, razao = ?, vencimento = ?, reg = ?, upload_time = ?
+            WHERE user_id = ? AND instalacao = ?
+        ''', updates)
+
+    if inserts:
+        cursor.executemany('''
+            INSERT INTO releituras (user_id, ul, instalacao, endereco, razao, vencimento, reg, status, upload_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDENTE', ?)
+        ''', inserts)
+
+    # Instalações removidas do relatório: marca como concluída se estavam pendentes
+    instalacoes_removidas = set(existing.keys()) - new_instalacoes
+    removed_to_close = [(user_id, inst) for inst in instalacoes_removidas if existing.get(inst) == 'PENDENTE']
+    if removed_to_close:
+        cursor.executemany('''
+            UPDATE releituras
+            SET status = 'CONCLUÍDA'
+            WHERE user_id = ? AND instalacao = ?
+        ''', removed_to_close)
+
+    # Histórico do upload
     cursor.execute('''
         INSERT INTO history_releitura (user_id, module, count, file_hash, timestamp)
         VALUES (?, ?, ?, ?, ?)
     ''', (user_id, 'releitura', len(details), file_hash, now))
 
     conn.commit()
-    
-    # Calcula métricas atualizadas para o snapshot
+
+    # Métricas + snapshot (após commit)
     cursor.execute('SELECT COUNT(*) FROM releituras WHERE user_id = ?', (user_id,))
     total = int(cursor.fetchone()[0] or 0)
-    
+
     cursor.execute("SELECT COUNT(*) FROM releituras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
     pendentes = int(cursor.fetchone()[0] or 0)
-    
+
     realizadas = max(total - pendentes, 0)
-    
+
     conn.close()
     _save_grafico_snapshot('releitura', total, pendentes, realizadas, file_hash, now, user_id)
     return
 
-
 def save_porteira_data(details, file_hash, user_id):
-    """Salva dados de porteira para o usuário especificado"""
+    """Salva dados de porteira para o usuário especificado (otimizado)."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     now = datetime.now().isoformat()
 
+    cursor.execute("BEGIN")
+
+    # Pega instalações existentes para evitar SELECT por linha
+    cursor.execute('SELECT instalacao FROM porteiras WHERE user_id = ?', (user_id,))
+    existing = {row[0] for row in cursor.fetchall()}
+
+    inserts = []
     for item in details:
-        cursor.execute('SELECT id FROM porteiras WHERE user_id = ? AND instalacao = ?', (user_id, item['inst']))
-        if not cursor.fetchone():
-            cursor.execute('''
-                INSERT INTO porteiras (user_id, ul, instalacao, status, upload_time)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (user_id, item['ul'], item['inst'], 'PENDENTE', now))
+        inst = item['inst']
+        if inst in existing:
+            continue
+        inserts.append((user_id, item['ul'], inst, 'PENDENTE', now))
+
+    if inserts:
+        cursor.executemany('''
+            INSERT INTO porteiras (user_id, ul, instalacao, status, upload_time)
+            VALUES (?, ?, ?, ?, ?)
+        ''', inserts)
 
     cursor.execute('''
         INSERT INTO history_porteira (user_id, module, count, file_hash, timestamp)
@@ -349,19 +476,16 @@ def save_porteira_data(details, file_hash, user_id):
     ''', (user_id, 'porteira', len(details), file_hash, now))
 
     conn.commit()
+
+    # Snapshot para gráfico (sem abrir nova conexão)
+    cursor.execute('SELECT COUNT(*) FROM porteiras WHERE user_id = ?', (user_id,))
+    total = int(cursor.fetchone()[0] or 0)
+    cursor.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
+    pendentes = int(cursor.fetchone()[0] or 0)
+    realizadas = max(total - pendentes, 0)
+
     conn.close()
-
-    # Snapshot para gráfico
-    conn2 = sqlite3.connect(str(DB_PATH))
-    cur2 = conn2.cursor()
-    cur2.execute('SELECT COUNT(*) FROM porteiras WHERE user_id = ?', (user_id,))
-    total = cur2.fetchone()[0]
-    cur2.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
-    pendentes = cur2.fetchone()[0]
-    conn2.close()
-    realizadas = total - pendentes
     _save_grafico_snapshot('porteira', total, pendentes, realizadas, file_hash, now, user_id)
-
 
 def update_installation_status(installation_list, new_status, module, user_id):
     """Atualiza status de instalações para o usuário especificado"""
