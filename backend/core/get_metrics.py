@@ -41,13 +41,11 @@ def get_system_overview(user_id):
     cursor.execute("SELECT COUNT(*) FROM releituras WHERE user_id = ? AND status = 'CONCLUIDA'", (user_id,))
     releituras_concluidas = cursor.fetchone()[0]
     
-    # Total de porteiras
-    cursor.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ?", (user_id,))
-    total_porteiras = cursor.fetchone()[0]
-    
-    # Porteiras pendentes
-    cursor.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
-    porteiras_pendentes = cursor.fetchone()[0]
+    # Total de porteiras (via resultados_leitura)
+    cursor.execute("SELECT SUM(Total_Leituras), SUM(Leituras_Nao_Executadas) FROM resultados_leitura WHERE user_id = ?", (user_id,))
+    row_porteira = cursor.fetchone()
+    total_porteiras = int(row_porteira[0] or 0)
+    porteiras_pendentes = int(row_porteira[1] or 0)
     
     # Total de uploads realizados
     cursor.execute("""
