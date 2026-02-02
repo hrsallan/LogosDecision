@@ -586,11 +586,11 @@ def get_porteira_metrics(user_id):
 
 
 def get_releitura_chart_data(user_id, date_str=None):
-    """Retorna dados do gráfico de releitura do usuário"""
+    """Retorna dados do gráfico de pendências de releitura por horário do usuário"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT hora, total
+        SELECT hora, pendentes
         FROM grafico_historico
         WHERE user_id = ? AND module = 'releitura' AND data = COALESCE(?, DATE('now','localtime'))
         ORDER BY hora ASC
@@ -599,12 +599,12 @@ def get_releitura_chart_data(user_id, date_str=None):
     conn.close()
 
     hourly_data = {f"{h:02d}h": 0 for h in range(7, 19)}
-    for hora, total in rows:
+    for hora, pendentes in rows:
         try:
             h = int(str(hora).split(':')[0])
             hora_label = f"{h:02d}h"
             if hora_label in hourly_data:
-                hourly_data[hora_label] = int(total)
+                hourly_data[hora_label] = int(pendentes)
         except Exception:
             continue
 

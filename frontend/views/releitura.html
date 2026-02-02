@@ -414,6 +414,212 @@
                 min-width: 120px;
             }
         }
+
+        /* ==================== CALENDÁRIO DATE PICKER ==================== */
+        .date-picker-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .date-picker-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .date-picker-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 209, 255, 0.3);
+        }
+
+        .date-picker-btn i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .calendar-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 320px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none;
+        }
+
+        .calendar-dropdown.active {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .calendar-month {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--v2-text);
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-nav-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--v2-border);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            background: rgba(0, 209, 255, 0.1);
+            border-color: rgba(0, 209, 255, 0.3);
+        }
+
+        .calendar-nav-btn i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+        }
+
+        .calendar-day:hover {
+            background: rgba(0, 209, 255, 0.1);
+            border-color: rgba(0, 209, 255, 0.3);
+        }
+
+        .calendar-day.other-month {
+            color: var(--v2-text-dim);
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            background: rgba(210, 153, 34, 0.15);
+            border-color: rgba(210, 153, 34, 0.5);
+            color: var(--v2-warning);
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.8) 100%);
+            color: #0a0c10;
+            border-color: transparent;
+            font-weight: 900;
+        }
+
+        .calendar-footer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--v2-border);
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-footer-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .calendar-footer-btn.clear {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .calendar-footer-btn.clear:hover {
+            background: rgba(248, 81, 73, 0.15);
+        }
+
+        .calendar-footer-btn.today {
+            background: rgba(0, 209, 255, 0.1);
+            color: var(--v2-primary);
+            border: 1px solid rgba(0, 209, 255, 0.3);
+        }
+
+        .calendar-footer-btn.today:hover {
+            background: rgba(0, 209, 255, 0.15);
+        }
     </style>
 </head>
 <body class="page-releitura">
@@ -497,6 +703,47 @@
                             <i data-lucide="trash-2"></i>
                             <span>Zerar</span>
                         </button>
+                        
+                        <!-- Date Picker Calendário -->
+                        <div class="date-picker-container">
+                            <button id="date-picker-btn" type="button" class="date-picker-btn" title="Selecionar data">
+                                <i data-lucide="calendar"></i>
+                                <span id="selected-date-text">Hoje</span>
+                            </button>
+                            <div id="calendar-dropdown" class="calendar-dropdown">
+                                <div class="calendar-header">
+                                    <span class="calendar-month" id="calendar-month-year">Janeiro 2026</span>
+                                    <div class="calendar-nav">
+                                        <button class="calendar-nav-btn" id="prev-month-btn" type="button">
+                                            <i data-lucide="chevron-left"></i>
+                                        </button>
+                                        <button class="calendar-nav-btn" id="next-month-btn" type="button">
+                                            <i data-lucide="chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="calendar-weekdays">
+                                    <div class="calendar-weekday">Dom</div>
+                                    <div class="calendar-weekday">Seg</div>
+                                    <div class="calendar-weekday">Ter</div>
+                                    <div class="calendar-weekday">Qua</div>
+                                    <div class="calendar-weekday">Qui</div>
+                                    <div class="calendar-weekday">Sex</div>
+                                    <div class="calendar-weekday">Sáb</div>
+                                </div>
+                                <div class="calendar-days" id="calendar-days">
+                                    <!-- Days will be generated by JavaScript -->
+                                </div>
+                                <div class="calendar-footer">
+                                    <button class="calendar-footer-btn clear" id="clear-date-btn" type="button">
+                                        Limpar
+                                    </button>
+                                    <button class="calendar-footer-btn today" id="today-btn" type="button">
+                                        Hoje
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
@@ -559,9 +806,9 @@
                         <div>
                             <div class="chart-title">
                                 <i data-lucide="bar-chart-3"></i>
-                                <h3>Releituras Não Executadas em Tempo Real</h3>
+                                <h3>Releituras Pendentes</h3>
                             </div>
-                            <p class="chart-subtitle">Análise por hora do dia selecionado</p>
+                            <p class="chart-subtitle">Distribuição de pendências não executadas por hora do dia</p>
                         </div>
                     </div>
                     <div class="chart-canvas large">
@@ -654,10 +901,10 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Releituras Não Executadas',
+                        label: 'Pendências por Horário',
                         data: values,
-                        backgroundColor: 'rgba(0, 209, 255, 0.2)',
-                        borderColor: 'rgba(0, 209, 255, 1)',
+                        backgroundColor: 'rgba(210, 153, 34, 0.2)',
+                        borderColor: 'rgba(210, 153, 34, 1)',
                         borderWidth: 2,
                         borderRadius: 8,
                     }]
@@ -669,7 +916,7 @@
                         legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(13, 27, 34, 0.95)',
-                            titleColor: '#00d1ff',
+                            titleColor: '#d29922',
                             bodyColor: '#c9d1d9',
                             borderColor: '#30363d',
                             borderWidth: 1,
@@ -758,6 +1005,174 @@
 
         // Date selection - mantém data atual para o sistema
         let selectedDateISO = new Date().toISOString().slice(0, 10);
+
+        // ==================== CALENDÁRIO DATE PICKER ====================
+        let currentCalendarDate = new Date();
+        const calendarDropdown = document.getElementById('calendar-dropdown');
+        const datePickerBtn = document.getElementById('date-picker-btn');
+        const selectedDateText = document.getElementById('selected-date-text');
+        const calendarMonthYear = document.getElementById('calendar-month-year');
+        const calendarDays = document.getElementById('calendar-days');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+        const clearDateBtn = document.getElementById('clear-date-btn');
+        const todayBtn = document.getElementById('today-btn');
+
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+        // Toggle calendar dropdown
+        datePickerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            calendarDropdown.classList.toggle('active');
+            if (calendarDropdown.classList.contains('active')) {
+                renderCalendar();
+                lucide.createIcons();
+            }
+        });
+
+        // Close calendar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!calendarDropdown.contains(e.target) && e.target !== datePickerBtn) {
+                calendarDropdown.classList.remove('active');
+            }
+        });
+
+        // Navigate months
+        prevMonthBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar();
+            lucide.createIcons();
+        });
+
+        nextMonthBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar();
+            lucide.createIcons();
+        });
+
+        // Clear date selection
+        clearDateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedDateISO = new Date().toISOString().slice(0, 10);
+            selectedDateText.textContent = 'Hoje';
+            currentCalendarDate = new Date();
+            renderCalendar();
+            calendarDropdown.classList.remove('active');
+            checkV2Status();
+            lucide.createIcons();
+        });
+
+        // Select today
+        todayBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const today = new Date();
+            selectedDateISO = today.toISOString().slice(0, 10);
+            selectedDateText.textContent = 'Hoje';
+            currentCalendarDate = new Date(today);
+            renderCalendar();
+            calendarDropdown.classList.remove('active');
+            checkV2Status();
+            lucide.createIcons();
+        });
+
+        // Render calendar
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
+            
+            // First day of month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const prevLastDay = new Date(year, month, 0);
+            
+            const firstDayWeek = firstDay.getDay();
+            const lastDateOfMonth = lastDay.getDate();
+            const prevLastDate = prevLastDay.getDate();
+            
+            let daysHTML = '';
+            
+            // Previous month days
+            for (let i = firstDayWeek - 1; i >= 0; i--) {
+                const day = prevLastDate - i;
+                daysHTML += `<div class="calendar-day other-month" data-date="${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}">${day}</div>`;
+            }
+            
+            // Current month days
+            const today = new Date();
+            const todayStr = today.toISOString().slice(0, 10);
+            
+            for (let day = 1; day <= lastDateOfMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                let classes = 'calendar-day';
+                
+                if (dateStr === todayStr) {
+                    classes += ' today';
+                }
+                
+                if (dateStr === selectedDateISO) {
+                    classes += ' selected';
+                }
+                
+                daysHTML += `<div class="${classes}" data-date="${dateStr}">${day}</div>`;
+            }
+            
+            // Next month days (fill remaining slots)
+            const totalCells = firstDayWeek + lastDateOfMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            
+            for (let day = 1; day <= remainingCells; day++) {
+                const nextMonth = month + 2;
+                const nextYear = nextMonth > 12 ? year + 1 : year;
+                const adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
+                daysHTML += `<div class="calendar-day other-month" data-date="${nextYear}-${String(adjustedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}">${day}</div>`;
+            }
+            
+            calendarDays.innerHTML = daysHTML;
+            
+            // Add click events to days
+            document.querySelectorAll('.calendar-day').forEach(dayEl => {
+                dayEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dateStr = dayEl.getAttribute('data-date');
+                    selectedDateISO = dateStr;
+                    
+                    // Update button text
+                    const selectedDate = new Date(dateStr + 'T00:00:00');
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (selectedDate.getTime() === today.getTime()) {
+                        selectedDateText.textContent = 'Hoje';
+                    } else {
+                        const [y, m, d] = dateStr.split('-');
+                        selectedDateText.textContent = `${d}/${m}/${y}`;
+                    }
+                    
+                    // Update calendar view if different month
+                    if (selectedDate.getMonth() !== currentCalendarDate.getMonth() || 
+                        selectedDate.getFullYear() !== currentCalendarDate.getFullYear()) {
+                        currentCalendarDate = new Date(selectedDate);
+                        renderCalendar();
+                    } else {
+                        // Just update the selected class
+                        document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                        dayEl.classList.add('selected');
+                    }
+                    
+                    // Close dropdown and refresh data
+                    calendarDropdown.classList.remove('active');
+                    checkV2Status();
+                });
+            });
+        }
+
+        // Initialize calendar
+        renderCalendar();
 
         // File upload
         let isUploading = false;
