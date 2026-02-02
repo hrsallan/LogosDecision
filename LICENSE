@@ -1,30 +1,41 @@
-VigilaCore - Non-Commercial License
+LICENÇA DE USO NÃO COMERCIAL - VIGILACORE
 
 Copyright (c) 2026 Allan Silva (hrsallan)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to use,
-copy, modify, and distribute the Software, subject to the following conditions:
+ESTE SOFTWARE É FORNECIDO SOB OS TERMOS DESTA LICENÇA. AO FAZER DOWNLOAD, INSTALAR, COPIAR OU UTILIZAR ESTE SOFTWARE, VOCÊ (O "LICENCIADO") CONCORDA EM VINCULAR-SE A TODOS OS TERMOS E CONDIÇÕES AQUI ESTABELECIDOS. SE VOCÊ NÃO CONCORDAR COM ESTES TERMOS, NÃO UTILIZE O SOFTWARE.
 
-1. NON-COMMERCIAL USE ONLY
-   The Software may NOT be used for commercial purposes. This includes, but is
-   not limited to:
-   - Selling the Software or any derivative works
-   - Using the Software in a product or service that is sold
-   - Using the Software to generate revenue directly or indirectly
-   - Offering the Software as a paid service (SaaS)
+1. DEFINIÇÕES
+   1.1. "Software" refere-se ao código-fonte, código-objeto, interfaces, gráficos e documentação associada do projeto VigilaCore.
+   1.2. "Uso Comercial" refere-se a qualquer uso do Software que tenha como objetivo direto ou indireto a obtenção de lucro financeiro, vantagem comercial ou compensação monetária. Isso inclui, mas não se limita a:
+        - Venda, aluguel ou licenciamento do Software.
+        - Inclusão do Software como parte de um produto ou serviço pago.
+        - Uso do Software para prestação de serviços a terceiros mediante pagamento (SaaS).
+        - Uso do Software em ambientes corporativos para suporte a atividades lucrativas sem autorização expressa.
 
-2. ATTRIBUTION
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
+2. CONCESSÃO DE LICENÇA
+   O Autor concede a você uma licença pessoal, intransferível, não exclusiva e gratuita para:
+   2.1. Usar o Software para fins pessoais, educacionais ou de pesquisa sem fins lucrativos.
+   2.2. Modificar o código-fonte para uso pessoal, desde que as modificações não sejam distribuídas comercialmente.
+   2.3. Distribuir cópias do Software ou de trabalhos derivados, desde que esta mesma licença seja mantida e acompanhe todas as cópias.
 
-3. SHARE-ALIKE
-   Any modifications or derivative works must be distributed under the same
-   license terms.
+3. RESTRIÇÕES
+   3.1. É ESTRITAMENTE PROIBIDO o Uso Comercial deste Software sem a prévia autorização por escrito do Autor.
+   3.2. Você não pode vender, revender, alugar, arrendar ou sublicenciar o Software.
+   3.3. Você não pode cobrar pelo Software ou por serviços derivados dele.
+   3.4. Você não pode remover ou alterar quaisquer avisos de direitos autorais, marcas registradas ou outros avisos de propriedade contidos no Software.
 
-4. NO WARRANTY
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-   OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+4. ATRIBUIÇÃO E COMPARTILHAMENTO (SHARE-ALIKE)
+   4.1. Qualquer distribuição ou trabalho derivado deve conter uma cópia desta licença.
+   4.2. Você deve dar o crédito apropriado ao autor original (Allan Silva - hrsallan).
+   4.3. Se você alterar, transformar ou criar a partir deste material, você deve distribuir suas contribuições sob a mesma licença que o original.
 
-For commercial licensing inquiries, please contact the author.
+5. ISENÇÃO DE GARANTIAS (NO WARRANTY)
+   O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA" ("AS IS"), SEM GARANTIA DE QUALQUER TIPO, EXPRESSA OU IMPLÍCITA, INCLUINDO, MAS NÃO SE LIMITANDO ÀS GARANTIAS DE COMERCIABILIDADE, ADEQUAÇÃO A UM DETERMINADO FIM E NÃO VIOLAÇÃO. O AUTOR NÃO GARANTE QUE O SOFTWARE ESTARÁ LIVRE DE ERROS OU QUE FUNCIONARÁ ININTERRUPTAMENTE.
+
+6. LIMITAÇÃO DE RESPONSABILIDADE
+   EM NENHUMA HIPÓTESE O AUTOR SERÁ RESPONSÁVEL POR QUAISQUER REIVINDICAÇÕES, DANOS OU OUTRAS RESPONSABILIDADES, SEJA EM UMA AÇÃO DE CONTRATO, ATO ILÍCITO OU DE OUTRA FORMA, DECORRENTES DE, FORA DE OU EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRAS NEGOCIAÇÕES NO SOFTWARE. O RISCO TOTAL DECORRENTE DO USO OU DESEMPENHO DO SOFTWARE É DE RESPONSABILIDADE DO LICENCIADO.
+
+7. RESCISÃO
+   Esta licença será rescindida automaticamente se você violar qualquer um de seus termos. Após a rescisão, você deve destruir todas as cópias do Software em sua posse.
+
+Para consultas sobre licenciamento comercial ou exceções a esta licença, entre em contato diretamente com o autor.

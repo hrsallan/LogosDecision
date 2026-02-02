@@ -26,6 +26,17 @@ VigilaCore is a full-stack web application designed to monitor and analyze utili
 - 📈 **Analytics Engine** - Deep scan analysis for reading data with duplicate detection
 - 👥 **Admin Controls** - Database reset capabilities for administrators
 
+## 🤖 Automatic Scheduler
+
+VigilaCore now includes a robust **automation system** that handles report downloads automatically from the CEMIG SGL portal.
+
+- **⏰ Automated Downloads**: Configurable hourly intervals.
+- **🔄 Sequential Execution**: Prevents conflicts by running Releitura and Porteira tasks sequentially.
+- **📅 Custom Schedule**: Set specific operating hours (e.g., 7 AM to 5 PM).
+- **📝 Detailed Logging**: Complete tracking of all automatic operations.
+
+For full configuration details, please refer to the [Automation Guide](GUIA_SCHEDULER_AUTOMATICO.md) (Portuguese).
+
 ## 🏗️ Project Structure
 
 ```
@@ -40,7 +51,8 @@ VigilaCore/
 │       ├── database.py     # Database operations
 │       ├── auth.py         # Authentication logic
 │       ├── dashboard_metrics.py
-│       └── portal_scraper.py  # Web scraping for portal sync
+│       ├── portal_scraper.py  # Web scraping for portal sync
+│       └── scheduler.py    # Automation scheduler logic
 ├── frontend/
 │   ├── views/              # HTML templates
 │   ├── css/                # Stylesheets
@@ -91,6 +103,8 @@ VigilaCore/
 | POST | `/api/upload/porteira` | Upload porteira Excel file |
 | POST | `/api/sync/releitura` | Sync releitura data from portal |
 | POST | `/api/sync/porteira` | Sync porteira data from portal |
+| GET | `/api/scheduler/status` | Get automation scheduler status |
+| POST | `/api/scheduler/toggle` | Start/Stop scheduler (Admin only) |
 | POST | `/api/reset` | Reset database (admin only) |
 | POST | `/api/reset/porteira` | Reset porteira database (admin only) |
 | GET | `/api/porteira/chart` | Get porteira chart data |
@@ -101,7 +115,7 @@ VigilaCore/
 - **Backend**: Python, Flask, Flask-CORS
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Data Processing**: Pandas, OpenPyXL, xlrd
-- **Automation**: Selenium, PyAutoGUI
+- **Automation**: Selenium, PyAutoGUI, APScheduler
 - **Configuration**: python-dotenv
 
 ## 📄 License

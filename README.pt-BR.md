@@ -28,6 +28,17 @@ VigilaCore é uma aplicação web full-stack projetada para monitorar e analisar
 - 📈 **Motor de Analytics** - Análise profunda de dados de leitura com detecção de duplicatas
 - 👥 **Controles de Administrador** - Capacidade de reset do banco de dados para administradores
 
+## 🤖 Agendador Automático
+
+O VigilaCore agora inclui um **sistema de automação** robusto que gerencia downloads de relatórios automaticamente do portal CEMIG SGL.
+
+- **⏰ Downloads Automáticos**: Intervalos configuráveis de hora em hora.
+- **🔄 Execução Sequencial**: Previne conflitos executando tarefas de Releitura e Porteira sequencialmente.
+- **📅 Agenda Personalizada**: Defina horários de operação específicos (ex: 07:00 às 17:00).
+- **📝 Logs Detalhados**: Rastreamento completo de todas as operações automáticas.
+
+Para detalhes completos de configuração, consulte o [Guia de Automação](GUIA_SCHEDULER_AUTOMATICO.md).
+
 ## 🏗️ Estrutura do Projeto
 
 ```
@@ -42,7 +53,8 @@ VigilaCore/
 │       ├── database.py     # Operações de banco de dados
 │       ├── auth.py         # Lógica de autenticação
 │       ├── dashboard_metrics.py
-│       └── portal_scraper.py  # Web scraping para sincronização
+│       ├── portal_scraper.py  # Web scraping para sincronização
+│       └── scheduler.py    # Lógica do agendador automático
 ├── frontend/
 │   ├── views/              # Templates HTML
 │   ├── css/                # Folhas de estilo
@@ -93,6 +105,8 @@ VigilaCore/
 | POST | `/api/upload/porteira` | Upload de arquivo Excel de porteira |
 | POST | `/api/sync/releitura` | Sincroniza dados de releitura do portal |
 | POST | `/api/sync/porteira` | Sincroniza dados de porteira do portal |
+| GET | `/api/scheduler/status` | Obtém status do agendador automático |
+| POST | `/api/scheduler/toggle` | Inicia/Para o agendador (Apenas Admin) |
 | POST | `/api/reset` | Reseta o banco de dados (apenas admin) |
 | POST | `/api/reset/porteira` | Reseta banco de dados da porteira (apenas admin) |
 | GET | `/api/porteira/chart` | Obtém dados do gráfico de porteira |
@@ -103,7 +117,7 @@ VigilaCore/
 - **Backend**: Python, Flask, Flask-CORS
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Processamento de Dados**: Pandas, OpenPyXL, xlrd
-- **Automação**: Selenium, PyAutoGUI
+- **Automação**: Selenium, PyAutoGUI, APScheduler
 - **Configuração**: python-dotenv
 
 ## 📄 Licença
