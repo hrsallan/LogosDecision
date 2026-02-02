@@ -566,14 +566,21 @@ def get_releitura_metrics(user_id):
 
 
 def get_porteira_metrics(user_id):
-    """Retorna métricas de porteira do usuário"""
+    """Retorna métricas de porteira do usuário usando resultados_leitura"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM porteiras WHERE user_id = ?', (user_id,))
-    total = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
-    pendentes = cursor.fetchone()[0]
+    cursor.execute('''
+        SELECT
+            SUM(Total_Leituras),
+            SUM(Leituras_Nao_Executadas)
+        FROM resultados_leitura
+        WHERE user_id = ?
+    ''', (user_id,))
+    row = cursor.fetchone()
     conn.close()
+
+    total = int(row[0] or 0)
+    pendentes = int(row[1] or 0)
 
     return {"total": total, "pendentes": pendentes}
 
@@ -764,8 +771,26 @@ def save_porteira_table_data(data_list, user_id):
             data.get('Releituras_Nao_Executadas')
         ))
 
+    # Calcular totais para o gráfico histórico
+    cursor.execute('''
+        SELECT
+            SUM(Total_Leituras),
+            SUM(Leituras_Nao_Executadas)
+        FROM resultados_leitura
+        WHERE user_id = ?
+    ''', (user_id,))
+    row = cursor.fetchone()
+
+    total = int(row[0] or 0)
+    pendentes = int(row[1] or 0)
+    realizadas = max(total - pendentes, 0)
+
     conn.commit()
     conn.close()
+
+    # Salvar snapshot no gráfico histórico
+    now = datetime.now().isoformat()
+    _save_grafico_snapshot('porteira', total, pendentes, realizadas, None, now, user_id)
 
 
 def get_porteira_chart_summary(user_id, ciclo: str | None = None):

@@ -284,20 +284,6 @@ def upload_porteira():
     })
 
 
-    save_porteira_data(details, file_hash, user_id)
-    save_file_history('porteira', len(details), file_hash, user_id)
-    labels, values = get_porteira_chart_data(user_id)
-    metrics = get_porteira_metrics(user_id)
-    all_details = []  # normal para porteira
-
-    return jsonify({
-        "success": True,
-        "metrics": metrics,
-        "chart": {"labels": labels, "values": values},
-        "details": all_details
-    })
-
-
 
 @app.route('/api/sync/releitura', methods=['POST'])
 def sync_releitura():
