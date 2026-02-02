@@ -447,7 +447,7 @@ See the [LICENSE](LICENSE) file for full legal terms.
 
 <div align="center">
 
-**Created with ❤️ by [Allan Silva (hrsallan)](https://github.com/hrsallan)**
+**Created by [Allan Silva (hrsallan)](https://github.com/hrsallan)**
 
 Copyright © 2026 Allan Silva. All rights reserved.
 
