@@ -310,7 +310,9 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
                             <div style="flex: 1;">
                                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                    <h2 style="margin: 0; font-size: 2.2rem;" data-i18n="hero.title">Bem-vindo ao VigilaCore</h2>
+                                    <h2 style="margin: 0; font-size: 2.2rem;">
+                                        <span id="username-display" style="color: var(--v2-primary);">Usuário</span>, <span data-i18n="hero.welcome">Seja Bem-Vindo</span>!
+                                    </h2>
                                     <div class="status-badge">
                                         <span class="pulse-dot"></span>
                                         <span data-i18n="hero.status">Ativo</span>
@@ -321,7 +323,7 @@
                                 </p>
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                     <span class="tech-badge"><i data-lucide="code" style="width: 14px; height: 14px;"></i> Python + Flask</span>
-                                    <span class="tech-badge"><i data-lucide="database" style="width: 14px; height: 14px;"></i> MongoDB</span>
+                                    <span class="tech-badge"><i data-lucide="database" style="width: 14px; height: 14px;"></i> SQLite3</span>
                                     <span class="tech-badge"><i data-lucide="zap" style="width: 14px; height: 14px;"></i> Real-time</span>
                                     <span class="tech-badge"><i data-lucide="shield" style="width: 14px; height: 14px;"></i> <span data-i18n="tech.secure">Seguro</span></span>
                                 </div>
@@ -441,7 +443,7 @@
                                     <span class="tech-badge">Python</span>
                                     <span class="tech-badge">SQLite3</span>
                                     <span class="tech-badge">Flask</span>
-                                    <span class="tech-badge">MongoDB</span>
+                                    <span class="tech-badge">SQLite3</span>
                                     <span class="tech-badge">JavaScript</span>
                                     <span class="tech-badge">HTML/CSS</span>
                                     <span class="tech-badge">API REST</span>
@@ -469,6 +471,35 @@
     <script>
         lucide.createIcons();
 
+        // Função para decodificar JWT
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('Erro ao decodificar token:', e);
+                return null;
+            }
+        }
+
+        // Exibir nome do usuário
+        function displayUsername() {
+            const token = localStorage.getItem('vigilacore_token');
+            if (token) {
+                const decoded = parseJwt(token);
+                if (decoded && decoded.username) {
+                    document.getElementById('username-display').textContent = decoded.username;
+                }
+            }
+        }
+
+        // Chamar ao carregar a página
+        displayUsername();
+
         // Relógio e data
         function updateClock() {
             const now = new Date();
@@ -483,7 +514,7 @@
         // Sistema de tradução
         const translations = {
             'pt-BR': {
-                'hero.title': 'Bem-vindo ao VigilaCore',
+                'hero.welcome': 'Seja Bem-Vindo',
                 'hero.status': 'Ativo',
                 'hero.description': 'Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, dashboards em tempo real e controle avançado de operações.',
                 'tech.secure': 'Seguro',
@@ -512,7 +543,7 @@
                 'footer.status': 'Sistema em desenvolvimento'
             },
             'en-US': {
-                'hero.title': 'Welcome to VigilaCore',
+                'hero.welcome': 'Welcome',
                 'hero.status': 'Active',
                 'hero.description': 'Complete system for monitoring and analyzing readings — intelligent data processing, real-time dashboards and advanced operations control.',
                 'tech.secure': 'Secure',
