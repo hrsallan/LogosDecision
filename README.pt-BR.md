@@ -447,7 +447,7 @@ Veja o arquivo [LICENSE](LICENSE) para termos legais completos.
 
 <div align="center">
 
-**Criado com ❤️ por [Allan Silva (hrsallan)](https://github.com/hrsallan)**
+**Criado por [Allan Silva (hrsallan)](https://github.com/hrsallan)**
 
 Copyright © 2026 Allan Silva. Todos os direitos reservados.
 
