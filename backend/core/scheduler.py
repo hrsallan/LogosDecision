@@ -118,8 +118,12 @@ class AutoScheduler:
         else:
             # Intervalo cruzando meia-noite (ex.: 22-6) -> duas faixas
             # OBS: CronTrigger aceita lista separada por vírgula.
-            end_inclusive = max(0, self.end_hour - 1)
-            hour_expr_base = f"{self.start_hour}-23,0-{end_inclusive}"
+            end_inclusive = self.end_hour - 1
+            if end_inclusive >= 0:
+                hour_expr_base = f"{self.start_hour}-23,0-{end_inclusive}"
+            else:
+                # Caso termine exatamente à meia-noite (0h) -> só vai até 23h
+                hour_expr_base = f"{self.start_hour}-23"
 
         minutes = int(self.interval_minutes)
 
