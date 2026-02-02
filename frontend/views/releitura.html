@@ -778,7 +778,7 @@
             syncBtn.style.opacity = '0.5';
             syncBtn.style.pointerEvents = 'none';
 
-            authFetch('/api/upload/releitura', {
+            authFetch('/api/upload', {
                 method: 'POST',
                 body: formData
             })
@@ -795,7 +795,7 @@
             })
             .catch(err => {
                 console.error(err);
-                alert("❌ " + (error?.message || "Erro ao conectar com o servidor"));
+                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
             })
             .finally(() => {
                 this.value = '';
@@ -838,7 +838,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert("❌ " + (error?.message || "Erro ao conectar com o servidor"));
+                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
             } finally {
                 isUploading = false;
                 this.style.opacity = '';

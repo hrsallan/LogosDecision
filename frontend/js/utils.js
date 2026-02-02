@@ -79,3 +79,41 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
         start();
     }
 })();
+
+// -------------------------------------------------------
+// Global alert filter + helpers
+// Some browsers report network/CORS issues as: "TypeError: Failed to fetch".
+// The app may still be fine (e.g., preflight/abort), but the UI would spam alerts.
+// We suppress only these noisy network messages.
+(function () {
+    const _alert = window.alert ? window.alert.bind(window) : null;
+
+    function isNetworkMessage(msg) {
+        const s = String(msg || '');
+        return /failed to fetch|networkerror|load failed|fetch api cannot load/i.test(s);
+    }
+
+    window.vcIsNetworkError = function (err) {
+        const m = (err && (err.message || err.toString())) ? String(err.message || err.toString()) : '';
+        return isNetworkMessage(m);
+    };
+
+    window.vcShowErrorAlert = function (err, fallbackMsg) {
+        const msg = (err && (err.message || err.toString())) ? String(err.message || err.toString()) : '';
+        if (isNetworkMessage(msg)) {
+            console.warn('[VigilaCore] Suppressed network alert:', msg, err);
+            return;
+        }
+        if (_alert) _alert('❌ ' + (msg || fallbackMsg || 'Erro ao conectar com o servidor'));
+    };
+
+    if (_alert) {
+        window.alert = function (msg) {
+            if (isNetworkMessage(msg)) {
+                console.warn('[VigilaCore] Suppressed alert:', msg);
+                return;
+            }
+            return _alert(msg);
+        };
+    }
+})();

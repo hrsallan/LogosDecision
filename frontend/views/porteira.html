@@ -1251,7 +1251,7 @@
             })
             .catch(err => {
                 console.error(err);
-                alert("❌ " + (error?.message || "Erro ao conectar com o servidor"));
+                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
             })
             .finally(() => {
                 this.value = '';
@@ -1304,7 +1304,7 @@
                 updateConnectionStatus(true);
             } catch (error) {
                 console.error("Erro ao sincronizar:", error);
-                alert("❌ " + (error?.message || "Erro ao sincronizar."));
+                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
                 updateConnectionStatus(false);
             } finally {
                 isUploading = false;

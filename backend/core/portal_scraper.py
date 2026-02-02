@@ -98,6 +98,7 @@ def download_releitura_excel(
         from selenium import webdriver  # type: ignore
         from selenium.webdriver.common.window import WindowTypes  # type: ignore
         from selenium.webdriver.common.by import By  # type: ignore
+        from selenium.webdriver.common.keys import Keys  # type: ignore
         from selenium.webdriver.support.ui import WebDriverWait  # type: ignore
         from selenium.webdriver.support import expected_conditions as EC  # type: ignore
         from selenium.webdriver.chrome.options import Options  # type: ignore
@@ -136,7 +137,7 @@ def download_releitura_excel(
     LOC_RELEITURA_BY_HREF = (By.XPATH, "//a[contains(@href,'/SGLEmpreiteira/Relatorios/RlReleituraNaoExecutada')]")
     LOC_RELEITURA_BY_TEXT = (By.XPATH, "//a[contains(.,'Releit') or contains(.,'RELEIT')]")
     LOC_MES_ANO = (By.ID, "txtMesAno")
-    LOC_DATA_HOJE = (By.XPATH, "//div[@class='datepicker-months']/table/tfoot/tr/th[contains(@class,'today')]")
+    LOC_DATA_HOJE = (By.XPATH, "/html/body/div[3]/div[2]/table/tbody/tr/td/span[1]")
     # LOC_UNIDADE_INI = (By.ID, "txtUnidadeLeituraIni")
     # LOC_UNIDADE_FIM = (By.ID, "txtUnidadeLeituraFim")
     LOC_BTN_GERAR = (By.ID, "btnGerarExcel")
@@ -234,6 +235,7 @@ def download_porteira_excel(
         import pyautogui  # type: ignore
         from selenium import webdriver  # type: ignore
         from selenium.webdriver.common.by import By  # type: ignore
+        from selenium.webdriver.common.keys import Keys  # type: ignore
         from selenium.webdriver.common.window import WindowTypes  # type: ignore
         from selenium.webdriver.support.ui import WebDriverWait  # type: ignore
         from selenium.webdriver.support import expected_conditions as EC  # type: ignore
@@ -271,7 +273,7 @@ def download_porteira_excel(
     LOC_PORTEIRA_BY_HREF = (By.XPATH, "//a[contains(@href,'/SGLEmpreiteira/Relatorios/RlAcompanhamentoResultadoLeitura')]")
     LOC_PORTEIRA_BY_TEXT = (By.XPATH, "//a[contains(.,'Acompanh') or contains(.,'Resultado') or contains(.,'Leitura')]")
     LOC_MES_ANO = (By.ID, "txtMesAno")
-    LOC_DATA_HOJE = (By.XPATH, "//div[@class='datepicker-months']/table/tfoot/tr/th[contains(@class,'today')]")
+    LOC_DATA_HOJE = (By.XPATH, "/html/body/div[3]/div[2]/table/tbody/tr/td/span[1]")
     LOC_UNIDADE_INI = (By.ID, "txtUnidadeLeituraIni")
     LOC_UNIDADE_FIM = (By.ID, "txtUnidadeLeituraFim")
     LOC_BTN_GERAR = (By.ID, "btnGerarExcel")
@@ -353,8 +355,22 @@ def download_porteira_excel(
             wait.until(EC.element_to_be_clickable(LOC_DATA_HOJE)).click()
 
         # Unidade range
-        wait.until(EC.element_to_be_clickable(LOC_UNIDADE_INI)).send_keys(unidade_de)
-        driver.find_element(*LOC_UNIDADE_FIM).send_keys(unidade_ate)
+        # Unidade range (garante que não concatena com valor pré-preenchido)
+        ini = wait.until(EC.element_to_be_clickable(LOC_UNIDADE_INI))
+        fim = driver.find_element(*LOC_UNIDADE_FIM)
+        for el, val in ((ini, unidade_de), (fim, unidade_ate)):
+            try:
+                el.click()
+                el.clear()
+            except Exception:
+                pass
+            try:
+                # fallback: CTRL+A + DEL
+                el.send_keys(Keys.CONTROL, 'a')
+                el.send_keys(Keys.DELETE)
+            except Exception:
+                pass
+            el.send_keys(val)
 
         # Download
         wait.until(EC.element_to_be_clickable(LOC_BTN_GERAR)).click()
