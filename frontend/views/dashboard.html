@@ -163,6 +163,19 @@
                         <div class="trend-chart-wrap"><canvas id="trend-chart"></canvas></div>
                     </div>
                 </div>
+
+                <!-- NOVO GRÁFICO: Leituras Não Executadas por Razão -->
+                <div class="chart-container">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <i data-lucide="pie-chart" style="width: 24px; height: 24px; color: var(--v2-primary);"></i>
+                        <div>
+                            <h2 class="chart-title" style="margin-bottom: 4px;">Leituras Não Executadas por Razão</h2>
+                            <p style="font-size: 0.8rem; color: var(--v2-text-dim); margin: 0;">Distribuição das pendências por categoria (dados da Porteira)</p>
+                        </div>
+                    </div>
+                    <div class="trend-chart-wrap" style="height: 400px;"><canvas id="nao-executadas-chart"></canvas></div>
+                </div>
+
                 <div class="chart-container">
                     <h2 class="chart-title">Linha do Tempo de Atividades</h2>
                     <div id="activity-timeline" class="activity-timeline"></div>
@@ -173,7 +186,7 @@
 
    <script>
     const API_BASE = '/api';
-    let trendChart = null, razaoChart = null;
+    let trendChart = null, razaoChart = null, naoExecutadasChart = null;
     let currentCiclo = '';
 
     // Regras dos ciclos rurais (Razões 89..100): por mês (97/98/99) e a Razão 96 entra sempre.
@@ -339,6 +352,8 @@
             updateMetrics(data);
 updateTimeline(data.activity_timeline || []);
             updateCharts(data);
+            renderNaoExecutadasChart();
+            lucide.createIcons();
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('v2-conn').className = 'v2-status-pill online';
@@ -433,6 +448,68 @@ updateTimeline(data.activity_timeline || []);
             });
         }
 
+    }
+
+    // Função para renderizar o gráfico de Leituras Não Executadas por Razão
+    async function renderNaoExecutadasChart() {
+        try {
+            const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
+            const res = await authenticatedFetch(`${API_BASE}/porteira/nao-executadas-chart${params}`);
+            
+            if (res === null) return; // Token ausente, já redirecionado
+            
+            const ctx = document.getElementById("nao-executadas-chart");
+            if (!ctx) return;
+
+            if (naoExecutadasChart) naoExecutadasChart.destroy();
+
+            naoExecutadasChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: res.labels || [],
+                    datasets: [{
+                        label: "Leituras Não Executadas",
+                        data: res.values || [],
+                        backgroundColor: 'rgba(248, 81, 73, 0.2)',
+                        borderColor: 'rgba(248, 81, 73, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                            titleColor: '#00d1ff',
+                            bodyColor: '#c9d1d9',
+                            borderColor: '#30363d',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#8b949e', font: { size: 11 } }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                            ticks: { color: '#8b949e' }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao renderizar gráfico de não executadas:', error);
+        }
     }
 
     // Event listeners
