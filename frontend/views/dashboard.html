@@ -5,43 +5,496 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Dashboard Inteligente</title>
     <link rel="stylesheet" href="../css/v2_modern.css">
-    <link rel="stylesheet" href="../css/dashboard.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
+    
+    <style>
+        /* ==================== DASHBOARD PAGE ENHANCEMENTS ==================== */
+        
+        .page-dashboard .v2-main {
+            padding: 24px;
+        }
+
+        /* Enhanced Metrics Grid - igual porteira/releitura */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .metric-card.warning::before {
+            background: radial-gradient(circle, rgba(210, 153, 34, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.success::before {
+            background: radial-gradient(circle, rgba(35, 134, 54, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.danger::before {
+            background: radial-gradient(circle, rgba(248, 81, 73, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(0, 209, 255, 0.1);
+        }
+
+        .metric-icon i {
+            width: 20px;
+            height: 20px;
+            color: var(--v2-primary);
+        }
+
+        .metric-card.warning .metric-icon {
+            background: rgba(210, 153, 34, 0.1);
+        }
+
+        .metric-card.warning .metric-icon i {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.success .metric-icon {
+            background: rgba(35, 134, 54, 0.1);
+        }
+
+        .metric-card.success .metric-icon i {
+            color: var(--v2-success);
+        }
+
+        .metric-card.danger .metric-icon {
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .metric-card.danger .metric-icon i {
+            color: var(--v2-danger);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--v2-text);
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric-card.warning .metric-value {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.success .metric-value {
+            color: var(--v2-success);
+        }
+
+        .metric-card.danger .metric-value {
+            color: var(--v2-danger);
+        }
+
+        .metric-sub {
+            font-size: 0.75rem;
+            color: var(--v2-text-dim);
+            margin-top: 8px;
+        }
+
+        /* Cycle Selector Card - igual porteira */
+        .cycle-selector-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .cycle-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cycle-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .cycle-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--v2-primary);
+            margin-bottom: 6px;
+        }
+
+        .cycle-title {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--v2-text);
+            margin-bottom: 4px;
+        }
+
+        .cycle-subtitle {
+            font-size: 0.85rem;
+            color: var(--v2-text-dim);
+        }
+
+        .cycle-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+        }
+
+        .cycle-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--v2-text-dim);
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .cycle-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .cycle-btn.is-active {
+            background: rgba(35, 134, 54, 0.15);
+            color: var(--v2-success);
+            box-shadow: 0 0 0 1px rgba(35, 134, 54, 0.3) inset;
+        }
+
+        .cycle-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .cycle-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .cycle-card.base {
+            border-color: rgba(88, 166, 255, 0.3);
+        }
+
+        .cycle-card.rural {
+            border-color: rgba(35, 134, 54, 0.3);
+        }
+
+        .cycle-card.cycle {
+            border-color: rgba(210, 153, 34, 0.3);
+        }
+
+        .cycle-card.always {
+            border-color: rgba(248, 81, 73, 0.3);
+        }
+
+        .cycle-card-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            margin-bottom: 8px;
+        }
+
+        .cycle-card-value {
+            font-size: 1rem;
+            font-weight: 900;
+            color: var(--v2-text);
+        }
+
+        /* Chart Cards - igual porteira/releitura */
+        .chart-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .chart-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-title i {
+            width: 24px;
+            height: 24px;
+            color: var(--v2-primary);
+        }
+
+        .chart-title h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            margin-top: 4px;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 400px;
+            padding: 16px 0;
+        }
+
+        .chart-canvas.large {
+            height: 500px;
+        }
+
+        /* Timeline Card */
+        .timeline-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .timeline-header i {
+            width: 24px;
+            height: 24px;
+            color: var(--v2-primary);
+        }
+
+        .timeline-header h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .activity-timeline {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-date {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--v2-primary);
+            min-width: 80px;
+        }
+
+        .activity-type {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--v2-text);
+        }
+
+        .activity-count {
+            font-size: 0.75rem;
+            color: var(--v2-text-dim);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--v2-text-dim);
+        }
+
+        .empty-state i {
+            width: 48px;
+            height: 48px;
+            color: var(--v2-text-dim);
+            opacity: 0.3;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 12, 16, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--v2-border);
+            border-top-color: var(--v2-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: var(--v2-text-dim);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cycle-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-canvas {
+                height: 300px;
+            }
+
+            .chart-canvas.large {
+                height: 350px;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="page-dashboard">
     <div id="loading" class="loading-overlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">Carregando Dashboard...</div>
     </div>
 
     <div class="v2-container">
+        <!-- SIDEBAR -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
-                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
                     <i data-lucide="panel-left"></i>
                 </button>
                 <div class="v2-logo-text v2-brand-text">
-                    <span class="logo-vigila">Vigila</span>
-                    <span class="logo-core">Core</span>
+                    <span class="logo-vigila">Vigila</span><span class="logo-core">Core</span>
                 </div>
             </div>
+
             <nav class="v2-nav">
-                <a href="menu_principal.html" class="v2-nav-item">
+                <a href="menu_principal.html" class="v2-nav-item" data-title="Menu Principal">
                     <i data-lucide="globe"></i>
                     <span class="v2-nav-text">Menu Principal</span>
                 </a>
-                <a href="dashboard.html" class="v2-nav-item active">
+                <a href="dashboard.html" class="v2-nav-item active" data-title="Dashboard">
                     <i data-lucide="layout-dashboard"></i>
                     <span class="v2-nav-text">Dashboard</span>
                 </a>
-                <a href="releitura.html" class="v2-nav-item">
+                <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
                     <i data-lucide="refresh-cw"></i>
                     <span class="v2-nav-text">Releituras</span>
                 </a>
-                <a href="porteira.html" class="v2-nav-item">
+                <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
                     <i data-lucide="door-open"></i>
                     <span class="v2-nav-text">Porteira</span>
                 </a>
@@ -49,28 +502,32 @@
                     <i data-lucide="circle-user-round"></i>
                     <span class="v2-nav-text">Área do Usuário</span>
                 </a>
+
                 <div class="v2-nav-divider"></div>
                 <div class="v2-nav-section-label">Em breve</div>
-                <a href="relatorios.html" class="v2-nav-item">
+
+                <a href="relatorios.html" class="v2-nav-item" data-title="Relatórios">
                     <i data-lucide="file-text"></i>
                     <span class="v2-nav-text">Relatórios</span>
                 </a>
-                <a href="ia.html" class="v2-nav-item">
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
                     <i data-lucide="brain"></i>
                     <span class="v2-nav-text">Análise IA</span>
                 </a>
-                <a href="administracao.html" class="v2-nav-item">
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
                     <i data-lucide="settings"></i>
                     <span class="v2-nav-text">Administração</span>
                 </a>
-                <a href="login.html" class="v2-nav-item v2-nav-logout">
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
                     <i data-lucide="power"></i>
                     <span class="v2-nav-text">Sair</span>
                 </a>
             </nav>
         </aside>
 
+        <!-- CONTENT -->
         <div class="v2-content">
+            <!-- HEADER -->
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Dashboard Inteligente</h1>
@@ -80,7 +537,9 @@
                     <button id="refresh-btn" type="button" class="v2-icon-btn" title="Atualizar">
                         <i data-lucide="refresh-cw"></i>
                     </button>
+                    
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
+                    
                     <div class="v2-clock-widget">
                         <div class="v2-time-display" id="v2-clock-val">--:--</div>
                         <div class="v2-date-display" id="v2-date">--/--/----</div>
@@ -88,398 +547,525 @@
                 </div>
             </header>
 
+            <!-- MAIN CONTENT -->
             <main class="v2-main">
-                <!-- Filtro por Ciclo (Rural OSB) - idêntico ao da aba Porteira.
-                     OBS: aqui o filtro afeta SOMENTE as métricas de Abertura de Porteira. -->
-                <div class="v2-card" id="v2-cycle-card" style="margin-bottom: 1rem;">
-                    <div class="v2-cycle-top">
+                <!-- CYCLE SELECTOR -->
+                <div class="cycle-selector-card">
+                    <div class="cycle-header">
+                        <div class="cycle-info">
+                            <div class="cycle-label">Rural OSB</div>
+                            <div class="cycle-title">Selecionar Ciclo</div>
+                            <p class="cycle-subtitle">Razões rurais por mês de vencimento</p>
+                        </div>
+                        
+                        <div class="cycle-buttons">
+                            <button type="button" class="cycle-btn is-active" data-cycle="" id="cycle-btn-all">Todos</button>
+                            <button type="button" class="cycle-btn" data-cycle="97" id="cycle-btn-97">Ciclo 97</button>
+                            <button type="button" class="cycle-btn" data-cycle="98" id="cycle-btn-98">Ciclo 98</button>
+                            <button type="button" class="cycle-btn" data-cycle="99" id="cycle-btn-99">Ciclo 99</button>
+                        </div>
+                    </div>
+
+                    <div class="cycle-cards-grid" id="cycle-ul-cards"></div>
+                </div>
+
+                <!-- METRICS -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="refresh-cw"></i>
+                            </div>
+                            <span class="metric-label">Total Releituras</span>
+                        </div>
+                        <div class="metric-value" id="total-releituras">0</div>
+                        <div class="metric-sub">
+                            <span id="releituras-concluidas">0</span> concluídas • 
+                            <span id="releituras-pendentes">0</span> pendentes
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card success">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="check-circle"></i>
+                            </div>
+                            <span class="metric-label">Releituras Realizadas</span>
+                        </div>
+                        <div class="metric-value" id="releituras-realizadas">0</div>
+                        <div class="metric-sub">Releituras executadas com sucesso</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="list-checks"></i>
+                            </div>
+                            <span class="metric-label">Leituras Totais</span>
+                        </div>
+                        <div class="metric-value" id="leituras-totais">0</div>
+                        <div class="metric-sub">Total de leituras registradas no sistema</div>
+                    </div>
+                    
+                    <div class="metric-card success">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="check-circle-2"></i>
+                            </div>
+                            <span class="metric-label">Leituras Realizadas</span>
+                        </div>
+                        <div class="metric-value" id="leituras-realizadas">0</div>
+                        <div class="metric-sub">Taxa: <span id="leituras-percentual-value">0%</span></div>
+                    </div>
+                </div>
+
+                <!-- TREND CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
                         <div>
-                            <div class="v2-card-label">Rural OSB</div>
-                            <div class="v2-cycle-title">Selecionar Ciclo <span class="v2-cycle-sub">(razões rurais por mês)</span></div>
-                        </div>
-
-                        <div class="v2-cycle-segment" role="group" aria-label="Selecionar ciclo">
-                            <button type="button" class="v2-cycle-btn is-active" data-cycle="" id="cycle-btn-all">Todos</button>
-                            <button type="button" class="v2-cycle-btn" data-cycle="97" id="cycle-btn-97">Ciclo 97</button>
-                            <button type="button" class="v2-cycle-btn" data-cycle="98" id="cycle-btn-98">Ciclo 98</button>
-                            <button type="button" class="v2-cycle-btn" data-cycle="99" id="cycle-btn-99">Ciclo 99</button>
+                            <div class="chart-title">
+                                <i data-lucide="trending-up"></i>
+                                <h3>Tendência de Releituras (30 dias)</h3>
+                            </div>
+                            <p class="chart-subtitle">Evolução das releituras realizadas e pendentes</p>
                         </div>
                     </div>
-
-                    <div class="v2-cycle-ulgrid" id="cycle-ul-cards" aria-label="Razões incluídas no filtro"></div>
-                </div>
-
-                <div class="dashboard-grid">
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <span class="metric-title">Total Releituras</span>
-                            <div class="metric-icon">
-                                <i data-lucide="refresh-cw" style="color: var(--v2-primary); width: 20px; height: 20px;"></i>
-                            </div>
-                        </div>
-                        <div class="metric-value" id="total-releituras">--</div>
-                        <div class="metric-label">
-                            <span id="releituras-concluidas">--</span> concluídas • 
-                            <span id="releituras-pendentes">--</span> pendentes
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <span class="metric-title">Releituras Realizadas</span>
-                            <div class="metric-icon">
-                                <i data-lucide="check-circle-2" style="color: var(--v2-success); width: 20px; height: 20px;"></i>
-                            </div>
-                        </div>
-                        <div class="metric-value" id="releituras-realizadas" style="color: var(--v2-success);">--</div>
-                        <div class="metric-label">Releituras executadas com sucesso</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <span class="metric-title">Leituras Totais</span>
-                            <div class="metric-icon">
-                                <i data-lucide="list-checks" style="color: var(--v2-primary); width: 20px; height: 20px;"></i>
-                            </div>
-                        </div>
-                        <div class="metric-value" id="leituras-totais">--</div>
-                        <div class="metric-label">Total de leituras registradas no sistema</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <span class="metric-title">Leituras Realizadas</span>
-                            <div class="metric-icon" style="background: rgba(35, 134, 54, 0.1); border-color: rgba(35, 134, 54, 0.2);">
-                                <i data-lucide="check-circle" style="color: var(--v2-success); width: 20px; height: 20px;"></i>
-                            </div>
-                        </div>
-                        <div class="metric-value" id="leituras-realizadas" style="color: var(--v2-success);">--</div>
-                        <div class="metric-label">
-                            Taxa de execução: <span id="leituras-percentual-value">--%</span>
-                        </div>
+                    <div class="chart-canvas">
+                        <canvas id="trend-chart"></canvas>
                     </div>
                 </div>
 
-                <div class="charts-row">
-                    <div class="chart-container">
-                        <h2 class="chart-title">Tendência de Releituras (30 dias)</h2>
-                        <div class="trend-chart-wrap"><canvas id="trend-chart"></canvas></div>
+                <!-- NAO EXECUTADAS CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="pie-chart"></i>
+                                <h3>Leituras Não Executadas por Razão</h3>
+                            </div>
+                            <p class="chart-subtitle">Distribuição das pendências por categoria (dados da Porteira)</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="nao-executadas-chart"></canvas>
                     </div>
                 </div>
-                <div class="chart-container">
-                    <h2 class="chart-title">Linha do Tempo de Atividades</h2>
-                    <div id="activity-timeline" class="activity-timeline"></div>
+
+                <!-- ACTIVITY TIMELINE -->
+                <div class="timeline-card">
+                    <div class="timeline-header">
+                        <i data-lucide="clock"></i>
+                        <h3>Linha do Tempo de Atividades</h3>
+                    </div>
+                    <div id="activity-timeline" class="activity-timeline">
+                        <div class="empty-state">
+                            <i data-lucide="inbox"></i>
+                            <p>Nenhuma atividade recente</p>
+                        </div>
+                    </div>
                 </div>
             </main>
+
+            <!-- FOOTER -->
+            <footer class="v2-footer">
+                <span>VigilaCore | Desenvolvimento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
         </div>
     </div>
 
-   <script>
-    const API_BASE = '/api';
-    let trendChart = null, razaoChart = null;
-    let currentCiclo = '';
-
-    // Regras dos ciclos rurais (Razões 89..100): por mês (97/98/99) e a Razão 96 entra sempre.
-    const CYCLE_RAZOES = {
-        "97": [90, 91],
-        "98": [92, 93],
-        "99": [89, 94],
-    };
-    const RURAL_ALWAYS = [96];
-
-    function getAllowedRuralRazoens(cycle) {
-        const c = (cycle || "").toString().trim();
-        const base = (CYCLE_RAZOES[c] || []).slice();
-        const cycNum = (c && String(parseInt(c, 10)) === c) ? [parseInt(c, 10)] : [];
-        return [...base, ...cycNum, ...RURAL_ALWAYS];
-    }
-
-    function updateCycleButtons() {
-        const btnAll = document.getElementById('cycle-btn-all');
-        const btn97 = document.getElementById('cycle-btn-97');
-        const btn98 = document.getElementById('cycle-btn-98');
-        const btn99 = document.getElementById('cycle-btn-99');
-
-        const buttons = [btnAll, btn97, btn98, btn99].filter(Boolean);
-        buttons.forEach(b => b.classList.remove('is-active'));
-
-        const map = {"": btnAll, "97": btn97, "98": btn98, "99": btn99};
-        const activeBtn = map[currentCiclo] || btnAll;
-        if (activeBtn) activeBtn.classList.add('is-active');
-    }
-
-    function renderCycleUniverseInfo() {
-        const cards = document.getElementById('cycle-ul-cards');
-        if (!cards) return;
-
-        let cardModels = [];
-        if (!currentCiclo) {
-            cardModels = [
-                { label: "BASE", value: "R01–R88", tone: "base" },
-                { label: "C97", value: "R90 • R91 • R97", tone: "cycle" },
-                { label: "C98", value: "R92 • R93 • R98", tone: "cycle" },
-                { label: "C99", value: "R89 • R94 • R99", tone: "cycle" },
-                { label: "SEMPRE", value: "R96", tone: "always" },
-            ];
-        } else {
-            const allowed = getAllowedRuralRazoens(currentCiclo).map(r => "R" + String(r).padStart(2, "0"));
-            const cycleNum = "R" + String(parseInt(currentCiclo, 10)).padStart(2, "0");
-            const always = "R96";
-            const rurals = allowed.filter(x => x !== always && x !== cycleNum);
-            cardModels = [
-                { label: "BASE", value: "R01–R88", tone: "base" },
-                { label: "RURAL", value: rurals[0] || "—", tone: "rural" },
-                { label: "RURAL", value: rurals[1] || "—", tone: "rural" },
-                { label: "CICLO", value: cycleNum, tone: "cycle" },
-                { label: "SEMPRE", value: always, tone: "always" },
-            ];
-        }
-
-        cards.innerHTML = cardModels.map(m => `
-            <div class="v2-cycle-ulcard ${m.tone}">
-                <div class="v2-cycle-ulcard-label">${m.label}</div>
-                <div class="v2-cycle-ulcard-value">${m.value}</div>
-            </div>
-        `).join("");
-    }
-
-    // Função para buscar token
-    function getToken() {
-        return localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
-    }
-
-    // Função de logout centralizada
-    function logout() {
-        localStorage.removeItem('vigilacore_token');
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-    }
-
-    // Função para fazer requisições autenticadas com melhor tratamento de erros
-    async function authenticatedFetch(url, options = {}) {
-        const token = getToken();
-        if (!token) {
-            // Sem token -> redireciona imediatamente para login
-            logout();
-            return null;
-        }
-
-        options.headers = {
-            ...options.headers,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        };
-
-        try {
-            const response = await authFetch(url, options);
-
-            // Se não autenticado, remove token e lança erro com status
-            if (response.status === 401) {
-                localStorage.removeItem('vigilacore_token');
-                localStorage.removeItem('token'); // limpa token local
-                const authError = new Error('Usuário não autenticado');
-                authError.status = 401;
-                throw authError;
-            }
-
-            // Se a resposta não é OK, tenta ler como JSON para pegar erro detalhado
-            if (!response.ok) {
-                const contentType = response.headers.get('content-type') || '';
-                if (contentType.includes('application/json')) {
-                    const errorData = await response.json();
-                    const msg = errorData.error || errorData.detail || JSON.stringify(errorData);
-                    const err = new Error(msg);
-                    err.status = response.status;
-                    throw err;
-                }
-                const text = await response.text();
-                const err = new Error(`HTTP ${response.status}: ${response.statusText} - ${text.substring(0, 200)}`);
-                err.status = response.status;
-                throw err;
-            }
-
-            // Resposta OK: tenta parsear JSON
-            const contentType = response.headers.get('content-type') || '';
-            if (contentType.includes('application/json')) {
-                return await response.json();
-            }
-
-            // Se não for JSON, retorna o texto (mas indica que não era o esperado)
-            const text = await response.text();
-            const err = new Error('Resposta do servidor não está em formato JSON');
-            err.raw = text;
-            throw err;
-
-        } catch (error) {
-            // Re-lança o erro para o chamador tratar (com propriedade .status quando aplicável)
-            console.error('Erro na requisição:', error);
-            throw error;
-        }
-    }
-
-    // Carrega métricas do dashboard
-    async function loadDashboard() {
-        try {
-            const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
-            const data = await authenticatedFetch(`${API_BASE}/dashboard/metrics${params}`);
-
-            // data === null => authenticatedFetch redirecionou/fez logout por token ausente; aborta
-            if (data === null) return;
-
-            // Trata caso "sem dados" como fluxo normal (não lança exceção)
-            const isEmptyObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length === 0;
-            const isEmpty = !data || (Array.isArray(data) && data.length === 0) || isEmptyObject(data);
-
-            if (isEmpty) {
-                document.getElementById('loading').style.display = 'none';
-                if (window.updateConnectionPill) window.updateConnectionPill('v2-conn');
-            document.getElementById('v2-conn').textContent = 'SEM DADOS';
-                alert('Nenhum dado retornado da API.\n\nVerifique se o servidor está rodando e tente novamente.');
-                return;
-            }
-
-            // Processa e atualiza UI
-            updateMetrics(data);
-updateTimeline(data.activity_timeline || []);
-            updateCharts(data);
-
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('v2-conn').className = 'v2-status-pill online';
-            document.getElementById('v2-conn').textContent = 'SISTEMA ONLINE';
-        } catch (error) {
-            console.error('Erro ao carregar dashboard:', error);
-            document.getElementById('loading').style.display = 'none';
-            if (window.updateConnectionPill) window.updateConnectionPill('v2-conn');
-            // Se for 401, desloga / redireciona explicitamente
-            if (error && error.status === 401) {
-                // opcional: mostrar mensagem curta antes de redirecionar
-                // alert('Sessão expirada. Você será redirecionado para a tela de login.');
-                logout();
-                return;
-            }
-
-            // Para outros erros, mostra alerta sem deslogar
-            alert(`Erro ao carregar dashboard: ${error.message}\n\nVerifique se o servidor está rodando e tente novamente.`);
-        }
-    }
-
-    // Atualiza métricas principais
-    function updateMetrics(data) {
-        const p = data.porteira || {};
-        const r = data.releituras || {};
-        const o = data.overview || {};
-
-        document.getElementById('releituras-realizadas').textContent =
-            (p.releituras_executadas || 0).toLocaleString('pt-BR');
-        document.getElementById('leituras-totais').textContent =
-            (p.total_leituras || 0).toLocaleString('pt-BR');
-        document.getElementById('leituras-realizadas').textContent =
-            (p.leituras_executadas || 0).toLocaleString('pt-BR');
-        document.getElementById('leituras-percentual-value').textContent =
-            (p.percentual_execucao || 0).toFixed(1) + '%';
-        document.getElementById('total-releituras').textContent =
-            (r.total || 0).toLocaleString('pt-BR');
-        document.getElementById('releituras-concluidas').textContent =
-            (r.concluidas || 0).toLocaleString('pt-BR');
-        document.getElementById('releituras-pendentes').textContent =
-            (r.pendentes || 0).toLocaleString('pt-BR');
-    }
-
-    // Atualiza timeline
-    function updateTimeline(timeline) {
-        const container = document.getElementById('activity-timeline');
-        if (!timeline || timeline.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--v2-text-dim); padding: 2rem;">Nenhuma atividade recente</p>';
-            return;
-        }
-        container.innerHTML = timeline.map(a => `
-            <div class="activity-item">
-                <div class="activity-date">${new Date(a.data).toLocaleDateString('pt-BR')}</div>
-                <div style="flex: 1;">
-                    <div class="activity-type">${a.tipo}</div>
-                    <div class="activity-count">${a.uploads} upload(s) • ${a.registros} registros</div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // Atualiza gráficos
-    function updateCharts(data) {
-        Chart.defaults.color = '#8b949e';
-        Chart.defaults.borderColor = '#30363d';
-
-        // Gráfico de tendência
-        const trend = data.releituras_trend || [];
-        if (trendChart) trendChart.destroy();
-        if (trend.length > 0) {
-            trendChart = new Chart(document.getElementById('trend-chart'), {
-                type: 'line',
-                data: {
-                    labels: trend.map(t => new Date(t.data).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})),
-                    datasets: [{
-                        label: 'Realizadas',
-                        data: trend.map(t => t.media_realizadas || 0),
-                        borderColor: '#238636',
-                        backgroundColor: 'rgba(35, 134, 54, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }, {
-                        label: 'Pendentes',
-                        data: trend.map(t => t.media_pendentes || 0),
-                        borderColor: '#f85149',
-                        backgroundColor: 'rgba(248, 81, 73, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } } }
-            });
-        }
-
-    }
-
-    // Event listeners
-    document.getElementById('refresh-btn').addEventListener('click', () => {
-        document.getElementById('loading').style.display = 'flex';
-        loadDashboard();
-    });
-
-    // Botões do filtro de ciclo (afeta SOMENTE Abertura de Porteira no backend)
-    function attachCycleEvents() {
-        const ids = ['cycle-btn-all', 'cycle-btn-97', 'cycle-btn-98', 'cycle-btn-99'];
-        ids.forEach(id => {
-            const btn = document.getElementById(id);
-            if (!btn) return;
-            btn.addEventListener('click', () => {
-                currentCiclo = (btn.getAttribute('data-cycle') || '').trim();
-                updateCycleButtons();
-                renderCycleUniverseInfo();
-                document.getElementById('loading').style.display = 'flex';
-                loadDashboard();
-            });
-        });
-    }
-
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', () => {
+    <script>
         lucide.createIcons();
 
-        // Relógio (mesmo padrão das outras abas)
+        const API_BASE = '/api';
+        let trendChart = null;
+        let naoExecutadasChart = null;
+        let currentCiclo = '';
+
+        // Regras dos ciclos rurais
+        const CYCLE_RAZOES = {
+            "97": [90, 91],
+            "98": [92, 93],
+            "99": [89, 94],
+        };
+        const RURAL_ALWAYS = [96];
+
+        // Clock
         setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            const clock = document.getElementById('v2-clock-val');
-            const date = document.getElementById('v2-date');
-            if (clock) clock.innerText = `${hours}:${minutes}`;
-            if (date) date.innerText = now.toLocaleDateString('pt-BR');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
         }, 1000);
 
-        updateCycleButtons();
-        renderCycleUniverseInfo();
-        attachCycleEvents();
-        loadDashboard();
-    });
+        function getAllowedRuralRazoens(cycle) {
+            const c = (cycle || "").toString().trim();
+            const base = (CYCLE_RAZOES[c] || []).slice();
+            const cycNum = (c && String(parseInt(c, 10)) === c) ? [parseInt(c, 10)] : [];
+            return [...base, ...cycNum, ...RURAL_ALWAYS];
+        }
 
-    // Auto-refresh
-    setInterval(loadDashboard, 5 * 60 * 1000);
-</script>
+        function updateCycleButtons() {
+            const btnAll = document.getElementById('cycle-btn-all');
+            const btn97 = document.getElementById('cycle-btn-97');
+            const btn98 = document.getElementById('cycle-btn-98');
+            const btn99 = document.getElementById('cycle-btn-99');
+
+            const buttons = [btnAll, btn97, btn98, btn99].filter(Boolean);
+            buttons.forEach(b => b.classList.remove('is-active'));
+
+            const map = {"": btnAll, "97": btn97, "98": btn98, "99": btn99};
+            const activeBtn = map[currentCiclo] || btnAll;
+            if (activeBtn) activeBtn.classList.add('is-active');
+        }
+
+        function renderCycleUniverseInfo() {
+            const cards = document.getElementById('cycle-ul-cards');
+            if (!cards) return;
+
+            let cardModels = [];
+
+            if (!currentCiclo) {
+                cardModels = [
+                    {label: "BASE", value: "R01–R88", tone: "base"},
+                    {label: "C97", value: "R90 • R91 • R97", tone: "cycle"},
+                    {label: "C98", value: "R92 • R93 • R98", tone: "cycle"},
+                    {label: "C99", value: "R89 • R94 • R99", tone: "cycle"},
+                    {label: "SEMPRE", value: "R96", tone: "always"},
+                ];
+            } else {
+                const allowed = getAllowedRuralRazoens(currentCiclo).map(r => "R" + String(r).padStart(2,"0"));
+                const cycleNum = "R" + String(parseInt(currentCiclo,10)).padStart(2,"0");
+                const always = "R96";
+                const rurals = allowed.filter(x => x !== always && x !== cycleNum);
+
+                cardModels = [
+                    {label: "BASE", value: "R01–R88", tone: "base"},
+                    {label: "RURAL", value: rurals[0] || "—", tone: "rural"},
+                    {label: "RURAL", value: rurals[1] || "—", tone: "rural"},
+                    {label: "CICLO", value: cycleNum, tone: "cycle"},
+                    {label: "SEMPRE", value: always, tone: "always"},
+                ];
+            }
+
+            cards.innerHTML = cardModels.map(m => `
+                <div class="cycle-card ${m.tone}">
+                    <div class="cycle-card-label">${m.label}</div>
+                    <div class="cycle-card-value">${m.value}</div>
+                </div>
+            `).join("");
+        }
+
+        function getToken() {
+            return localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
+        }
+
+        function logout() {
+            localStorage.removeItem('vigilacore_token');
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        async function authenticatedFetch(url, options = {}) {
+            const token = getToken();
+            if (!token) {
+                logout();
+                return null;
+            }
+
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+
+            try {
+                const response = await authFetch(url, options);
+
+                if (response.status === 401) {
+                    localStorage.removeItem('vigilacore_token');
+                    localStorage.removeItem('token');
+                    const authError = new Error('Usuário não autenticado');
+                    authError.status = 401;
+                    throw authError;
+                }
+
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        const msg = errorData.error || errorData.detail || JSON.stringify(errorData);
+                        const err = new Error(msg);
+                        err.status = response.status;
+                        throw err;
+                    }
+                    const text = await response.text();
+                    const err = new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    err.status = response.status;
+                    throw err;
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    return await response.json();
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                throw error;
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
+                const data = await authenticatedFetch(`${API_BASE}/dashboard/metrics${params}`);
+
+                if (data === null) return;
+
+                const isEmptyObject = (obj) => obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length === 0;
+                const isEmpty = !data || (Array.isArray(data) && data.length === 0) || isEmptyObject(data);
+
+                if (isEmpty) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('v2-conn').textContent = 'SEM DADOS';
+                    document.getElementById('v2-conn').className = 'v2-status-pill offline';
+                    return;
+                }
+
+                updateMetrics(data);
+                updateTimeline(data.activity_timeline || []);
+                updateTrendChart(data);
+                await renderNaoExecutadasChart();
+                lucide.createIcons();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('v2-conn').className = 'v2-status-pill online';
+                document.getElementById('v2-conn').textContent = 'SISTEMA ONLINE';
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('v2-conn').className = 'v2-status-pill offline';
+                document.getElementById('v2-conn').textContent = 'ERRO';
+                
+                if (error && error.status === 401) {
+                    logout();
+                    return;
+                }
+            }
+        }
+
+        function updateMetrics(data) {
+            const p = data.porteira || {};
+            const r = data.releituras || {};
+
+            document.getElementById('releituras-realizadas').textContent =
+                (p.releituras_executadas || 0).toLocaleString('pt-BR');
+            document.getElementById('leituras-totais').textContent =
+                (p.total_leituras || 0).toLocaleString('pt-BR');
+            document.getElementById('leituras-realizadas').textContent =
+                (p.leituras_executadas || 0).toLocaleString('pt-BR');
+            document.getElementById('leituras-percentual-value').textContent =
+                (p.percentual_execucao || 0).toFixed(1) + '%';
+            document.getElementById('total-releituras').textContent =
+                (r.total || 0).toLocaleString('pt-BR');
+            document.getElementById('releituras-concluidas').textContent =
+                (r.concluidas || 0).toLocaleString('pt-BR');
+            document.getElementById('releituras-pendentes').textContent =
+                (r.pendentes || 0).toLocaleString('pt-BR');
+        }
+
+        function updateTimeline(timeline) {
+            const container = document.getElementById('activity-timeline');
+            if (!timeline || timeline.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="inbox"></i>
+                        <p>Nenhuma atividade recente</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+            container.innerHTML = timeline.map(a => `
+                <div class="activity-item">
+                    <div class="activity-date">${new Date(a.data).toLocaleDateString('pt-BR')}</div>
+                    <div style="flex: 1;">
+                        <div class="activity-type">${a.tipo}</div>
+                        <div class="activity-count">${a.uploads} upload(s) • ${a.registros} registros</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateTrendChart(data) {
+            Chart.defaults.color = '#8b949e';
+            Chart.defaults.borderColor = '#30363d';
+
+            const trend = data.releituras_trend || [];
+            if (trendChart) trendChart.destroy();
+            
+            if (trend.length > 0) {
+                trendChart = new Chart(document.getElementById('trend-chart'), {
+                    type: 'line',
+                    data: {
+                        labels: trend.map(t => new Date(t.data).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})),
+                        datasets: [{
+                            label: 'Realizadas',
+                            data: trend.map(t => t.media_realizadas || 0),
+                            borderColor: '#238636',
+                            backgroundColor: 'rgba(35, 134, 54, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }, {
+                            label: 'Pendentes',
+                            data: trend.map(t => t.media_pendentes || 0),
+                            borderColor: '#f85149',
+                            backgroundColor: 'rgba(248, 81, 73, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#c9d1d9',
+                                    font: { size: 12, weight: '600' },
+                                    padding: 16,
+                                    usePointStyle: true,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                                titleColor: '#00d1ff',
+                                bodyColor: '#c9d1d9',
+                                borderColor: '#30363d',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        async function renderNaoExecutadasChart() {
+            try {
+                const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
+                const res = await authenticatedFetch(`${API_BASE}/porteira/nao-executadas-chart${params}`);
+                
+                if (res === null) return;
+                
+                const ctx = document.getElementById("nao-executadas-chart");
+                if (!ctx) return;
+
+                if (naoExecutadasChart) naoExecutadasChart.destroy();
+
+                naoExecutadasChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: res.labels || [],
+                        datasets: [{
+                            label: "Leituras Não Executadas",
+                            data: res.values || [],
+                            backgroundColor: 'rgba(248, 81, 73, 0.2)',
+                            borderColor: 'rgba(248, 81, 73, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                                titleColor: '#f85149',
+                                bodyColor: '#c9d1d9',
+                                borderColor: '#30363d',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                grid: { display: false },
+                                ticks: { color: '#8b949e', font: { size: 11 } }
+                            },
+                            x: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao renderizar gráfico de não executadas:', error);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            document.getElementById('loading').style.display = 'flex';
+            loadDashboard();
+        });
+
+        // Cycle buttons
+        function attachCycleEvents() {
+            const ids = ['cycle-btn-all', 'cycle-btn-97', 'cycle-btn-98', 'cycle-btn-99'];
+            ids.forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                btn.addEventListener('click', () => {
+                    currentCiclo = (btn.getAttribute('data-cycle') || '').trim();
+                    updateCycleButtons();
+                    renderCycleUniverseInfo();
+                    document.getElementById('loading').style.display = 'flex';
+                    loadDashboard();
+                });
+            });
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            updateCycleButtons();
+            renderCycleUniverseInfo();
+            attachCycleEvents();
+            loadDashboard();
+        });
+
+        // Auto-refresh a cada 5 minutos
+        setInterval(loadDashboard, 5 * 60 * 1000);
+    </script>
 </body>
 </html>
