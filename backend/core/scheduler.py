@@ -4,12 +4,13 @@ Executa downloads automáticos de relatórios em horários configurados.
 
 Configuração via .env:
     SCHEDULER_ENABLED=1                  # Habilita scheduler (0=desabilitado)
-    SCHEDULER_START_HOUR=7               # Hora de início (padrão: 7h)
-    SCHEDULER_END_HOUR=17                # Hora de fim (padrão: 17h)
+    SCHEDULER_START_HOUR=5               # Hora de início (padrão: 5h)
+    SCHEDULER_END_HOUR=22                # Hora de fim (EXCLUSIVO). 22 => até 21:00
     SCHEDULER_INTERVAL_MINUTES=60        # Intervalo em minutos (padrão: 60 = 1 hora)
     SCHEDULER_AUTO_RELEITURA=1           # Auto-download de releitura (padrão: 1)
     SCHEDULER_AUTO_PORTEIRA=1            # Auto-download de porteira (padrão: 1)
-    SCHEDULER_USER_ID=1                  # ID do usuário para salvar dados (obrigatório)
+    SCHEDULER_USER_ID=1                  # (Opcional) ID do usuário para salvar dados
+    SCHEDULER_MANAGER_USERNAME=GRTRI     # Username (gerência) com credenciais do Portal
 """
 
 import os
@@ -33,12 +34,15 @@ class AutoScheduler:
     def __init__(self):
         self.scheduler = None
         self.enabled = False
-        self.start_hour = 7
-        self.end_hour = 18
+        self.start_hour = 5
+        self.end_hour = 22
         self.interval_minutes = 60
         self.auto_releitura = True
         self.auto_porteira = True
         self.user_id = None
+        # Usuário (gerência) que possui as credenciais do Portal SGL para o scheduler.
+        # Por padrão, conforme solicitado, o username é GRTRI.
+        self.portal_manager_username = "GRTRI"
         self.is_running = False
         
         
@@ -63,11 +67,17 @@ class AutoScheduler:
         
         # Ler configurações
         self.enabled = os.getenv("SCHEDULER_ENABLED", "0") == "1"
-        self.start_hour = int(os.getenv("SCHEDULER_START_HOUR", "7"))
-        self.end_hour = int(os.getenv("SCHEDULER_END_HOUR", "18"))
+        self.start_hour = int(os.getenv("SCHEDULER_START_HOUR", "5"))
+        self.end_hour = int(os.getenv("SCHEDULER_END_HOUR", "22"))
         self.interval_minutes = int(os.getenv("SCHEDULER_INTERVAL_MINUTES", "60"))
         self.auto_releitura = os.getenv("SCHEDULER_AUTO_RELEITURA", "1") == "1"
         self.auto_porteira = os.getenv("SCHEDULER_AUTO_PORTEIRA", "1") == "1"
+
+        # Usuário (gerência) que possui as credenciais do Portal para o scheduler.
+        self.portal_manager_username = (
+            os.getenv("SCHEDULER_MANAGER_USERNAME", self.portal_manager_username).strip()
+            or self.portal_manager_username
+        )
         
         user_id_str = os.getenv("SCHEDULER_USER_ID")
         if user_id_str and user_id_str.isdigit():
@@ -75,11 +85,18 @@ class AutoScheduler:
         
         logger.info(f"📋 Configurações do Scheduler:")
         logger.info(f"   - Habilitado: {self.enabled}")
-        logger.info(f"   - Horário: {self.start_hour}h às {self.end_hour}h")
+        logger.info(f"   - Horário: {self._schedule_display()}")
         logger.info(f"   - Intervalo: {self.interval_minutes} minutos")
         logger.info(f"   - Auto Releitura: {self.auto_releitura}")
         logger.info(f"   - Auto Porteira: {self.auto_porteira}")
         logger.info(f"   - User ID: {self.user_id}")
+        logger.info(f"   - Portal Manager Username: {self.portal_manager_username}")
+
+    def _schedule_display(self) -> str:
+        """Retorna o horário em formato amigável (end_hour é exclusivo)."""
+        end_inclusive = (self.end_hour - 1) % 24
+        return f"{self.start_hour:02d}:00 - {end_inclusive:02d}:00"
+
     
     def _is_within_schedule(self) -> bool:
         """Verifica se está dentro do horário configurado"""
@@ -141,6 +158,40 @@ class AutoScheduler:
         # Fallback (melhor esforço)
         return CronTrigger(minute=f"*/{minutes}", second=0, hour=hour_expr_base)
 
+    def _get_scheduler_portal_credentials(self):
+        """Obtém as credenciais do Portal a partir do usuário de gerência.
+
+        Requisitos:
+          - Usuário "gerencia" cadastrado no banco (por padrão username=GRTRI)
+          - Credenciais do portal (portal_user/portal_password) configuradas na Área do Usuário
+
+        Retorna (creds, manager_user_id) onde creds é {portal_user, portal_password}.
+        """
+        try:
+            from core.database import get_user_id_by_username, get_portal_credentials
+        except Exception as e:
+            logger.error(f"❌ Não foi possível importar funções do banco: {e}")
+            return None, None
+
+        manager_username = (self.portal_manager_username or "").strip() or "GRTRI"
+        manager_id = get_user_id_by_username(manager_username)
+        if not manager_id:
+            logger.warning(
+                f"⚠️ Scheduler: usuário gerência '{manager_username}' não encontrado no banco. "
+                "Cadastre-o (role=gerencia) e configure as credenciais do portal na Área do Usuário."
+            )
+            return None, None
+
+        creds = get_portal_credentials(int(manager_id))
+        if not creds:
+            logger.warning(
+                f"⚠️ Scheduler: credenciais do portal NÃO configuradas para '{manager_username}' (id={manager_id}). "
+                "Vá em 'Área do Usuário' e cadastre para habilitar a sincronização automática."
+            )
+            return None, int(manager_id)
+
+        return creds, int(manager_id)
+
     def _execute_releitura_sync(self):
         """Executa download e processamento de releitura"""
         if not self.auto_releitura:
@@ -155,19 +206,26 @@ class AutoScheduler:
         try:
             from core.portal_scraper import download_releitura_excel
             from core.analytics import get_file_hash, deep_scan_excel
-            from core.database import is_file_duplicate, save_releitura_data, get_portal_credentials
-            
-            if not self.user_id:
-                logger.error("❌ SCHEDULER_USER_ID não configurado no .env")
-                return
-            
-            # Download
-            creds = get_portal_credentials(int(self.user_id))
+            from core.database import is_file_duplicate, save_releitura_data
+            from core.portal_scraper import _default_download_dir
+
+            creds, manager_id = self._get_scheduler_portal_credentials()
+            # Se não há credenciais, apenas avisa no console e não trava o app.
             if not creds:
-                logger.error("❌ Credenciais do portal não configuradas para o usuário do scheduler")
                 return
 
-            downloaded_path = download_releitura_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
+            # ID do usuário para salvar dados (prioriza o .env, senão usa o gerente)
+            save_user_id = int(self.user_id) if self.user_id else int(manager_id) if manager_id else None
+            if not save_user_id:
+                logger.error("❌ Scheduler: nenhum user_id disponível para salvar dados (SCHEDULER_USER_ID ausente e gerente não encontrado)")
+                return
+
+            # Download (sempre salva em data/exports na raiz do projeto)
+            downloaded_path = download_releitura_excel(
+                portal_user=creds['portal_user'],
+                portal_pass=creds['portal_password'],
+                download_dir=str(_default_download_dir()),
+            )
             if not downloaded_path or not os.path.exists(downloaded_path):
                 logger.error("❌ Falha no download do relatório de releitura")
                 return
@@ -183,12 +241,12 @@ class AutoScheduler:
                 return
             
             # Verificar duplicata
-            if is_file_duplicate(file_hash, 'releitura', self.user_id):
+            if is_file_duplicate(file_hash, 'releitura', save_user_id):
                 logger.info("ℹ️ Relatório já processado anteriormente (duplicado)")
                 return
             
             # Salvar
-            save_releitura_data(details, file_hash, self.user_id)
+            save_releitura_data(details, file_hash, save_user_id)
             logger.info(f"✅ Releitura sincronizada: {len(details)} registros processados")
             
         except Exception as e:
@@ -208,19 +266,25 @@ class AutoScheduler:
         try:
             from core.portal_scraper import download_porteira_excel
             from core.analytics import get_file_hash, deep_scan_porteira_excel
-            from core.database import is_file_duplicate, save_porteira_table_data, save_file_history, get_portal_credentials
-            
-            if not self.user_id:
-                logger.error("❌ SCHEDULER_USER_ID não configurado no .env")
-                return
-            
-            # Download
-            creds = get_portal_credentials(int(self.user_id))
+            from core.database import is_file_duplicate, save_porteira_table_data, save_file_history
+            from core.portal_scraper import _default_download_dir
+
+            creds, manager_id = self._get_scheduler_portal_credentials()
+            # Se não há credenciais, apenas avisa no console e não trava o app.
             if not creds:
-                logger.error("❌ Credenciais do portal não configuradas para o usuário do scheduler")
                 return
 
-            downloaded_path = download_porteira_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
+            # ID do usuário para salvar dados (prioriza o .env, senão usa o gerente)
+            save_user_id = int(self.user_id) if self.user_id else int(manager_id) if manager_id else None
+            if not save_user_id:
+                logger.error("❌ Scheduler: nenhum user_id disponível para salvar dados (SCHEDULER_USER_ID ausente e gerente não encontrado)")
+                return
+
+            downloaded_path = download_porteira_excel(
+                portal_user=creds['portal_user'],
+                portal_pass=creds['portal_password'],
+                download_dir=str(_default_download_dir()),
+            )
             if not downloaded_path or not os.path.exists(downloaded_path):
                 logger.error("❌ Falha no download do relatório de porteira")
                 return
@@ -236,13 +300,13 @@ class AutoScheduler:
                 return
             
             # Verificar duplicata
-            if is_file_duplicate(file_hash, 'porteira', self.user_id):
+            if is_file_duplicate(file_hash, 'porteira', save_user_id):
                 logger.info("ℹ️ Relatório já processado anteriormente (duplicado)")
                 return
             
             # Salvar
-            save_porteira_table_data(details, self.user_id)
-            save_file_history('porteira', len(details), file_hash, self.user_id)
+            save_porteira_table_data(details, save_user_id)
+            save_file_history('porteira', len(details), file_hash, save_user_id)
             logger.info(f"✅ Porteira sincronizada: {len(details)} registros processados")
             
         except Exception as e:
@@ -299,8 +363,10 @@ class AutoScheduler:
             return
         
         if not self.user_id:
-            logger.error("❌ SCHEDULER_USER_ID não configurado no .env - scheduler não iniciado")
-            return
+            logger.warning(
+                "⚠️ SCHEDULER_USER_ID não configurado no .env. "
+                "Os dados serão salvos no usuário gerência (SCHEDULER_MANAGER_USERNAME) quando ele existir."
+            )
         
         self.scheduler = BackgroundScheduler(timezone=os.getenv("SCHEDULER_TIMEZONE", "America/Sao_Paulo"))
         
@@ -332,7 +398,7 @@ class AutoScheduler:
         self.is_running = True
         
         logger.info("🚀 Scheduler automático iniciado com sucesso!")
-        logger.info(f"⏰ Execuções programadas: {self.start_hour}h às {self.end_hour}h (minutos 'redondos')")
+        logger.info(f"⏰ Execuções programadas: {self._schedule_display()} (minutos 'redondos')")
 
 
     def stop(self):
@@ -356,7 +422,7 @@ class AutoScheduler:
         return {
             'enabled': self.enabled,
             'running': self.is_running,
-            'schedule': f"{self.start_hour}h - {self.end_hour}h",
+            'schedule': self._schedule_display(),
             'interval_minutes': self.interval_minutes,
             'auto_releitura': self.auto_releitura,
             'auto_porteira': self.auto_porteira,

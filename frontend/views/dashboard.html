@@ -233,6 +233,7 @@
             gap: 12px;
         }
 
+
         .cycle-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--v2-border);
@@ -461,7 +462,113 @@
                 height: 350px;
             }
         }
-    </style>
+    
+        /* ------------------------------------------------------------------
+           Compact dashboard layout (UI only)
+           ------------------------------------------------------------------ */
+        .v2-main { padding: 18px; }
+
+        .cycle-selector-card {
+            padding: 16px;
+            margin-bottom: 14px;
+            border-radius: 14px;
+        }
+
+        .cycle-header {
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .cycle-info { min-width: 160px; }
+
+        .cycle-label { margin-bottom: 2px; }
+
+        .cycle-title {
+            font-size: 1.05rem;
+            margin-bottom: 2px;
+        }
+
+        .cycle-subtitle {
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .cycle-buttons {
+            padding: 6px;
+            gap: 6px;
+            border-radius: 12px;
+        }
+
+        .cycle-btn {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            letter-spacing: 0.4px;
+        }
+
+        /* UL cards: smaller + more compact grid */
+        .cycle-cards-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cycle-card {
+            padding: 10px 12px;
+            border-radius: 12px;
+            text-align: left;
+            flex: 1 1 170px;
+            min-width: 150px;
+        }
+
+        .cycle-card-label {
+            margin-bottom: 0;
+            font-size: 0.68rem;
+            letter-spacing: 0.4px;
+        }
+
+        .cycle-card-value {
+            font-size: 0.95rem;
+        }
+
+
+        /* Metrics & charts: slightly tighter */
+        .metrics-grid {
+            gap: 12px;
+            margin-bottom: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .metric-card {
+            padding: 16px;
+            border-radius: 14px;
+        }
+
+        .metric-header { margin-bottom: 10px; }
+
+        .metric-value {
+            font-size: 1.75rem;
+        }
+
+        .chart-card {
+            padding: 18px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 820px) {
+            .v2-main { padding: 14px; }
+            .cycle-selector-card { padding: 14px; }
+            .cycle-subtitle { display: none; }
+            .cycle-buttons { width: 100%; justify-content: space-between; }
+        }
+
+        @media (max-width: 520px) {
+            .cycle-btn { padding: 8px 10px; }
+        }
+</style>
 </head>
 <body class="page-dashboard">
     <div id="loading" class="loading-overlay">
@@ -549,6 +656,9 @@
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
+
+
+
                 <!-- CYCLE SELECTOR -->
                 <div class="cycle-selector-card">
                     <div class="cycle-header">
@@ -681,7 +791,7 @@
         let trendChart = null;
         let naoExecutadasChart = null;
         let currentCiclo = '';
-
+        // Admin: quando preenchido, filtra o dashboard por este user_id
         // Regras dos ciclos rurais
         const CYCLE_RAZOES = {
             "97": [90, 91],
@@ -818,9 +928,16 @@
             }
         }
 
+        function buildDashboardQueryString() {
+            const q = new URLSearchParams();
+            if (currentCiclo) q.set('ciclo', currentCiclo);
+            const s = q.toString();
+            return s ? `?${s}` : '';
+        }
+
         async function loadDashboard() {
             try {
-                const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
+                const params = buildDashboardQueryString();
                 const data = await authenticatedFetch(`${API_BASE}/dashboard/metrics${params}`);
 
                 if (data === null) return;
@@ -829,7 +946,6 @@
                 const isEmpty = !data || (Array.isArray(data) && data.length === 0) || isEmptyObject(data);
 
                 if (isEmpty) {
-                    document.getElementById('loading').style.display = 'none';
                     document.getElementById('v2-conn').textContent = 'SEM DADOS';
                     document.getElementById('v2-conn').className = 'v2-status-pill offline';
                     return;
@@ -841,19 +957,20 @@
                 await renderNaoExecutadasChart();
                 lucide.createIcons();
 
-                document.getElementById('loading').style.display = 'none';
                 document.getElementById('v2-conn').className = 'v2-status-pill online';
                 document.getElementById('v2-conn').textContent = 'SISTEMA ONLINE';
             } catch (error) {
                 console.error('Erro ao carregar dashboard:', error);
-                document.getElementById('loading').style.display = 'none';
                 document.getElementById('v2-conn').className = 'v2-status-pill offline';
                 document.getElementById('v2-conn').textContent = 'ERRO';
-                
+
                 if (error && error.status === 401) {
                     logout();
                     return;
                 }
+            } finally {
+                const loadingEl = document.getElementById('loading');
+                if (loadingEl) loadingEl.style.display = 'none';
             }
         }
 
@@ -976,7 +1093,7 @@
 
         async function renderNaoExecutadasChart() {
             try {
-                const params = currentCiclo ? `?ciclo=${encodeURIComponent(currentCiclo)}` : '';
+                const params = buildDashboardQueryString();
                 const res = await authenticatedFetch(`${API_BASE}/porteira/nao-executadas-chart${params}`);
                 
                 if (res === null) return;
@@ -1056,7 +1173,7 @@
         }
 
         // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
             updateCycleButtons();
             renderCycleUniverseInfo();

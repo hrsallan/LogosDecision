@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import time
 
 # Carregar variáveis do .env
 load_dotenv()
@@ -54,9 +55,11 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            nome TEXT,
+            base TEXT,
             portal_user TEXT,
             portal_password TEXT,
-            role TEXT DEFAULT 'user',
+            role TEXT DEFAULT 'analistas',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -68,6 +71,19 @@ def init_db():
         cursor.execute("ALTER TABLE users ADD COLUMN portal_user TEXT")
     if "portal_password" not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN portal_password TEXT")
+
+
+    # Garantir colunas de perfil (migração segura)
+    if "nome" not in cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN nome TEXT")
+    if "base" not in cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN base TEXT")
+
+    # Normalizar roles antigos para o novo padrão (migração segura)
+    # - admin  -> diretoria
+    # - user   -> analistas
+    cursor.execute("UPDATE users SET role = 'diretoria' WHERE role = 'admin'")
+    cursor.execute("UPDATE users SET role = 'analistas' WHERE role IS NULL OR role = '' OR role IN ('user', 'usuario')")
 
 
     # Releituras - com user_id
@@ -163,7 +179,7 @@ def init_db():
         )
     ''')
 
-    # Criar usuário admin padrão via variáveis de ambiente
+    # Criar usuário padrão de diretoria via variáveis de ambiente
     admin_username = os.getenv('ADMIN_USERNAME')
     admin_password = os.getenv('ADMIN_PASSWORD')
 
@@ -173,9 +189,9 @@ def init_db():
             hashed_password = hash_password(admin_password)
             cursor.execute("""
                 INSERT INTO users (username, password, role)
-                VALUES (?, ?, 'admin')
+                VALUES (?, ?, 'diretoria')
             """, (admin_username, hashed_password))
-            print(f"✅ Usuário admin '{admin_username}' criado com sucesso!")
+            print(f"✅ Usuário de diretoria '{admin_username}' criado com sucesso!")
 
     conn.commit()
     conn.close()
@@ -185,18 +201,60 @@ def init_db():
 authenticate_user = secure_authenticate
 
 
-def register_user(username, password, role='user'):
-    """Registra um novo usuário com senha hasheada usando bcrypt"""
-    try:
-        hashed_password = hash_password(password)
-        conn = sqlite3.connect(str(DB_PATH))
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', (username, hashed_password, role))
-        conn.commit()
-        conn.close()
-        return True
-    except sqlite3.IntegrityError:
-        return False
+def register_user(
+    username,
+    password,
+    role: str = 'analistas',
+    nome: str | None = None,
+    base: str | None = None,
+):
+    """Registra um novo usuário com senha hasheada usando bcrypt.
+
+    Observação: em ambientes com scheduler/threads ou DB Browser aberto, o SQLite pode
+    acusar "database is locked". Por isso configuramos timeout/busy_timeout.
+    Além disso, garantimos (best-effort) que as colunas `nome` e `base` existam.
+    """
+    hashed_password = hash_password(password)
+
+    # Tentativas para lidar com "database is locked" (scheduler/DB Browser aberto, etc.)
+    for attempt in range(4):
+        conn = None
+        try:
+            conn = sqlite3.connect(str(DB_PATH), timeout=30)
+            conn.execute("PRAGMA busy_timeout = 30000")
+            cursor = conn.cursor()
+
+            # Migração defensiva: garante colunas, mesmo se o DB for antigo.
+            cursor.execute("PRAGMA table_info(users)")
+            cols = {row[1] for row in cursor.fetchall()}
+            if "nome" not in cols:
+                cursor.execute("ALTER TABLE users ADD COLUMN nome TEXT")
+            if "base" not in cols:
+                cursor.execute("ALTER TABLE users ADD COLUMN base TEXT")
+
+            cursor.execute(
+                'INSERT INTO users (username, password, role, nome, base) VALUES (?, ?, ?, ?, ?)',
+                (username, hashed_password, role, nome, base),
+            )
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            # username duplicado
+            return False
+        except sqlite3.OperationalError as e:
+            msg = str(e).lower()
+            if "locked" in msg and attempt < 3:
+                time.sleep([0.15, 0.35, 0.8][attempt])
+                continue
+            raise
+        finally:
+            try:
+                if conn is not None:
+                    conn.close()
+            except Exception:
+                pass
+
+    return False
 
 
 def get_user_by_id(user_id):
@@ -204,10 +262,34 @@ def get_user_by_id(user_id):
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute('SELECT id, username, role FROM users WHERE id = ?', (user_id,))
+    cursor.execute('SELECT id, username, role, nome, base FROM users WHERE id = ?', (user_id,))
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+def list_users(include_admin: bool = True):
+    """Lista usuários cadastrados (sem credenciais sensíveis).
+
+    Returns:
+        list[dict]: [{'id': int, 'username': str, 'role': str, 'created_at': str}, ...]
+    """
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    if include_admin:
+        cursor.execute(
+            "SELECT id, username, role, nome, base, created_at FROM users ORDER BY username COLLATE NOCASE"
+        )
+    else:
+        cursor.execute(
+            "SELECT id, username, role, nome, base, created_at FROM users WHERE role NOT IN ('diretoria','gerencia') ORDER BY username COLLATE NOCASE"
+        )
+
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 def set_portal_credentials(user_id: int, portal_user: str, portal_password_plain: str) -> None:
     """Salva as credenciais do portal para o usuário.
@@ -275,6 +357,43 @@ def get_portal_credentials(user_id: int) -> dict | None:
         return None
 
     return {"portal_user": pu, "portal_password": plain}
+
+
+def get_user_id_by_username(username: str) -> int | None:
+    """Retorna o ID do usuário a partir do username (case-insensitive).
+
+    Retorna None se não existir.
+    """
+    if not username:
+        return None
+
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id FROM users WHERE UPPER(username) = UPPER(?) LIMIT 1",
+        (username.strip(),),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    try:
+        return int(row["id"])
+    except Exception:
+        return None
+
+
+def get_portal_credentials_by_username(username: str) -> dict | None:
+    """Retorna credenciais do portal a partir do username.
+
+    Útil para rotinas automatizadas (scheduler) que precisam usar as credenciais
+    de um usuário específico (ex.: gerente).
+    """
+    uid = get_user_id_by_username(username)
+    if not uid:
+        return None
+    return get_portal_credentials(uid)
 
 
 def get_portal_credentials_status(user_id: int) -> dict:
@@ -598,7 +717,7 @@ def get_releitura_chart_data(user_id, date_str=None):
     rows = cursor.fetchall()
     conn.close()
 
-    hourly_data = {f"{h:02d}h": 0 for h in range(7, 19)}
+    hourly_data = {f"{h:02d}h": 0 for h in range(5, 22)}
     for hora, pendentes in rows:
         try:
             h = int(str(hora).split(':')[0])
@@ -656,7 +775,7 @@ def get_porteira_chart_data(user_id, date_str=None):
     rows = cursor.fetchall()
     conn.close()
 
-    hourly_data = {f"{h:02d}h": 0 for h in range(7, 19)}
+    hourly_data = {f"{h:02d}h": 0 for h in range(5, 22)}
     for hora, total in rows:
         try:
             h = int(str(hora).split(':')[0])

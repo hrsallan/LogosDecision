@@ -1,4 +1,13 @@
 import os
+from pathlib import Path
+try:
+    from dotenv import load_dotenv  # type: ignore
+    # Carrega variáveis do arquivo .env na raiz do projeto (VigilaCore/.env)
+    load_dotenv(Path(__file__).resolve().parents[1] / '.env')
+except Exception:
+    # Se python-dotenv não estiver instalado, o app continua rodando
+    pass
+import unicodedata
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import jwt
@@ -7,6 +16,7 @@ from core.analytics import deep_scan_excel, deep_scan_porteira_excel, get_file_h
 from core.portal_scraper import download_releitura_excel, download_porteira_excel
 from core.database import (
     init_db, register_user, authenticate_user, get_user_by_id,
+    list_users,
     save_releitura_data, save_porteira_data,
     get_releitura_chart_data, get_releitura_metrics, get_releitura_details,
     get_releitura_due_chart_data, reset_database, is_file_duplicate, save_file_history,
@@ -61,17 +71,92 @@ def get_user_id_from_token():
     except Exception:
         return None
 
-# -------------------------------------------------------
-# Rotas públicas (registro, login, arquivos estáticos)
-# -------------------------------------------------------
+
+def get_current_user_from_request():
+    """Retorna o usuário atual (id, username, role) a partir do token JWT."""
+    uid = get_user_id_from_token()
+    if not uid:
+        return None
+    return get_user_by_id(uid)
+
 @app.route('/api/register', methods=['POST'])
 def register():
-    data = request.json
-    username = data.get('username')
-    password = data.get('password')
-    if register_user(username, password):
-        return jsonify({"success": True})
-    return jsonify({"success": False, "msg": "Usuário já existe"}), 409
+    data = request.json or {}
+    username = (data.get('username') or '').strip()
+    password = data.get('password') or ''
+    nome = (data.get('nome') or '').strip() or None
+    base = (data.get('base') or '').strip() or None
+
+    def _normalize_role(v):
+        s = (v or '').strip().lower()
+        if not s:
+            return ''
+        # remove acentos (ex.: gerência -> gerencia)
+        s = ''.join(
+            c for c in unicodedata.normalize('NFKD', s)
+            if not unicodedata.combining(c)
+        )
+        # tolerar espaços
+        s = s.replace(' ', '')
+        return s
+
+    role_raw = _normalize_role(data.get('role'))
+
+    # Registro público: apenas roles equivalentes a "usuário comum".
+    # Roles privilegiadas só podem ser criadas por alguém autenticado (diretoria/desenvolvedor).
+    public_roles = {'analistas', 'supervisor'}
+    privileged_roles = {'diretoria', 'gerencia', 'desenvolvedor'}
+    all_roles = public_roles | privileged_roles
+
+    # role padrão
+    if not role_raw:
+        role = 'analistas'
+    elif role_raw not in all_roles:
+        return jsonify({
+            'success': False,
+            'msg': 'role inválido',
+            'allowed': sorted(list(all_roles)),
+        }), 400
+    elif role_raw in public_roles:
+        role = role_raw
+    else:
+        # Tentativa de criar um usuário privilegiado via /api/register
+        current_user = get_current_user_from_request()
+        if not current_user:
+            return jsonify({
+                'success': False,
+                'msg': 'role privilegiado requer autenticação (Bearer token)',
+                'allowed_public': sorted(list(public_roles)),
+                'requested': role_raw,
+            }), 403
+
+        creator_role = (current_user.get('role') or '').strip().lower()
+        if creator_role in ('diretoria', 'desenvolvedor'):
+            role = role_raw
+        else:
+            return jsonify({
+                'success': False,
+                'msg': 'Acesso negado para criar usuários com role privilegiado',
+                'allowed_public': sorted(list(public_roles)),
+                'requested': role_raw,
+            }), 403
+
+    if not username or not password:
+        return jsonify({'success': False, 'msg': 'username e password são obrigatórios'}), 400
+
+    try:
+        ok = register_user(username, password, role=role, nome=nome, base=base)
+    except Exception as e:
+        # Erro operacional (ex.: DB locked, schema antigo, etc.)
+        return jsonify({
+            'success': False,
+            'msg': 'Falha ao registrar usuário no banco de dados',
+            'detail': f'{e.__class__.__name__}: {str(e)}'
+        }), 500
+
+    if ok:
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'msg': 'Usuário já existe'}), 409
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -124,6 +209,19 @@ def portal_credentials_clear():
     clear_portal_credentials(user_id)
     return jsonify({"success": True})
 
+
+# -------------------------------------------------------
+# Rotas protegidas: Perfil do usuário (me)
+# -------------------------------------------------------
+@app.get('/api/user/me')
+def user_me():
+    user = get_current_user_from_request()
+    if not user:
+        return jsonify({"error": "Usuário não autenticado"}), 401
+    return jsonify(user)
+
+
+
 # -------------------------------------------------------
 # Rotas protegidas: Sempre exigem autenticação
 # -------------------------------------------------------
@@ -131,13 +229,15 @@ def portal_credentials_clear():
 # Metricas para o Dashboard Geral
 @app.route('/api/dashboard/metrics', methods=['GET'])
 def dashboard_metrics():
-    user_id = get_user_id_from_token()
-    if not user_id:
+    user = get_current_user_from_request()
+    if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
     
     try:
         ciclo = request.args.get('ciclo')
-        metrics = get_dashboard_metrics(user_id, ciclo=ciclo)
+        metrics = get_dashboard_metrics(user['id'], ciclo=ciclo)
+        # Adiciona contexto útil para o frontend (sem dados sensíveis)
+        metrics['viewer'] = user
         return jsonify(metrics), 200
     except Exception as e:
         import traceback
@@ -195,18 +295,28 @@ def status_porteira():
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
-    user_id = get_user_id_from_token()
-    if not user_id:
-        return jsonify({"error": "Usuário não autenticado"}), 401
-    reset_database(user_id)
+    user = get_current_user_from_request()
+    if not user:
+        return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
+
+    # Apenas o cargo "desenvolvedor" pode zerar o banco (releituras)
+    if str(user.get('role') or '').lower() != 'desenvolvedor':
+        return jsonify({"success": False, "error": "Acesso negado", "message": "Apenas desenvolvedor pode zerar o banco."}), 403
+
+    reset_database(int(user['id']))
     return jsonify({"success": True, "message": "Banco de releituras zerado para este usuário."})
 
 @app.route('/api/reset/porteira', methods=['POST'])
 def reset_porteira():
-    user_id = get_user_id_from_token()
-    if not user_id:
-        return jsonify({"error": "Usuário não autenticado"}), 401
-    reset_porteira_database(user_id)
+    user = get_current_user_from_request()
+    if not user:
+        return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
+
+    # Apenas o cargo "desenvolvedor" pode zerar o banco (porteira)
+    if str(user.get('role') or '').lower() != 'desenvolvedor':
+        return jsonify({"success": False, "error": "Acesso negado", "message": "Apenas desenvolvedor pode zerar o banco."}), 403
+
+    reset_porteira_database(int(user['id']))
     return jsonify({"success": True, "message": "Banco de porteira zerado para este usuário."})
 
 @app.route('/api/upload', methods=['POST'])
@@ -295,7 +405,7 @@ def sync_releitura():
         creds = get_portal_credentials(user_id)
         if not creds:
             user = get_user_by_id(user_id)
-            is_admin = bool(user and (user.get("role") == "admin"))
+            is_admin = bool(user and (user.get("role") in ("diretoria", "gerencia")))
             if is_admin:
                 env_user = (os.environ.get("PORTAL_USERNAME") or os.environ.get("PORTAL_USER") or "").strip()
                 env_pass = os.environ.get("PORTAL_PASSWORD") or ""
@@ -345,7 +455,7 @@ def sync_porteira():
         creds = get_portal_credentials(user_id)
         if not creds:
             user = get_user_by_id(user_id)
-            is_admin = bool(user and (user.get("role") == "admin"))
+            is_admin = bool(user and (user.get("role") in ("diretoria", "gerencia")))
             if is_admin:
                 env_user = (os.environ.get("PORTAL_USERNAME") or os.environ.get("PORTAL_USER") or "").strip()
                 env_pass = os.environ.get("PORTAL_PASSWORD") or ""
@@ -414,11 +524,12 @@ def porteira_table():
 
 @app.route('/api/porteira/nao-executadas-chart', methods=['GET'])
 def porteira_nao_executadas_chart():
-    user_id = get_user_id_from_token()
-    if not user_id:
+    user = get_current_user_from_request()
+    if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
+
     ciclo = request.args.get('ciclo')
-    labels, values = get_porteira_nao_executadas_chart(user_id, ciclo=ciclo)
+    labels, values = get_porteira_nao_executadas_chart(user['id'], ciclo=ciclo)
     return jsonify({
         "labels": labels,
         "values": values
@@ -440,14 +551,14 @@ def scheduler_status():
 
 @app.route('/api/scheduler/toggle', methods=['POST'])
 def scheduler_toggle():
-    """Liga/desliga o scheduler (apenas admin)"""
+    """Liga/desliga o scheduler (apenas diretoria/gerência)"""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
     
-    # Verificar se é admin
+    # Verificar se é diretoria/gerência
     user = get_user_by_id(user_id)
-    if not user or user.get('role') != 'admin':
+    if not user or user.get('role') not in ('diretoria', 'gerencia'):
         return jsonify({"error": "Apenas administradores podem controlar o scheduler"}), 403
     
     data = request.json

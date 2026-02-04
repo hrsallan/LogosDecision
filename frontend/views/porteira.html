@@ -604,24 +604,6 @@
                     <p class="v2-header-subtitle">Análise de Leituras e Releituras | CEMIG SGL</p>
                 </div>
                 <div class="v2-header-right">
-                    <div class="header-actions-group">
-                        <button id="v2-upload-btn" type="button" class="action-btn primary" title="Carregar relatório">
-                            <i data-lucide="cloud-upload"></i>
-                            <span>Upload</span>
-                        </button>
-                        <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
-                        
-                        <button id="v2-sync-btn" type="button" class="action-btn" title="Sincronizar dados">
-                            <i data-lucide="cloud-download"></i>
-                            <span>Sincronizar</span>
-                        </button>
-                        
-                        <button id="v2-reset-btn" class="action-btn danger" title="Zerar banco de dados">
-                            <i data-lucide="trash-2"></i>
-                            <span>Zerar</span>
-                        </button>
-                    </div>
-                    
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
                     
                     <div class="v2-clock-widget">
@@ -803,7 +785,6 @@
         let filteredTableData = [];
         let selectedCycle = "";
         let cacheBust = 0;
-        let isUploading = false;
         let universeNeedsRefresh = true;
         let universeRows = [];
 
@@ -921,18 +902,6 @@
         // Chart rendering
         async function renderChart() {
             try {
-
-                // Check portal credentials before trying to sync (avoids confusing generic errors)
-                try {
-                    const stRes = await authFetch('/api/user/portal-credentials', { method: 'GET' });
-                    const st = await stRes.json().catch(() => ({}));
-                    if (stRes.ok && st && st.configured === false) {
-                        alert("⚠️ Credenciais do portal não configuradas. Vá em 'Área do Usuário' e cadastre para usar a sincronização.");
-                        return;
-                    }
-                } catch (e) {
-                    // ignore and attempt sync; backend will return a meaningful message
-                }
 
                 const res = await authFetch(buildUrl("/api/porteira/chart"));
                 const payload = await res.json();
@@ -1222,148 +1191,6 @@
         document.getElementById('cycle-btn-97').addEventListener('click', () => setCycle('97'));
         document.getElementById('cycle-btn-98').addEventListener('click', () => setCycle('98'));
         document.getElementById('cycle-btn-99').addEventListener('click', () => setCycle('99'));
-
-        // Upload
-        document.getElementById('v2-upload-btn').addEventListener('click', () => {
-            document.getElementById('v2-file-input').click();
-        });
-
-        document.getElementById('v2-file-input').addEventListener('change', function(e) {
-            if (!this.files.length || isUploading) return;
-            isUploading = true;
-            
-            const file = this.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-
-            authFetch('/api/upload/porteira', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Upload realizado com sucesso!');
-                    refreshAll(true);
-                } else {
-                    alert(data.error || "Erro ao fazer upload");
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
-            })
-            .finally(() => {
-                this.value = '';
-                isUploading = false;
-            });
-        });
-
-        // Sync
-        document.getElementById('v2-sync-btn').addEventListener('click', async function() {
-            if (isUploading) return;
-            isUploading = true;
-            
-            this.style.opacity = '0.5';
-            this.style.pointerEvents = 'none';
-
-            try {
-                const res = await authFetch('/api/sync/porteira', { method: 'POST' });
-                const text = await res.text().catch(() => "");
-                
-                if (!res.ok) {
-                    // Try to surface backend error message to the user
-                    let msg = `Erro HTTP ${res.status}`;
-                    try {
-                        const j = JSON.parse(text || '{}');
-                        msg = j.error || j.message || msg;
-                    } catch (e) {
-                        if (text && text.trim()) msg = text.trim();
-                    }
-                    throw new Error(msg);
-                }
-                
-                let data = null;
-                try { data = JSON.parse(text || '{}'); } catch { data = { success: true }; }
-                
-                if (data && data.error === "DUPLICADO") {
-                    alert(data.message || "Relatório duplicado.");
-                    return;
-                }
-
-                if (data && data.success === false) {
-                    throw new Error(data.error || "Falha ao sincronizar.");
-                }
-
-                if (data.totals) updateMetrics(data.totals);
-
-                universeNeedsRefresh = true;
-                await refreshAll();
-                
-                alert('✅ Sincronização concluída!');
-                updateConnectionStatus(true);
-            } catch (error) {
-                console.error("Erro ao sincronizar:", error);
-                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
-                updateConnectionStatus(false);
-            } finally {
-                isUploading = false;
-                this.style.opacity = '';
-                this.style.pointerEvents = '';
-            }
-        });
-
-        // Reset
-        document.getElementById('v2-reset-btn').onclick = async () => {
-            if (!confirm("Deseja realmente ZERAR todo o banco de dados?")) return;
-            
-            const username = prompt("Confirme o usuário ADMIN:");
-            if (!username) return;
-
-            const password = prompt("Digite a senha do ADMIN para confirmar:");
-            if (!password) return;
-
-            try {
-                const res = await authFetch('/api/reset/porteira', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await res.json();
-
-                if (!res.ok || !data.success) {
-                    alert(data.message || "Senha inválida / Acesso negado.");
-                    return;
-                }
-
-                // Reset UI
-                document.getElementById('v2-total-leituras').innerText = '0';
-                document.getElementById('v2-leituras-nao-exec').innerText = '0';
-                document.getElementById('v2-total-releituras').innerText = '0';
-                document.getElementById('v2-releituras-nao-exec').innerText = '0';
-                document.getElementById('v2-perc-releituras-nao-exec').innerText = '0%';
-
-                document.getElementById('v2-table-body').innerHTML = `
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <i data-lucide="inbox"></i>
-                                <p>Nenhum dado carregado</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-
-                lucide.createIcons();
-                alert("✅ Banco zerado com sucesso!");
-                
-                refreshAll(true);
-            } catch (e) {
-                console.error(e);
-                alert("❌ Erro ao comunicar com o backend.");
-            }
-        };
 
         // Initial load
         refreshAll(true);

@@ -117,3 +117,83 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
         };
     }
 })();
+
+
+// -------------------------------------------------------
+// Role-based visibility (RBAC) - nav + page guard
+// Regras atuais:
+//   - diretoria e analistas NÃO veem a aba "Área do Usuário"
+//   - gerencia vê normalmente
+// Observação: isso é UI/UX. As APIs continuam protegidas no backend.
+// -------------------------------------------------------
+(function () {
+    let __vc_me_cache = null;
+
+    async function vcGetMe() {
+        if (__vc_me_cache) return __vc_me_cache;
+        const token = localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
+        if (!token) return null;
+
+        try {
+            const res = await window.authFetch('/api/user/me', { method: 'GET' });
+            if (!res.ok) return null;
+            const me = await res.json();
+            __vc_me_cache = me;
+            return me;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function hideUserAreaNav() {
+        // Hides both by href and by data-title for robustness.
+        const selectors = [
+            'a[href="usuario.html"]',
+            'a[href$="/usuario.html"]',
+            'a[data-title="Área do Usuário"]',
+        ];
+        document.querySelectorAll(selectors.join(',')).forEach((el) => {
+            el.style.display = 'none';
+        });
+    }
+
+    function isOnUserPage() {
+        const p = (window.location.pathname || '').toLowerCase();
+        const h = (window.location.href || '').toLowerCase();
+        return p.endsWith('usuario.html') || h.includes('/usuario.html') || h.endsWith('usuario.html');
+    }
+
+    async function apply() {
+        const me = await vcGetMe();
+        if (!me || !me.role) return;
+
+        const role = String(me.role || '').toLowerCase();
+
+        // \"Zerar banco\" é exclusivo do cargo desenvolvedor (UI/UX)
+        if (role !== 'desenvolvedor') {
+            document.querySelectorAll('#v2-reset-btn').forEach((el) => {
+                el.style.display = 'none';
+            });
+        }
+
+        // Hide nav for diretoria and analistas
+        if (role === 'diretoria' || role === 'analistas' || role === 'supervisor') {
+            hideUserAreaNav();
+
+            // Guard direct access
+            if (isOnUserPage()) {
+                // prefer dashboard if available; otherwise go to menu principal
+                try {
+                    alert('Acesso restrito: sua função não possui acesso à Área do Usuário.');
+                } catch {}
+                window.location.href = 'dashboard.html';
+            }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', apply);
+    } else {
+        apply();
+    }
+})();

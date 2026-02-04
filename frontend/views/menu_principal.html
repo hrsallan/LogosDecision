@@ -486,18 +486,38 @@
             }
         }
 
-        // Exibir nome do usuário
-        function displayUsername() {
-            const token = localStorage.getItem('vigilacore_token');
-            if (token) {
-                const decoded = parseJwt(token);
-                if (decoded && decoded.username) {
-                    document.getElementById('username-display').textContent = decoded.username;
-                }
-            }
-        }
+        // Exibir nome do usuário (nome do banco se existir; senão username)
+async function displayUsername() {
+    const el = document.getElementById('username-display');
+    if (!el) return;
 
-        // Chamar ao carregar a página
+    const token = localStorage.getItem('vigilacore_token');
+    let decoded = null;
+    if (token) {
+        decoded = parseJwt(token);
+    }
+
+    // Preferência: buscar do backend (traz 'nome' e 'username')
+    try {
+        const res = await authFetch('/api/user/me', { method: 'GET' });
+        if (res.ok) {
+            const me = await res.json().catch(() => ({}));
+            const nome = (me && me.nome != null) ? String(me.nome).trim() : '';
+            const username = (me && me.username) ? String(me.username) : ((decoded && decoded.username) ? String(decoded.username) : '');
+            const display = (nome && nome.toLowerCase() !== 'none') ? nome : (username || 'Usuário');
+            el.textContent = display;
+            return;
+        }
+    } catch (e) {
+        // Fallback abaixo
+    }
+
+    // Fallback: usar username do token
+    if (decoded && decoded.username) {
+        el.textContent = decoded.username;
+    }
+}
+// Chamar ao carregar a página
         displayUsername();
 
         // Relógio e data

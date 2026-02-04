@@ -688,22 +688,6 @@
                 </div>
                 <div class="v2-header-right">
                     <div class="header-actions-group">
-                        <button id="v2-upload-btn" type="button" class="action-btn primary" title="Carregar relatório">
-                            <i data-lucide="cloud-upload"></i>
-                            <span>Upload</span>
-                        </button>
-                        <input type="file" id="v2-file-input" hidden accept=".xls,.xlsx">
-                        
-                        <button id="v2-sync-btn" type="button" class="action-btn" title="Sincronizar dados">
-                            <i data-lucide="cloud-download"></i>
-                            <span>Sincronizar</span>
-                        </button>
-                        
-                        <button id="v2-reset-btn" class="action-btn danger" title="Zerar banco de dados">
-                            <i data-lucide="trash-2"></i>
-                            <span>Zerar</span>
-                        </button>
-                        
                         <!-- Date Picker Calendário -->
                         <div class="date-picker-container">
                             <button id="date-picker-btn" type="button" class="date-picker-btn" title="Selecionar data">
@@ -994,8 +978,8 @@
 
         // Initialize with empty data
         initV2Chart(
-            Array.from({ length: 12 }, (_, i) => String(i + 7).padStart(2, '0') + 'h'),
-            Array.from({ length: 12 }, () => 0)
+            Array.from({ length: 17 }, (_, i) => String(i + 5).padStart(2, '0') + 'h'),
+            Array.from({ length: 17 }, () => 0)
         );
         
         initV2DueChart(
@@ -1174,160 +1158,12 @@
         // Initialize calendar
         renderCalendar();
 
-        // File upload
-        let isUploading = false;
-        
-        document.getElementById('v2-upload-btn').addEventListener('click', () => {
-            document.getElementById('v2-file-input').click();
-        });
-
-        document.getElementById('v2-file-input').addEventListener('change', function(e) {
-            if (!this.files.length || isUploading) return;
-            isUploading = true;
-            
-            const file = this.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const syncBtn = document.getElementById('v2-sync-btn');
-            syncBtn.style.opacity = '0.5';
-            syncBtn.style.pointerEvents = 'none';
-
-            authFetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Upload realizado com sucesso!');
-                    checkV2Status(true);
-                } else if (data.error === "DUPLICADO") {
-                    alert(data.message);
-                } else {
-                    alert(data.error || "Erro ao fazer upload");
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
-            })
-            .finally(() => {
-                this.value = '';
-                isUploading = false;
-                syncBtn.style.opacity = '';
-                syncBtn.style.pointerEvents = '';
-            });
-        });
-
-        // Sync button
-        document.getElementById('v2-sync-btn').addEventListener('click', async function() {
-            if (isUploading) return;
-            isUploading = true;
-            
-            this.style.opacity = '0.5';
-            this.style.pointerEvents = 'none';
-
-            try {
-
-                // Check portal credentials before trying to sync (avoids confusing generic errors)
-                try {
-                    const stRes = await authFetch('/api/user/portal-credentials', { method: 'GET' });
-                    const st = await stRes.json().catch(() => ({}));
-                    if (stRes.ok && st && st.configured === false) {
-                        alert("⚠️ Credenciais do portal não configuradas. Vá em 'Área do Usuário' e cadastre para usar a sincronização.");
-                        return;
-                    }
-                } catch (e) {
-                    // ignore and attempt sync; backend will return a meaningful message
-                }
-
-                const res = await authFetch('/api/sync/releitura', { method: 'POST' });
-                const data = await res.json();
-                
-                if (data.success) {
-                    alert('✅ Sincronização concluída!');
-                    checkV2Status(true);
-                } else {
-                    alert(data.error || "Erro ao sincronizar");
-                }
-            } catch (err) {
-                console.error(err);
-                window.vcShowErrorAlert(err, "Erro ao conectar com o servidor");
-            } finally {
-                isUploading = false;
-                this.style.opacity = '';
-                this.style.pointerEvents = '';
-            }
-        });
-
-        // Reset button
-        document.getElementById('v2-reset-btn').onclick = async () => {
-            if (!confirm("Deseja realmente ZERAR todo o banco de dados?")) return;
-            
-            const username = prompt("Confirme o usuário ADMIN:");
-            if (!username) return;
-
-            const password = prompt("Digite a senha do ADMIN para confirmar:");
-            if (!password) return;
-
-            try {
-                const res = await authFetch('/api/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await res.json();
-
-                if (!res.ok || !data.success) {
-                    alert(data.message || "Senha inválida / Acesso negado.");
-                    return;
-                }
-
-                // Reset UI
-                document.getElementById('v2-total').innerText = '0';
-                document.getElementById('v2-pend').innerText = '0';
-                document.getElementById('v2-realizadas').innerText = '0';
-                document.getElementById('v2-atrasadas').innerText = '0';
-
-                document.getElementById('v2-table-body').innerHTML = `
-                    <tr>
-                        <td colspan="7">
-                            <div class="empty-state">
-                                <i data-lucide="inbox"></i>
-                                <p>Nenhum dado carregado</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-
-                initV2Chart(
-                    Array.from({ length: 12 }, (_, i) => String(i + 7).padStart(2, '0') + 'h'),
-                    Array.from({ length: 12 }, () => 0)
-                );
-
-                initV2DueChart(
-                    ['--/--','--/--','--/--','--/--','--/--','--/--','--/--'],
-                    [0,0,0,0,0,0,0]
-                );
-
-                lucide.createIcons();
-                alert("✅ Banco zerado com sucesso!");
-            } catch (e) {
-                console.error(e);
-                alert("❌ Erro ao comunicar com o backend.");
-            }
-        };
-
         // Status check
         let lastChartData = null;
         let lastDueChartData = null;
         let lastTableData = null;
         
         function checkV2Status() {
-            if (isUploading) return;
-            
             authFetch('/api/status/releitura?date=' + encodeURIComponent(selectedDateISO))
                 .then(res => res.json())
                 .then(data => {

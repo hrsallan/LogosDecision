@@ -107,14 +107,14 @@ def authenticate_user(username: str, password: str) -> Optional[Dict]:
 
 
 
-def register_user(username: str, password: str, role: str = 'user') -> bool:
+def register_user(username: str, password: str, role: str = 'analistas') -> bool:
     """
     Registra um novo usuário com senha hasheada
     
     Args:
         username: Nome de usuário
         password: Senha em texto plano
-        role: Papel do usuário (user/admin)
+        role: Papel do usuário (analistas/gerencia/diretoria)
         
     Returns:
         True se registrado com sucesso, False se usuário já existe
