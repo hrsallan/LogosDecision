@@ -57,6 +57,7 @@ def init_db():
             password TEXT NOT NULL,
             nome TEXT,
             base TEXT,
+            matricula TEXT,
             portal_user TEXT,
             portal_password TEXT,
             role TEXT DEFAULT 'analistas',
@@ -78,6 +79,9 @@ def init_db():
         cursor.execute("ALTER TABLE users ADD COLUMN nome TEXT")
     if "base" not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN base TEXT")
+
+    if "matricula" not in cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN matricula TEXT")
 
     # Normalizar roles antigos para o novo padrão (migração segura)
     # - admin  -> diretoria
@@ -103,6 +107,20 @@ def init_db():
         )
     ''')
 
+
+    # Migração: colunas de roteamento na tabela releituras
+    cursor.execute("PRAGMA table_info(releituras)")
+    rcols = {row[1] for row in cursor.fetchall()}
+    if "route_status" not in rcols:
+        cursor.execute("ALTER TABLE releituras ADD COLUMN route_status TEXT DEFAULT 'ROUTED'")
+    if "route_reason" not in rcols:
+        cursor.execute("ALTER TABLE releituras ADD COLUMN route_reason TEXT")
+    if "region" not in rcols:
+        cursor.execute("ALTER TABLE releituras ADD COLUMN region TEXT")
+    if "ul_regional" not in rcols:
+        cursor.execute("ALTER TABLE releituras ADD COLUMN ul_regional TEXT")
+    if "localidade" not in rcols:
+        cursor.execute("ALTER TABLE releituras ADD COLUMN localidade TEXT")
     # Histórico de uploads - Releitura
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS history_releitura (
@@ -115,6 +133,23 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
+
+
+    # Configuração: destino por região (matrícula) para Releitura
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS releitura_region_targets (
+            region TEXT PRIMARY KEY,
+            matricula TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    # Seed das regiões
+    cursor.execute("SELECT COUNT(*) FROM releitura_region_targets")
+    if (cursor.fetchone() or [0])[0] == 0:
+        cursor.executemany(
+            "INSERT INTO releitura_region_targets (region, matricula) VALUES (?, ?)",
+            [("Araxá", None), ("Uberaba", None), ("Frutal", None)]
+        )
 
     # Porteiras - com user_id
     cursor.execute('''
@@ -207,6 +242,7 @@ def register_user(
     role: str = 'analistas',
     nome: str | None = None,
     base: str | None = None,
+    matricula: str | None = None,
 ):
     """Registra um novo usuário com senha hasheada usando bcrypt.
 
@@ -231,10 +267,12 @@ def register_user(
                 cursor.execute("ALTER TABLE users ADD COLUMN nome TEXT")
             if "base" not in cols:
                 cursor.execute("ALTER TABLE users ADD COLUMN base TEXT")
+            if "matricula" not in cols:
+                cursor.execute("ALTER TABLE users ADD COLUMN matricula TEXT")
 
             cursor.execute(
-                'INSERT INTO users (username, password, role, nome, base) VALUES (?, ?, ?, ?, ?)',
-                (username, hashed_password, role, nome, base),
+                'INSERT INTO users (username, password, role, nome, base, matricula) VALUES (?, ?, ?, ?, ?, ?)',
+                (username, hashed_password, role, nome, base, matricula),
             )
             conn.commit()
             return True
@@ -262,7 +300,7 @@ def get_user_by_id(user_id):
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute('SELECT id, username, role, nome, base FROM users WHERE id = ?', (user_id,))
+    cursor.execute('SELECT id, username, role, nome, base, matricula FROM users WHERE id = ?', (user_id,))
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
@@ -280,11 +318,11 @@ def list_users(include_admin: bool = True):
 
     if include_admin:
         cursor.execute(
-            "SELECT id, username, role, nome, base, created_at FROM users ORDER BY username COLLATE NOCASE"
+            "SELECT id, username, role, nome, base, matricula, created_at FROM users ORDER BY username COLLATE NOCASE"
         )
     else:
         cursor.execute(
-            "SELECT id, username, role, nome, base, created_at FROM users WHERE role NOT IN ('diretoria','gerencia') ORDER BY username COLLATE NOCASE"
+            "SELECT id, username, role, nome, base, matricula, created_at FROM users WHERE role NOT IN ('diretoria','gerencia') ORDER BY username COLLATE NOCASE"
         )
 
     rows = cursor.fetchall()
@@ -512,25 +550,35 @@ def save_releitura_data(details, file_hash, user_id):
         razao = ul[:2]
         venc = item.get('venc', '')
 
+        region = item.get('region')
+        route_status = item.get('route_status', 'ROUTED')
+        route_reason = item.get('route_reason')
+        ul_regional = item.get('ul_regional')
+        localidade = item.get('localidade')
+
         if instalacao in existing:
             # mantém CONCLUÍDA
             if existing[instalacao] == 'CONCLUÍDA':
                 continue
-            updates.append((ul, endereco, razao, venc, reg, now, user_id, instalacao))
+            updates.append(
+                (ul, endereco, razao, venc, reg, now, region, route_status, route_reason, ul_regional, localidade, user_id, instalacao)
+            )
         else:
-            inserts.append((user_id, ul, instalacao, endereco, razao, venc, reg, now))
+            inserts.append(
+                (user_id, ul, instalacao, endereco, razao, venc, reg, now, region, route_status, route_reason, ul_regional, localidade)
+            )
 
     if updates:
         cursor.executemany('''
             UPDATE releituras
-            SET ul = ?, endereco = ?, razao = ?, vencimento = ?, reg = ?, upload_time = ?
+            SET ul = ?, endereco = ?, razao = ?, vencimento = ?, reg = ?, upload_time = ?, region = ?, route_status = ?, route_reason = ?, ul_regional = ?, localidade = ?
             WHERE user_id = ? AND instalacao = ?
         ''', updates)
 
     if inserts:
         cursor.executemany('''
-            INSERT INTO releituras (user_id, ul, instalacao, endereco, razao, vencimento, reg, status, upload_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDENTE', ?)
+            INSERT INTO releituras (user_id, ul, instalacao, endereco, razao, vencimento, reg, status, upload_time, region, route_status, route_reason, ul_regional, localidade)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDENTE', ?, ?, ?, ?, ?, ?)
         ''', inserts)
 
     # Instalações removidas do relatório: marca como concluída se estavam pendentes
@@ -631,7 +679,7 @@ def get_releitura_details(user_id):
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT ul, instalacao, endereco, razao, vencimento, reg, status 
+        SELECT ul, instalacao, endereco, razao, vencimento, reg, status, region, route_status, route_reason, ul_regional, localidade
         FROM releituras 
         WHERE user_id = ? AND status = 'PENDENTE'
     ''', (user_id,))
@@ -640,7 +688,7 @@ def get_releitura_details(user_id):
 
     details = []
     for r in rows:
-        item = {"ul": r[0], "inst": r[1], "endereco": r[2], "razao": r[3], "venc": r[4], "reg": r[5], "status": r[6]}
+        item = {"ul": r[0], "inst": r[1], "endereco": r[2], "razao": r[3], "venc": r[4], "reg": r[5], "status": r[6], "region": r[7], "route_status": r[8], "route_reason": r[9], "ul_regional": r[10], "localidade": r[11]}
         details.append(item)
 
     def sort_key(item):
@@ -650,7 +698,7 @@ def get_releitura_details(user_id):
             return (datetime(2099, 12, 31), "ZZ")
 
     details.sort(key=sort_key)
-    return details[:100]
+    return details[:500]
 
 
 def get_releitura_metrics(user_id):
@@ -1036,3 +1084,96 @@ def save_file_history(module, count, file_hash, user_id):
 
     conn.commit()
     conn.close()
+
+# -------------------------------
+# Releitura: targets por região
+# -------------------------------
+
+def get_user_id_by_username(username: str):
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM users WHERE username = ?", (username,))
+    row = cur.fetchone()
+    conn.close()
+    return int(row[0]) if row else None
+
+
+def get_user_id_by_matricula(matricula: str):
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM users WHERE matricula = ?", (matricula,))
+    row = cur.fetchone()
+    conn.close()
+    return int(row[0]) if row else None
+
+
+def get_releitura_region_targets():
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    cur.execute("SELECT region, matricula FROM releitura_region_targets")
+    rows = cur.fetchall()
+    conn.close()
+    return {r[0]: (r[1] or None) for r in rows}
+
+
+def set_releitura_region_targets(mapping: dict):
+    now = datetime.now().isoformat()
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    for region, matricula in mapping.items():
+        cur.execute(
+            "INSERT INTO releitura_region_targets (region, matricula, updated_at) VALUES (?, ?, ?) "
+            "ON CONFLICT(region) DO UPDATE SET matricula=excluded.matricula, updated_at=excluded.updated_at",
+            (region, matricula, now),
+        )
+    conn.commit()
+    conn.close()
+
+
+
+def count_releitura_unrouted(user_id: int) -> int:
+    """Conta pendências não roteadas do usuário (status PENDENTE e route_status=UNROUTED)."""
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND route_status='UNROUTED'", (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    return int(row[0] or 0)
+
+def get_releitura_unrouted(date_str: str | None = None):
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    if date_str:
+        cur.execute(
+            """SELECT ul, instalacao, endereco, vencimento, region, route_reason, ul_regional, localidade
+               FROM releituras
+               WHERE route_status='UNROUTED' AND status='PENDENTE' AND DATE(upload_time)=DATE(?)
+               ORDER BY route_reason, region, vencimento""",
+            (date_str,),
+        )
+    else:
+        cur.execute(
+            """SELECT ul, instalacao, endereco, vencimento, region, route_reason, ul_regional, localidade
+               FROM releituras
+               WHERE route_status='UNROUTED' AND status='PENDENTE'
+               ORDER BY route_reason, region, vencimento"""
+        )
+    rows = cur.fetchall()
+    conn.close()
+    return [
+        {"ul": r[0], "instalacao": r[1], "endereco": r[2], "vencimento": r[3], "region": r[4], "reason": r[5], "ul_regional": r[6], "localidade": r[7]}
+        for r in rows
+    ]
+
+
+def reset_releitura_global():
+    """Zera somente as tabelas relacionadas à Releitura (global)."""
+    conn = sqlite3.connect(str(DB_PATH))
+    cur = conn.cursor()
+    cur.execute("DELETE FROM releituras")
+    cur.execute("DELETE FROM history_releitura")
+    # grafico_historico: apenas módulo releitura
+    cur.execute("DELETE FROM grafico_historico WHERE module='releitura'")
+    conn.commit()
+    conn.close()
+
