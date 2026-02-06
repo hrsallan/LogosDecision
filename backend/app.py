@@ -313,14 +313,18 @@ def status_releitura():
 
     # Gerência/Diretoria: agregação por targets + gerente (unrouted)
     targets = get_releitura_region_targets()
+    print(f"[DEBUG Releitura] Targets configurados: {targets}")
+    
     region_user_ids = {}
     for rname in ('Araxá','Uberaba','Frutal'):
         matricula = targets.get(rname)
         uid = get_user_id_by_matricula(matricula) if matricula else None
+        print(f"[DEBUG Releitura] Região {rname} -> Matrícula: {matricula} -> User ID: {uid}")
         region_user_ids[rname]=uid
 
     manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
     manager_id = get_user_id_by_username(manager_username) or user_id
+    print(f"[DEBUG Releitura] Manager: {manager_username} -> ID: {manager_id}")
 
     def agg_chart(fn):
         # fn(user_id, date_str) -> (labels, values)
@@ -401,18 +405,25 @@ def status_releitura():
     regions_summary={}
     for rname, uid in region_user_ids.items():
         if not uid:
+            print(f"[DEBUG Releitura] Região {rname} não configurada (uid=None)")
             regions_summary[rname]={"configured":False,"total":0,"pendentes":0,"realizadas":0,"atrasadas":0}
             continue
+        
+        print(f"[DEBUG Releitura] Calculando métricas para {rname} (uid={uid})")
         cur2 = sqlite3.connect(str(DB_PATH)).cursor()
         ph2="?"
         cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=?", (uid,))
         t=cur2.fetchone()[0]
+        print(f"[DEBUG Releitura]   {rname} Total: {t}")
         cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE'", (uid,))
         p=cur2.fetchone()[0]
+        print(f"[DEBUG Releitura]   {rname} Pendentes: {p}")
         cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='CONCLUÍDA'", (uid,))
         rd=cur2.fetchone()[0]
+        print(f"[DEBUG Releitura]   {rname} Realizadas: {rd}")
         cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND vencimento <> '' AND vencimento < ?", (uid, today))
         a=cur2.fetchone()[0]
+        print(f"[DEBUG Releitura]   {rname} Atrasadas: {a}")
         cur2.connection.close()
         regions_summary[rname]={"configured":True,"total":t,"pendentes":p,"realizadas":rd,"atrasadas":a}
 
@@ -422,6 +433,9 @@ def status_releitura():
     cur.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND route_status='UNROUTED'", (manager_id,))
     unrouted_count=cur.fetchone()[0]
     conn.close()
+
+    print(f"[DEBUG Releitura] Resumo final das regiões: {regions_summary}")
+    print(f"[DEBUG Releitura] Não roteados (manager): {unrouted_count}")
 
     return jsonify({
         "status":"online",

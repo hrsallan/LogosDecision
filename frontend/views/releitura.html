@@ -947,25 +947,7 @@
                         <div class="metric-value" id="v2-nao-roteados" style="color: #6478ff;">0</div>
                     </div>
 
-                    <div class="metric-card" style="--glow-color: rgba(100, 120, 255, 0.12);">
-                        <div class="metric-header">
-                            <div class="metric-icon">
-                                <i data-lucide="route"></i>
-                            </div>
-                            <span class="metric-label">Roteados</span>
-                        </div>
-                        <div class="metric-value" id="v2-roteados">0</div>
-                    </div>
-
-                    <div class="metric-card" style="--glow-color: rgba(46, 160, 67, 0.12);">
-                        <div class="metric-header">
-                            <div class="metric-icon" style="background: rgba(46, 160, 67, 0.12);">
-                                <i data-lucide="percent" style="color: #2ea043;"></i>
-                            </div>
-                            <span class="metric-label">Taxa de Roteamento</span>
-                        </div>
-                        <div class="metric-value" id="v2-routing-rate" style="color: #2ea043;">0%</div>
-                    </div>
+                    <!-- MÉTRICAS REMOVIDAS: Roteados e Taxa de Roteamento -->
                 </div>
 
                 <!-- REGION DETAIL CARDS -->
@@ -1116,8 +1098,6 @@
                                 <tr>
                                     <th>Status</th>
                                     <th>UL</th>
-                                    <th>UL Reg.</th>
-                                    <th>Localidade</th>
                                     <th>Instalação</th>
                                     <th>Endereço</th>
                                     <th>Razão</th>
@@ -1577,11 +1557,9 @@
                                     </span>
                                 </td>
                                 <td>${row.ul}</td>
-                                <td>${row.ul_regional || '-'}</td>
-                                <td>${row.localidade || '-'}</td>
                                 <td>${row.inst || row.instalacao || '-'}</td>
-                                <td>${row.endereco || '-'}</td>
-                                <td>${row.razao || '-'}</td>
+                                <td title="${String((row.endereco ?? row.localidade ?? '-') ).replace(/"/g,'&quot;')}">${row.endereco || row.localidade || '-'}</td>
+                                <td>${String(row.ul || '').slice(0,2) || '-'}</td>
                                 <td>${row.reg || '-'}</td>
                                 <td>${row.venc || row.vencimento || '-'}</td>
                             </tr>
@@ -1790,11 +1768,11 @@
                 <tr>
                   <td>${row.status ?? ''}</td>
                   <td>${ul}</td>
-                  <td>${row.instalacao ?? ''}</td>
-                  <td title="${(row.endereco ?? '').replace(/"/g,'&quot;')}">${row.endereco ?? ''}</td>
-                  <td>${razao}</td>
+                  <td>${row.inst ?? row.instalacao ?? ''}</td>
+                  <td title="${String((row.endereco ?? row.localidade ?? '')).replace(/"/g,'&quot;')}">${row.endereco ?? row.localidade ?? ''}</td>
+                  <td>${razao || ''}</td>
                   <td>${row.reg ?? ''}</td>
-                  <td>${row.vencimento ?? ''}</td>
+                  <td>${row.venc ?? row.vencimento ?? ''}</td>
                 </tr>
               `;
             }
