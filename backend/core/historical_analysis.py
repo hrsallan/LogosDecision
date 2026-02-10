@@ -1,14 +1,30 @@
+"""
+Módulo de Análise Histórica
+
+Responsável por gerar estatísticas agregadas e tendências históricas
+baseadas nos dados armazenados no banco de dados.
+"""
+
 import sqlite3
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict
 
+# Caminho absoluto para o banco de dados
 DB_PATH = os.path.join(os.getcwd(), 'data', 'vigilacore.db')
 
 def get_historical_analysis():
+    """
+    Gera um relatório completo de análise histórica das Releituras.
+    Inclui totais, tendências diárias, distribuição por razão e status.
+
+    Returns:
+        Dicionário contendo métricas e estruturas de dados para gráficos.
+    """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
+    # Totais gerais
     cursor.execute('SELECT COUNT(*) FROM releituras')
     total_all_time = cursor.fetchone()[0]
     
@@ -18,6 +34,7 @@ def get_historical_analysis():
     cursor.execute('SELECT COUNT(*) FROM releituras WHERE status = "PENDENTE"')
     pendentes_all_time = cursor.fetchone()[0]
     
+    # Tendência diária (últimos 30 dias)
     cursor.execute('''
         SELECT DATE(upload_time), COUNT(*) as count
         FROM releituras
@@ -27,6 +44,7 @@ def get_historical_analysis():
     ''')
     daily_data = cursor.fetchall()
     
+    # Distribuição por Razão (Top 10)
     cursor.execute('''
         SELECT razao, COUNT(*) as count, 
                SUM(CASE WHEN status = "CONCLUIDA" THEN 1 ELSE 0 END) as concluidas
@@ -37,6 +55,7 @@ def get_historical_analysis():
     ''')
     razao_distribution = cursor.fetchall()
     
+    # Distribuição por Status
     cursor.execute('''
         SELECT status, COUNT(*) as count
         FROM releituras
@@ -44,6 +63,7 @@ def get_historical_analysis():
     ''')
     status_distribution = cursor.fetchall()
     
+    # Tempo médio de resolução (em horas)
     cursor.execute('''
         SELECT AVG(CAST((julianday('now') - julianday(upload_time)) * 24 AS INTEGER)) as avg_hours
         FROM releituras
@@ -51,18 +71,21 @@ def get_historical_analysis():
     ''')
     avg_resolution_time = cursor.fetchone()[0] or 0
     
+    # Volume recente (7 dias)
     cursor.execute('''
         SELECT COUNT(*) FROM releituras 
         WHERE upload_time >= datetime('now', '-7 days')
     ''')
     last_7_days = cursor.fetchone()[0]
     
+    # Volume recente (24 horas)
     cursor.execute('''
         SELECT COUNT(*) FROM releituras 
         WHERE upload_time >= datetime('now', '-1 day')
     ''')
     last_24_hours = cursor.fetchone()[0]
     
+    # Itens vencidos (Pendentes com data de vencimento passada)
     cursor.execute('''
         SELECT COUNT(*) FROM releituras 
         WHERE status = "PENDENTE" AND 
@@ -70,6 +93,7 @@ def get_historical_analysis():
     ''')
     overdue = cursor.fetchone()[0]
     
+    # Quantidade de razões únicas
     cursor.execute('''
         SELECT COUNT(DISTINCT razao) FROM releituras
     ''')
@@ -77,6 +101,7 @@ def get_historical_analysis():
     
     conn.close()
     
+    # Processamento dos dados para o frontend
     daily_labels = [d[0] for d in reversed(daily_data)]
     daily_values = [d[1] for d in reversed(daily_data)]
     
@@ -86,6 +111,7 @@ def get_historical_analysis():
     
     status_dict = {s[0]: s[1] for s in status_distribution}
     
+    # Indicador de tendência (seta)
     trend = "↑" if (last_24_hours > 0) else "→"
     trend_pct = ((last_24_hours / max(last_7_days, 1)) * 100) if last_7_days > 0 else 0
     

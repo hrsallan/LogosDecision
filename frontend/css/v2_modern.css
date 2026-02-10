@@ -1,3 +1,11 @@
+/* ==========================================================================
+   VigilaCore v2 - Tema Moderno
+
+   Estilos principais para a interface atualizada do sistema.
+   Inclui: Sidebar dinâmica, Grid responsivo, Cards flutuantes, e
+   elementos de formulário customizados.
+   ========================================================================== */
+
 :root {
     --v2-bg: #0a0c10;
     --v2-surface: #161b22;
@@ -74,7 +82,7 @@ body {
 .v2-logo-text {
     font-size: 20px;
     letter-spacing: 0.5px;
-    line-height: 1.2; /* ou 1.3 */
+    line-height: 1.2;
     display: flex;
     align-items: center;
 }
@@ -96,8 +104,8 @@ body {
     flex-direction: column;
     gap: 4px;
     padding: 0 12px;
-
-    position: relative;}
+    position: relative;
+}
 
 .v2-nav-item {
     display: flex;
@@ -119,7 +127,8 @@ body {
     z-index: 1;
     flex: 0 0 auto;
     overflow: hidden;
-    pointer-events: auto;}
+    pointer-events: auto;
+}
 
 .v2-nav-item:hover {
     background: var(--v2-surface-light);
@@ -158,7 +167,7 @@ body {
 
 .v2-nav-logout {
     margin-top: auto;
-color: var(--v2-danger);
+    color: var(--v2-danger);
     border-top: 1px solid var(--v2-border);
     padding-top: 12px;
 }
@@ -167,7 +176,7 @@ color: var(--v2-danger);
     background: rgba(248, 81, 73, 0.1);
 }
 
-/* ==================== CONTENT AREA ==================== */
+/* ==================== ÁREA DE CONTEÚDO ==================== */
 
 .v2-content {
     flex: 1;
@@ -176,7 +185,7 @@ color: var(--v2-danger);
     overflow: hidden;
 }
 
-/* ==================== HEADER ==================== */
+/* ==================== CABEÇALHO ==================== */
 
 .v2-header {
     background: var(--v2-surface);
@@ -214,7 +223,7 @@ color: var(--v2-danger);
 }
 
 
-/* Calendar control (minimal) */
+/* Controle de Calendário (Minimalista) */
 .v2-calendar-wrap{
     position: relative;
     display:flex;
@@ -317,7 +326,7 @@ color: var(--v2-danger);
     white-space: nowrap;
 }
 
-/* ==================== MAIN CONTENT ==================== */
+/* ==================== CONTEÚDO PRINCIPAL (SCROLLABLE) ==================== */
 
 .v2-main {
     flex: 1;
@@ -340,7 +349,7 @@ color: var(--v2-danger);
     border-radius: 4px;
 }
 
-/* ==================== GRID ==================== */
+/* ==================== SISTEMA DE GRID ==================== */
 
 .v2-grid {
     display: grid;
@@ -612,7 +621,7 @@ color: var(--v2-danger);
     border: 1px solid var(--v2-warning);
 }
 
-/* ==================== UPLOAD ZONE ==================== */
+/* ==================== ZONA DE UPLOAD ==================== */
 
 .v2-upload-card {
     cursor: pointer;
@@ -656,7 +665,7 @@ color: var(--v2-danger);
     color: var(--v2-text-dim);
 }
 
-/* ==================== FOOTER ==================== */
+/* ==================== RODAPÉ ==================== */
 
 .v2-footer {
     background: var(--v2-surface);
@@ -743,7 +752,7 @@ color: var(--v2-danger);
     background: var(--v2-text-dim);
 }
 
-/* ==================== RESPONSIVO ==================== */
+/* ==================== RESPONSIVO (MOBILE/TABLET) ==================== */
 
 @media (max-width: 1024px) {
     .v2-sidebar {
@@ -841,13 +850,13 @@ color: var(--v2-danger);
 }
 
 
-/* Visually hidden (accessibility) */
+/* Visually hidden (acessibilidade) */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
-/* ==================== PORTEIRA: RESPONSIVIDADE (NOTEBOOK vs MONITOR) ==================== */
+/* ==================== PORTEIRA: RESPONSIVIDADE ESPECÍFICA ==================== */
 /*
-  Em telas menores (ex.: 1366px), regras antigas reduziam o span dos charts (span 3),
-  deixando “buraco” à direita. Nesta página, charts/tabelas devem sempre ocupar a largura toda.
+  Garante que tabelas e gráficos ocupem toda a largura em telas menores,
+  evitando "buracos" no layout em notebooks (ex: 1366px).
 */
 .page-porteira .v2-card-chart,
 .page-porteira .v2-table-area,
@@ -855,12 +864,11 @@ color: var(--v2-danger);
   grid-column: 1 / -1 !important;
 }
 
-/* Mantém as métricas fluidas em diferentes larguras */
+/* Mantém as métricas fluidas */
 .page-porteira .v2-metrics-row {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
-/* Ajuste fino para notebooks comuns */
 @media (max-width: 1366px) {
   .page-porteira .v2-main {
     padding: 14px 16px;
@@ -868,7 +876,7 @@ color: var(--v2-danger);
 }
 
 
-/* ==================== SIDEBAR TOGGLE ==================== */
+/* ==================== SIDEBAR TOGGLE (EXPANDIR/COLAPSAR) ==================== */
 
 :root{
   --v2-sidebar-w: 280px;
@@ -876,7 +884,6 @@ color: var(--v2-danger);
   --v2-sidebar-transition: 220ms ease;
 }
 
-/* default width uses var (keeps same visual) */
 .v2-sidebar{
   width: var(--v2-sidebar-w);
   transition: width var(--v2-sidebar-transition);
@@ -905,23 +912,20 @@ color: var(--v2-danger);
   transform: translateY(1px);
 }
 
-/* collapsed state */
+/* ESTADO COLAPSADO */
 body.sidebar-collapsed .v2-sidebar{
   width: var(--v2-sidebar-w-collapsed);
 }
 
-/* hide logo text and section label and nav text */
+/* Esconde textos quando colapsado */
 body.sidebar-collapsed .v2-brand-text,
 body.sidebar-collapsed .v2-nav-section-label,
-body.sidebar-collapsed .v2-nav-divider{
-  display: none !important;
-}
-
+body.sidebar-collapsed .v2-nav-divider,
 body.sidebar-collapsed .v2-nav-item .v2-nav-text{
   display: none !important;
 }
 
-/* center icons */
+/* Centraliza ícones */
 body.sidebar-collapsed .v2-nav-item{
   justify-content: center;
   gap: 0;
@@ -929,13 +933,12 @@ body.sidebar-collapsed .v2-nav-item{
   padding-right: 0;
 }
 
-/* keep logout at bottom working */
 body.sidebar-collapsed .v2-nav-logout{
   justify-content: center;
 }
 
 
-/* --- Porteira | Ciclo selector (moderno) --- */
+/* ==================== SELETOR DE CICLO (MODERNO) ==================== */
 .v2-cycle-top{
   display:flex;
   align-items:flex-start;

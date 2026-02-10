@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Relatórios</title>
+    <!-- Estilos V2 -->
     <link rel="stylesheet" href="../css/v2_modern.css">
+    <!-- Dependências -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
 </head>
 <body>
     <div class="v2-container">
-        <!-- SIDEBAR -->
+        <!-- BARRA LATERAL -->
         <aside class="v2-sidebar">
-            <div class="v2-logo-section"><button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
-                <div class="v2-logo-text v2-brand-text"><span class="logo-vigila">Vigila</span><span class="logo-core">Core</span></div>
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">Vigila</span><span class="logo-core">Core</span>
+                </div>
             </div>
 
             <nav class="v2-nav">
@@ -57,9 +64,9 @@
             </nav>
         </aside>
 
-        <!-- CONTENT -->
+        <!-- CONTEÚDO PRINCIPAL -->
         <div class="v2-content">
-            <!-- HEADER -->
+            <!-- CABEÇALHO -->
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Relatórios</h1>
@@ -74,7 +81,7 @@
                 </div>
             </header>
 
-            <!-- MAIN CONTENT -->
+            <!-- ÁREA DE CONTEÚDO -->
             <main class="v2-main">
                 <div class="v2-dev-page">
                     <i data-lucide="file-text" class="v2-dev-icon"></i>
@@ -84,7 +91,7 @@
                 </div>
             </main>
 
-            <!-- FOOTER -->
+            <!-- RODAPÉ -->
             <footer class="v2-footer">
                 <span>VigilaCore  | Desenvolvimento Operacional Estratégico</span>
                 <span>Sistema em desenvolvimento</span>
@@ -92,9 +99,11 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
         lucide.createIcons();
 
+        // Relógio
         setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');

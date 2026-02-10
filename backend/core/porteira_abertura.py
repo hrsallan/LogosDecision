@@ -1,3 +1,10 @@
+"""
+Módulo de Abertura de Porteira (Cálculo de Datas)
+
+Responsável por calcular datas de vencimento e abertura de ciclo de leitura
+com base em um calendário Excel configurável.
+"""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -8,16 +15,16 @@ import threading
 import pandas as pd
 
 
-# Cache simples para evitar reabrir o Excel a cada request
+# Cache simples para evitar reabrir o Excel a cada requisição
 __LOCK = threading.Lock()
 __CACHE: dict = {
     "path": None,
     "mtime": None,
-    "map": {},  # (ano, mes, razao_int) -> date
+    "map": {},  # Chave: (ano, mes, razao_int) -> Valor: date
 }
 
 
-# Abreviações de meses (pt-BR) usadas nas abas do calendário
+# Mapeamento de abreviações de meses (pt-BR) para números
 MONTH_ABBR_TO_NUM = {
     "Jan": 1, "Fev": 2, "Mar": 3, "Abr": 4, "Mai": 5, "Jun": 6,
     "Jul": 7, "Ago": 8, "Set": 9, "Out": 10, "Nov": 11, "Dez": 12,
@@ -26,14 +33,15 @@ MONTH_ABBR_TO_NUM = {
 
 def default_calendar_path() -> Path:
     """
-    Caminho padrão do calendário.
-    Esperado em: <raiz_do_projeto>/data/calendario_leitura.xlsx
+    Retorna o caminho padrão do arquivo de calendário.
+    Localização esperada: <raiz_do_projeto>/data/calendario_leitura.xlsx
     """
     project_root = Path(__file__).resolve().parents[2]
     return project_root / "data" / "calendario_leitura.xlsx"
 
 
 def _norm(s: str) -> str:
+    """Normaliza strings para comparação (lowercase, sem espaços/pontos)."""
     return (
         str(s or "")
         .strip()
@@ -45,13 +53,17 @@ def _norm(s: str) -> str:
 
 
 def _find_col(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
+    """
+    Encontra o nome real de uma coluna no DataFrame baseada em candidatos.
+    Tenta correspondência exata normalizada e depois correspondência parcial.
+    """
     cols = list(df.columns)
     norm_map = {_norm(c): c for c in cols}
     for cand in candidates:
         key = _norm(cand)
         if key in norm_map:
             return norm_map[key]
-    # fallback: contains
+    # Fallback: verifica se contém a substring
     for c in cols:
         nc = _norm(c)
         for cand in candidates:
@@ -61,6 +73,7 @@ def _find_col(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
 
 
 def _parse_date(v) -> Optional[date]:
+    """Tenta converter um valor para objeto date."""
     if v is None or (isinstance(v, float) and pd.isna(v)):
         return None
     if isinstance(v, datetime):
@@ -70,7 +83,7 @@ def _parse_date(v) -> Optional[date]:
     s = str(v).strip()
     if not s or s.lower() in ("nan", "nat"):
         return None
-    # formatos comuns: 07.01.2026 / 07/01/2026
+    # Formatos comuns: 07.01.2026 / 07/01/2026
     s = s.replace(".", "/")
     try:
         dt = pd.to_datetime(s, dayfirst=True, errors="coerce")
@@ -83,8 +96,10 @@ def _parse_date(v) -> Optional[date]:
 
 def _sheet_to_month_year(sheet_name: str) -> Tuple[Optional[int], Optional[int]]:
     """
-    Ex.: 'Jan-26' -> (2026, 1)
-         'Fev-2026' -> (2026, 2)
+    Extrai Mês e Ano do nome da aba do Excel.
+    Exemplos:
+        'Jan-26' -> (2026, 1)
+        'Fev-2026' -> (2026, 2)
     """
     s = str(sheet_name or "").strip()
     if "-" not in s:
@@ -92,7 +107,7 @@ def _sheet_to_month_year(sheet_name: str) -> Tuple[Optional[int], Optional[int]]
     a, b = s.split("-", 1)
     mon = MONTH_ABBR_TO_NUM.get(a.strip()[:3].title())
     year_part = b.strip()
-    # aceita '26' ou '2026'
+    # Aceita '26' (2026) ou '2026'
     try:
         y = int(year_part)
         if y < 100:
@@ -104,9 +119,13 @@ def _sheet_to_month_year(sheet_name: str) -> Tuple[Optional[int], Optional[int]]
 
 def load_calendar_map(path: Optional[Path] = None) -> Dict[Tuple[int, int, int], date]:
     """
-    Retorna um mapa (ano, mes, razao) -> data de referência.
-    A data de referência é priorizada por 'Cálculo do Faturamento';
-    se não houver, usa 'Leitura' conforme orientação do usuário.
+    Lê o arquivo Excel de calendário e constrói um mapa de datas.
+
+    A data de referência é priorizada pela coluna 'Cálculo do Faturamento'.
+    Se não existir, usa a coluna 'Leitura' como fallback.
+
+    Returns:
+        Dict[(ano, mes, razao), data_referencia]
     """
     p = Path(path) if path else default_calendar_path()
     if not p.exists():
@@ -156,8 +175,8 @@ def load_calendar_map(path: Optional[Path] = None) -> Dict[Tuple[int, int, int],
 
 def get_due_date(ano: int, mes: int, razao: int, path: Optional[Path] = None) -> Optional[date]:
     """
-    Busca a data de referência do calendário para (ano, mes, razao).
-    Usa cache por mtime para recarregar quando o arquivo mudar.
+    Consulta a data de vencimento/referência para uma combinação Ano/Mês/Razão.
+    Utiliza cache inteligente (verifica data de modificação do arquivo) para performance.
     """
     p = Path(path) if path else default_calendar_path()
     if not p.exists():

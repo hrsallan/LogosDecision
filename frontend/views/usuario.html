@@ -4,19 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Área do Usuário</title>
+    <!-- Estilos V2 -->
     <link rel="stylesheet" href="../css/v2_modern.css">
+    <!-- Dependências externas -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
 
     <style>
-        /* ==================== USER PAGE ENHANCEMENTS ==================== */
+        /* ==================== ESTILOS ESPECÍFICOS DA PÁGINA DE USUÁRIO ==================== */
         
         .user-container {
             max-width: 1000px;
             margin: 0 auto;
         }
 
+        /* Cartão de Cabeçalho do Perfil */
         .user-header-card {
             background: linear-gradient(135deg, rgba(0, 209, 255, 0.08) 0%, rgba(0, 209, 255, 0.02) 100%);
             border: 1px solid rgba(0, 209, 255, 0.2);
@@ -46,6 +49,7 @@
             gap: 20px;
         }
 
+        /* Avatar do Usuário */
         .user-avatar {
             width: 80px;
             height: 80px;
@@ -77,7 +81,7 @@
             line-height: 1.5;
         }
 
-        /* CREDENTIALS SECTION */
+        /* SEÇÃO DE CREDENCIAIS */
         .credentials-section {
             background: var(--v2-surface);
             border: 1px solid var(--v2-border);
@@ -122,6 +126,7 @@
             line-height: 1.4;
         }
 
+        /* Badge de Status */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -152,7 +157,7 @@
             height: 14px;
         }
 
-        /* FORM STYLES */
+        /* FORMULÁRIO */
         .credentials-form {
             padding: 24px;
         }
@@ -209,7 +214,7 @@
             opacity: 0.6;
         }
 
-        /* BUTTON STYLES */
+        /* BOTÕES */
         .form-actions {
             display: flex;
             align-items: center;
@@ -267,7 +272,7 @@
             transform: translateY(-1px);
         }
 
-        /* MESSAGE AREA */
+        /* ÁREA DE MENSAGENS */
         .form-message {
             flex: 1;
             min-width: 200px;
@@ -297,7 +302,7 @@
             border: 1px solid rgba(0, 209, 255, 0.3);
         }
 
-        /* INFO BOX */
+        /* CAIXA DE INFORMAÇÃO */
         .info-box {
             margin-top: 16px;
             padding: 16px;
@@ -334,7 +339,7 @@
             line-height: 1.5;
         }
 
-        /* SECURITY BADGE */
+        /* BADGE DE SEGURANÇA */
         .security-badge {
             display: inline-flex;
             align-items: center;
@@ -355,7 +360,7 @@
             height: 12px;
         }
 
-        /* RESPONSIVE */
+        /* RESPONSIVO */
         @media (max-width: 768px) {
             .user-header-content {
                 flex-direction: column;
@@ -381,7 +386,7 @@
             }
         }
 
-        /* LOADING STATE */
+        /* ANIMAÇÃO DE LOADING */
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -395,7 +400,7 @@
 </head>
 <body>
     <div class="v2-container">
-        <!-- SIDEBAR -->
+        <!-- BARRA LATERAL -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
                 <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
@@ -446,9 +451,9 @@
             </nav>
         </aside>
 
-        <!-- CONTENT -->
+        <!-- CONTEÚDO PRINCIPAL -->
         <div class="v2-content">
-            <!-- HEADER -->
+            <!-- CABEÇALHO -->
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Área do Usuário</h1>
@@ -463,10 +468,10 @@
                 </div>
             </header>
 
-            <!-- MAIN CONTENT -->
+            <!-- CONTEÚDO -->
             <main class="v2-main">
                 <div class="user-container">
-                    <!-- USER HEADER -->
+                    <!-- CABEÇALHO DO PERFIL -->
                     <div class="user-header-card">
                         <div class="user-header-content">
                             <div class="user-avatar">
@@ -479,7 +484,7 @@
                         </div>
                     </div>
 
-                    <!-- CREDENTIALS SECTION -->
+                    <!-- SEÇÃO DE CREDENCIAIS -->
                     <section class="credentials-section">
                         <div class="credentials-header">
                             <div class="credentials-title">
@@ -495,6 +500,7 @@
                             </div>
                         </div>
 
+                        <!-- FORMULÁRIO DE CREDENCIAIS -->
                         <form id="portal-form" class="credentials-form" autocomplete="off">
                             <div class="form-grid">
                                 <div class="form-group">
@@ -554,7 +560,7 @@
                 </div>
             </main>
 
-            <!-- FOOTER -->
+            <!-- RODAPÉ -->
             <footer class="v2-footer">
                 <span>VigilaCore  | Desenvolvimento Operacional Estratégico</span>
                 <span>Sistema em desenvolvimento</span>
@@ -562,10 +568,11 @@
         </div>
     </div>
 
+    <!-- Scripts de Lógica -->
     <script>
         lucide.createIcons();
 
-        // Clock update
+        // Relógio
         setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -574,7 +581,7 @@
             document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
         }, 1000);
 
-        // Portal credentials management
+        // Gerenciamento de Credenciais do Portal
         async function loadPortalStatus() {
             const msgEl = document.getElementById('portal-msg');
             msgEl.style.display = 'none';
@@ -610,7 +617,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadPortalStatus();
 
-            // Form submit
+            // Salvar credenciais
             const form = document.getElementById('portal-form');
             form.addEventListener('submit', async (ev) => {
                 ev.preventDefault();
@@ -639,7 +646,7 @@
                 }
             });
 
-            // Clear credentials
+            // Remover credenciais
             document.getElementById('portal-clear').addEventListener('click', async () => {
                 if (!confirm('Tem certeza que deseja remover suas credenciais?')) {
                     return;

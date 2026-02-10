@@ -1,19 +1,14 @@
-"""Releitura routing V2: UL (regional) -> Região + Localidade.
+"""
+Módulo de Roteamento de Releituras (V2)
 
-Enriquece registros do relatório de Releituras com:
-- ul_regional: UL8[2:6]
-- localidade: mapeada por referência Excel (se disponível)
-- region: Araxá / Uberaba / Frutal (preferencialmente via referência; fallback via mapa fixo)
-- route_status / route_reason
+Este módulo enriquece os registros de releitura, determinando a região
+geográfica (Araxá, Uberaba, Frutal) e a localidade baseada no código da UL.
 
-Arquivo de referência (opcional):
-- REFERENCIA_LOCALIDADE_TR_4680006773.xlsx
-
-Busca automática (ou por env RELEITURA_REF_XLSX):
-- VigilaCore/REFERENCIA_LOCALIDADE_TR_4680006773.xlsx
-- VigilaCore/data/REFERENCIA_LOCALIDADE_TR_4680006773.xlsx
-- VigilaCore/data/reference/REFERENCIA_LOCALIDADE_TR_4680006773.xlsx
-- VigilaCore/data/refs/REFERENCIA_LOCALIDADE_TR_4680006773.xlsx
+Funcionalidades:
+- Extração de UL Regional (dígitos centrais).
+- Mapeamento de Localidade via arquivo Excel de referência.
+- Determinação de Região (com fallback para mapa estático).
+- Definição de status de roteamento (ROUTED / UNROUTED).
 """
 
 from __future__ import annotations
@@ -23,12 +18,25 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 
-# Mapa (fallback) UL regional -> Região (extraído do roteamento antigo do projeto)
-UL_REGION_MAP: Dict[str, str] = {"3427": "Araxá", "5101": "Araxá", "5103": "Araxá", "5104": "Araxá", "5117": "Araxá", "5118": "Araxá", "5119": "Araxá", "5120": "Araxá", "5121": "Araxá", "5325": "Araxá", "1966": "Uberaba", "5105": "Uberaba", "5106": "Uberaba", "5300": "Uberaba", "5301": "Uberaba", "5302": "Uberaba", "5313": "Uberaba", "5314": "Uberaba", "5315": "Uberaba", "5309": "Frutal", "5310": "Frutal", "5311": "Frutal", "5312": "Frutal", "5323": "Frutal", "5324": "Frutal", "5413": "Frutal", "5415": "Frutal", "5418": "Frutal", "5420": "Frutal", "5422": "Frutal", "5424": "Frutal"}
+# Mapa de fallback (UL Regional -> Região) extraído do legado do projeto.
+# Usado caso o Excel de referência não cubra determinada UL.
+UL_REGION_MAP: Dict[str, str] = {
+    "3427": "Araxá", "5101": "Araxá", "5103": "Araxá", "5104": "Araxá",
+    "5117": "Araxá", "5118": "Araxá", "5119": "Araxá", "5120": "Araxá",
+    "5121": "Araxá", "5325": "Araxá", "1966": "Uberaba", "5105": "Uberaba",
+    "5106": "Uberaba", "5300": "Uberaba", "5301": "Uberaba", "5302": "Uberaba",
+    "5313": "Uberaba", "5314": "Uberaba", "5315": "Uberaba", "5309": "Frutal",
+    "5310": "Frutal", "5311": "Frutal", "5312": "Frutal", "5323": "Frutal",
+    "5324": "Frutal", "5413": "Frutal", "5415": "Frutal", "5418": "Frutal",
+    "5420": "Frutal", "5422": "Frutal", "5424": "Frutal"
+}
 
 
 def ul8_to_ulregional(ul8: str) -> Optional[str]:
-    """Extrai UL regional (4 dígitos) a partir da UL8 (8 dígitos)."""
+    """
+    Extrai a UL Regional (4 dígitos centrais) a partir da UL de 8 dígitos.
+    Ex: 01234567 -> 2345
+    """
     if not ul8:
         return None
     s = str(ul8).strip()
@@ -38,6 +46,7 @@ def ul8_to_ulregional(ul8: str) -> Optional[str]:
 
 
 def ulregional_to_region_fallback(ul_regional: Optional[str]) -> Optional[str]:
+    """Busca a região no mapa estático de fallback."""
     if not ul_regional:
         return None
     key = str(ul_regional).strip()
@@ -47,6 +56,7 @@ def ulregional_to_region_fallback(ul_regional: Optional[str]) -> Optional[str]:
 
 
 def _find_ref_xlsx(project_root: Path) -> Optional[Path]:
+    """Procura o arquivo Excel de referência de localidades."""
     env_path = (os.environ.get("RELEITURA_REF_XLSX") or "").strip()
     if env_path:
         p = Path(env_path)
@@ -66,16 +76,12 @@ def _find_ref_xlsx(project_root: Path) -> Optional[Path]:
 
 
 def _load_reference(ref_path: Path) -> Tuple[Dict[str, str], Dict[str, str]]:
-    """Carrega mapeamentos do Excel de referência.
+    """
+    Carrega os mapeamentos do Excel de referência.
 
-    Retorna:
+    Returns:
       - ul_regional -> localidade
-      - ul_regional -> region (se existir no arquivo)
-
-    Heurística de colunas:
-      - UL: qualquer coluna contendo 'ul'
-      - Localidade: 'localidade' ou 'local'
-      - Região: 'regiao', 'região', 'regional', 'base' (tenta as mais prováveis)
+      - ul_regional -> region
     """
     ul_to_loc: Dict[str, str] = {}
     ul_to_region: Dict[str, str] = {}
@@ -86,7 +92,7 @@ def _load_reference(ref_path: Path) -> Tuple[Dict[str, str], Dict[str, str]]:
             s = s.zfill(4)
         return s
 
-    # pandas
+    # Tentativa com Pandas (mais robusto)
     try:
         import pandas as pd  # type: ignore
 
@@ -98,13 +104,14 @@ def _load_reference(ref_path: Path) -> Tuple[Dict[str, str], Dict[str, str]]:
         loc_col = None
         reg_col = None
 
+        # Heurística para encontrar colunas
         for c, cl in zip(cols, cols_l):
             if ul_col is None and "ul" in cl:
                 ul_col = c
             if loc_col is None and ("localidade" in cl or "local" in cl):
                 loc_col = c
 
-        # região: tenta várias opções
+        # Região: tenta várias opções de nome
         for c, cl in zip(cols, cols_l):
             if "região" in cl or "regiao" in cl:
                 reg_col = c
@@ -134,7 +141,7 @@ def _load_reference(ref_path: Path) -> Tuple[Dict[str, str], Dict[str, str]]:
     except Exception:
         pass
 
-    # openpyxl fallback
+    # Fallback com openpyxl (se pandas falhar ou não estiver instalado)
     try:
         from openpyxl import load_workbook  # type: ignore
 
@@ -189,11 +196,21 @@ def _load_reference(ref_path: Path) -> Tuple[Dict[str, str], Dict[str, str]]:
 
 
 def route_releituras(records: List[dict]) -> List[dict]:
-    """Enriquece registros de releitura com roteamento V2.
+    """
+    Aplica lógica de roteamento V2 aos registros de releitura.
 
-    Entrada: lista de dicts que contenham, no mínimo, 'ul'
-    Saída: mesma lista, com chaves adicionais:
-        - ul_regional, localidade, region, route_status, route_reason
+    Enriquece cada registro com:
+        - ul_regional
+        - localidade
+        - region (Araxá/Uberaba/Frutal)
+        - route_status (ROUTED / UNROUTED)
+        - route_reason (Motivo se não roteado)
+
+    Args:
+        records: Lista de dicionários (dados brutos do Excel).
+
+    Returns:
+        Lista de dicionários enriquecidos.
     """
     if not records:
         return []
@@ -211,7 +228,10 @@ def route_releituras(records: List[dict]) -> List[dict]:
         ulr = ul8_to_ulregional(ul8)
         ulr_norm = str(ulr).zfill(4) if ulr else None
 
+        # Tenta rotear via arquivo de referência
         region = ul_to_reg.get(ulr_norm) if ulr_norm else None
+
+        # Fallback para mapa estático
         if not region:
             region = ulregional_to_region_fallback(ulr)
 

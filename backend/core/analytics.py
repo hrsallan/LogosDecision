@@ -1,3 +1,12 @@
+"""
+Módulo de Análise e Processamento de Dados (Excel)
+
+Este módulo é responsável por ler, validar e extrair dados dos relatórios Excel
+fornecidos pelo portal SGL da CEMIG. Ele lida com conversão de formatos (XLS -> XLSX),
+identificação do tipo de relatório (Releitura ou Porteira) e extração estruturada
+das informações para inserção no banco de dados.
+"""
+
 import os
 import pandas as pd
 import re
@@ -8,6 +17,10 @@ from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 
 def get_file_hash(file_path):
+    """
+    Calcula o hash SHA-256 de um arquivo.
+    Útil para detectar duplicatas antes de processar.
+    """
     sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as f:
         for byte_block in iter(lambda: f.read(4096), b""):
@@ -16,8 +29,15 @@ def get_file_hash(file_path):
 
 def _to_xlsx_if_needed(path_str: str) -> str:
     """
-    Se o arquivo for .xls e não houver xlrd, converte para .xlsx via LibreOffice (soffice),
-    e retorna o caminho do arquivo convertido.
+    Converte arquivos .xls antigos para .xlsx se necessário.
+    Tenta usar a biblioteca 'xlrd' primeiro, e como fallback usa o LibreOffice (soffice)
+    via linha de comando, se disponível no sistema.
+
+    Args:
+        path_str: Caminho do arquivo original.
+
+    Returns:
+        Caminho do arquivo .xlsx (convertido ou original).
     """
     p = Path(path_str)
     if p.suffix.lower() != ".xls":
@@ -30,7 +50,7 @@ def _to_xlsx_if_needed(path_str: str) -> str:
     except Exception:
         pass
 
-    # Fallback: converter via soffice
+    # Fallback: converter via soffice (LibreOffice)
     out_dir = Path(tempfile.mkdtemp(prefix="vigila_xls2xlsx_"))
     try:
         subprocess.run(
@@ -50,7 +70,7 @@ def _to_xlsx_if_needed(path_str: str) -> str:
 
 def validate_report_type(file_path: str) -> Tuple[str, str]:
     """
-    Valida qual tipo de relatório é o arquivo baseado em strings características.
+    Identifica o tipo de relatório baseado em palavras-chave no conteúdo binário do arquivo.
     
     Returns:
         Tuple[tipo, mensagem]
@@ -60,7 +80,7 @@ def validate_report_type(file_path: str) -> Tuple[str, str]:
         with open(file_path, 'rb') as f:
             content = f.read()
         
-        # Strings características do relatório Porteira
+        # Marcadores para relatório de Porteira (Acompanhamento de Resultados)
         porteira_markers = [
             b'Acompanhamento de Resultados',
             b'Conjunto de Contrato',
@@ -68,7 +88,7 @@ def validate_report_type(file_path: str) -> Tuple[str, str]:
             b'Leituras'
         ]
         
-        # Strings características do relatório Releituras
+        # Marcadores para relatório de Releituras (Pendentes)
         releituras_markers = [
             b'Releitura',
             b'Instalacao',
@@ -92,8 +112,11 @@ def validate_report_type(file_path: str) -> Tuple[str, str]:
 
 def deep_scan_excel(file_path):
     """
-    ⚠️ ATENÇÃO: Esta função processa o relatório de RELEITURAS NÃO EXECUTADAS.
-    Para o relatório de "Acompanhamento de Resultados" (Porteira), use deep_scan_porteira_excel().
+    Processa o relatório de RELEITURAS (Serviços Pendentes).
+    Extrai UL, Instalação, Endereço, Vencimento e Região.
+
+    ⚠️ ATENÇÃO: Para o relatório de "Acompanhamento de Resultados" (Porteira),
+    use deep_scan_porteira_excel().
     """
     try:
         # Validar tipo de relatório
@@ -106,6 +129,7 @@ def deep_scan_excel(file_path):
             return None
         elif report_type == "UNKNOWN":
             print("⚠️ AVISO: Tipo de relatório não identificado. Tentando processar mesmo assim...")
+
         normalized_path = _to_xlsx_if_needed(file_path)
         engine = "openpyxl" if str(normalized_path).lower().endswith(".xlsx") else None
         
@@ -113,6 +137,7 @@ def deep_scan_excel(file_path):
         data_matrix = df_raw.values
         details = []
         
+        # Regex para validação básica
         re_ul = re.compile(r'^\d{8}$')
         re_inst = re.compile(r'^\d{10}$')
         re_data = re.compile(r'\d{2}/\d{2}/\d{4}')
@@ -130,13 +155,14 @@ def deep_scan_excel(file_path):
         while i < len(data_matrix):
             row = data_matrix[i]
             
+            # Mapeamento posicional das colunas (baseado no layout padrão CEMIG)
             ul_val = str(row[0]).strip() if pd.notna(row[0]) else None
             inst_val = str(row[4]).strip() if pd.notna(row[4]) and len(row) > 4 else None
             endereco_val = str(row[10]).strip() if pd.notna(row[10]) and len(row) > 10 else None
             data_val = str(row[26]).strip() if pd.notna(row[26]) and len(row) > 26 else None
             reg_val = str(row[9]).strip() if pd.notna(row[9]) and len(row) > 9 else "03"
             
-            # Pular cabeçalhos
+            # Pular linhas de cabeçalho
             if reg_val.lower() == 'reg.':
                 stats['cabecalhos'] += 1
                 i += 1
@@ -182,9 +208,8 @@ def deep_scan_excel(file_path):
 
 def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
     """
-    Carrega arquivo de referência de localidades.
-    
-    CORRIGIDO: Remove espaços dos nomes das colunas e usa UL regional como chave.
+    Carrega o arquivo auxiliar de referência de localidades (Excel).
+    Mapeia códigos de UL Regional (dígitos centrais) para nomes de Localidade e Supervisão.
     
     Returns:
         Dict[ul_regional, {'localidade': str, 'supervisao': str, 'regiao': str}]
@@ -198,12 +223,12 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
     try:
         df_ref = pd.read_excel(ref_path)
         
-        # Limpar nomes das colunas (remover espaços extras)
+        # Normalizar nomes das colunas
         df_ref.columns = [str(col).strip() for col in df_ref.columns]
         
         print(f"📋 Colunas disponíveis no arquivo de referência: {list(df_ref.columns)}")
         
-        # Mapear nomes de colunas possíveis
+        # Mapeamento dinâmico de colunas
         col_mapping = {}
         for col in df_ref.columns:
             col_lower = col.lower()
@@ -211,9 +236,9 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
                 col_mapping['ul'] = col
             elif 'localidade' in col_lower and not col_mapping.get('localidade'):
                 col_mapping['localidade'] = col
-            elif 'supervisao' in col_lower or 'supervisão' in col_lower and not col_mapping.get('supervisao'):
+            elif ('supervisao' in col_lower or 'supervisão' in col_lower) and not col_mapping.get('supervisao'):
                 col_mapping['supervisao'] = col
-            elif 'regiao' in col_lower or 'região' in col_lower and not col_mapping.get('regiao'):
+            elif ('regiao' in col_lower or 'região' in col_lower) and not col_mapping.get('regiao'):
                 col_mapping['regiao'] = col
         
         print(f"🔍 Mapeamento de colunas: {col_mapping}")
@@ -224,10 +249,9 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
         
         for _, row in df_ref.iterrows():
             try:
-                # Extrair UL regional (4 dígitos do meio)
+                # Extrair UL regional (4 dígitos do meio ou finais)
                 ul_full = str(row[col_mapping['ul']]).strip()
                 if len(ul_full) >= 6:
-                    # Para UL de 8 dígitos, pegar dígitos 3-6 (índices 2-5)
                     ul_regional = ul_full[2:6] if len(ul_full) == 8 else ul_full[-4:]
                 else:
                     ul_regional = ul_full.zfill(4)
@@ -241,16 +265,10 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
                 localidade_map[ul_regional] = info
                 
             except Exception as e:
-                print(f"⚠️ Erro ao processar linha: {e}")
+                print(f"⚠️ Erro ao processar linha de referência: {e}")
                 continue
         
-        print(f"✅ Carregado arquivo de referência: {len(localidade_map)} localidades mapeadas")
-        
-        # Mostrar alguns exemplos
-        if localidade_map:
-            print(f"\n🔍 Exemplos de mapeamento (primeiros 5):")
-            for i, (key, value) in enumerate(list(localidade_map.items())[:5]):
-                print(f"   {i+1}. UL Regional {key}: {value['localidade']} ({value['supervisao']})")
+        print(f"✅ Arquivo de referência carregado: {len(localidade_map)} localidades mapeadas")
         
         return localidade_map
         
@@ -263,13 +281,13 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
 
 def deep_scan_porteira_excel(file_path, ciclo=None):
     """
-    Analisa o relatório de "Acompanhamento de Resultados de Leitura" (Porteira).
+    Processa o relatório de ACOMPANHAMENTO DE RESULTADOS (Porteira).
+    Extrai métricas de leituras planejadas, executadas e não executadas.
+    Calcula porcentagens e agrupa por UL.
     
-    VERSÃO CORRIGIDA:
-    - Valida tipo de relatório
-    - Usa UL regional (dígitos 3-6) para mapeamento
-    - Melhora logging e estatísticas
-    - Remove hardcoding de nomes de colunas
+    Args:
+        file_path: Caminho do arquivo Excel.
+        ciclo: (Opcional) Filtra ULs rurais baseadas no ciclo (97, 98, 99).
     """
     try:
         # ==================== VALIDAR TIPO DE RELATÓRIO ====================
@@ -283,18 +301,20 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
         elif report_type == "UNKNOWN":
             print("⚠️ AVISO: Tipo de relatório não identificado. Tentando processar mesmo assim...")
         
-        # ==================== CARREGAR ARQUIVO DE REFERÊNCIA ====================
+        # ==================== CARREGAR REFERÊNCIA ====================
+        # Caminho relativo para o arquivo de referência na raiz ou pasta data
         ref_path = Path(__file__).parent.parent.parent / "REFERENCIA_LOCALIDADE_TR_4680006773.xlsx"
         localidade_map = load_localidade_reference(ref_path)
         
-        # ==================== DEFINIR LOCALIDADES VÁLIDAS POR CICLO ====================
+        # ==================== REGRAS DE CICLO ====================
+        # Mapeia quais localidades RURAIS pertencem a qual ciclo
         CICLO_LOCALIDADES = {
-            "97": set(list(range(1, 89)) + [90, 91, 96, 97]), # CICLO 97: Localidades 01-88 + 90, 91, 96, 97
-            "98": set(list(range(1, 89)) + [92, 93, 96, 98]), # CICLO 98: Localidades 01-88 + 92, 93, 96, 98
-            "99": set(list(range(1, 89)) + [89, 94, 96, 99]),  # CICLO 99: Localidades 01-88 + 89, 94, 96, 99
+            "97": set(list(range(1, 89)) + [90, 91, 96, 97]), # Urbanas + Rurais do ciclo 97
+            "98": set(list(range(1, 89)) + [92, 93, 96, 98]), # Urbanas + Rurais do ciclo 98
+            "99": set(list(range(1, 89)) + [89, 94, 96, 99]), # Urbanas + Rurais do ciclo 99
         }
         
-        # ==================== PROCESSAR ARQUIVO EXCEL ====================
+        # ==================== LEITURA DO EXCEL ====================
         normalized_path = _to_xlsx_if_needed(file_path)
         engine = "openpyxl" if str(normalized_path).lower().endswith(".xlsx") else None
         df_raw = pd.read_excel(normalized_path, header=None, engine=engine)
@@ -302,24 +322,17 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
         data_rows = []
         current_conjunto_contrato = "N/A"
 
-        # Índices das colunas no arquivo Excel
-        # Observação importante (relatório "Acompanhamento de Resultados de Leitura"):
-        #   - "Leituras a Exec." (col 3) = TOTAL PROGRAMADO (planejado)
-        #   - "Total" (col 13) = TOTAL EXECUTADO (realizado)
-        #   - "ñ exec." (col 16) = NÃO EXECUTADO
-        # O bug da UI (% > 100 e "não executadas" > "total") ocorria porque
-        # a coluna 13 (executadas) estava sendo interpretada como "total".
+        # Índices das colunas no layout padrão
         COL_UL = 0
         COL_TIPO_UL = 1
-        COL_LEIT_PLANEJADAS = 3
-        COL_LEIT_EXECUTADAS = 13
-        COL_NAO_EXEC = 16
-        COL_IMPEDIMENTOS = 23  # "C/Imp" no relatório
+        COL_LEIT_PLANEJADAS = 3  # "Leituras a Exec."
+        COL_LEIT_EXECUTADAS = 13 # "Total" (Executado)
+        COL_NAO_EXEC = 16        # "ñ exec."
+        COL_IMPEDIMENTOS = 23    # "C/Imp"
         COL_REL_EXEC = 49
         COL_REL_NAO_EXEC = 50
         COL_REL_TOTAL = 52
 
-        # Estatísticas detalhadas
         stats = {
             'total_linhas_arquivo': len(df_raw),
             'linhas_processadas': 0,
@@ -337,21 +350,20 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             row = df_raw.iloc[i]
             first_cell = row.iloc[COL_UL]
 
-            # Detectar mudança de Conjunto de Contrato
+            # Detectar agrupamento "Conjunto de Contrato"
             if isinstance(first_cell, str) and "Conjunto de Contrato:" in first_cell:
                 conjunto_novo = first_cell.split(":")[-1].strip()
                 current_conjunto_contrato = conjunto_novo
                 stats['conjuntos_unicos'].add(conjunto_novo)
                 continue
 
-            # Obter valor da UL
             ul_val = str(first_cell).strip() if pd.notna(first_cell) else ""
 
-            # Pular linhas de totais e vazias
+            # Ignorar totais e linhas vazias
             if not ul_val or "Sub-Total" in ul_val or "Total Geral" in ul_val:
                 continue
 
-            # Limpar UL e validar
+            # Validar formato da UL (8 dígitos)
             ul_clean = ul_val.replace(".0", "")
             if not ul_clean.isdigit() or len(ul_clean) != 8:
                 stats['ul_invalida'] += 1
@@ -359,10 +371,10 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
 
             stats['linhas_processadas'] += 1
 
-            # ==================== EXTRAIR LOCALIDADE DA UL ====================
-            localidade_ul = ul_clean[-2:]  # Últimos 2 dígitos
+            # ==================== PROCESSAR UL E LOCALIDADE ====================
+            localidade_ul = ul_clean[-2:]  # 2 últimos dígitos
             
-            # ==================== FILTRAR POR CICLO ====================
+            # Filtro de Ciclo (se ativo)
             if ciclo and ciclo in CICLO_LOCALIDADES:
                 try:
                     localidade_ul_num = int(localidade_ul)
@@ -372,16 +384,17 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
                 except ValueError:
                     continue
 
-            # ==================== EXTRAIR UL REGIONAL (DÍGITOS 3-6) ====================
+            # Extrair UL Regional (dígitos 3 a 6) para mapeamento
             ul_regional = ul_clean[2:6]
             stats['ul_regionais_encontradas'].add(ul_regional)
 
-            # ==================== EXTRAIR TIPO UL ====================
+            # Extrair Tipo UL (OSB / CNV)
             tipo_ul_val = ""
             try:
                 if len(row) > COL_TIPO_UL and pd.notna(row.iloc[COL_TIPO_UL]):
                     tipo_ul_val = str(row.iloc[COL_TIPO_UL]).strip()
                 if not tipo_ul_val:
+                    # Tenta encontrar OSB/CNV em outras colunas próximas
                     for j in range(min(12, len(row))):
                         v = row.iloc[j]
                         if pd.isna(v): continue
@@ -396,33 +409,29 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             except Exception:
                 tipo_ul_val = tipo_ul_val or ""
 
-            # ==================== BUSCAR REGIÃO NO MAPEAMENTO ====================
-            # CORRIGIDO: Usa UL regional em vez dos últimos 4 dígitos do Conjunto
+            # Buscar no mapa de referência
             regiao_info = localidade_map.get(ul_regional)
             
             if not regiao_info:
                 stats['sem_mapeamento'] += 1
                 stats['conjuntos_sem_mapeamento'].add(current_conjunto_contrato)
-                # Usar valores padrão
                 regiao_info = {
                     'localidade': 'Desconhecida',
                     'supervisao': 'N/A',
                     'regiao': 'N/A'
                 }
 
-            # ==================== VALIDAR RAZÃO ====================
+            # Validar Razão (2 primeiros dígitos)
             razao = ul_clean[:2]
             if not razao.isdigit():
                 stats['razao_invalida'] += 1
                 continue
             
-            # CORRIGIDO: Expandir range ou apenas avisar
             razao_int = int(razao)
             if razao_int < 1 or razao_int > 18:
-                # Avisar mas não descartar
-                print(f"⚠️ Razão fora do range esperado: {razao} (UL: {ul_clean})")
+                print(f"⚠️ Razão fora do intervalo esperado (01-18): {razao} (UL: {ul_clean})")
 
-            # ==================== EXTRAIR MÉTRICAS ====================
+            # ==================== EXTRAÇÃO DE VALORES ====================
             def _num(idx):
                 try:
                     v = row.iloc[idx]
@@ -434,8 +443,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             leituras_executadas = _num(COL_LEIT_EXECUTADAS)
             leituras_nao_exec = _num(COL_NAO_EXEC)
 
-            # Se por qualquer motivo a coluna planejada vier vazia/0,
-            # mas existirem executadas/não executadas, recompor o total.
+            # Correção de integridade: Se planejado <= 0 mas existe execução/pendência, recalcular.
             if (leituras_planejadas or 0) <= 0 and ((leituras_executadas or 0) > 0 or (leituras_nao_exec or 0) > 0):
                 leituras_planejadas = (leituras_executadas or 0) + (leituras_nao_exec or 0)
 
@@ -443,7 +451,6 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             releituras_nao_exec = _num(COL_REL_NAO_EXEC)
             impedimentos = _num(COL_IMPEDIMENTOS)
 
-            # ==================== ADICIONAR LINHA ====================
             stats['linhas_validas'] += 1
             data_rows.append({
                 "Conjunto_Contrato": current_conjunto_contrato,
@@ -455,7 +462,6 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
                 "Regiao": regiao_info.get('regiao', regiao_info.get('supervisao', 'N/A')),
                 "Supervisao": regiao_info.get('supervisao', 'N/A'),
                 "Razao": razao.zfill(2),
-                # Total planejado (para que % não executada faça sentido)
                 "Total_Leituras": leituras_planejadas,
                 "Leituras_Nao_Executadas": leituras_nao_exec,
                 "Releituras_Totais": releituras_total,
@@ -463,46 +469,24 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
                 "Impedimentos": impedimentos,
             })
 
-
-        # ==================== LOG DE PROCESSAMENTO DETALHADO ====================
+        # ==================== LOGS FINAIS ====================
         print(f"\n{'='*80}")
-        print(f"📊 ESTATÍSTICAS DE PROCESSAMENTO DETALHADAS")
+        print(f"📊 ESTATÍSTICAS DE PROCESSAMENTO - PORTEIRA")
         print(f"{'='*80}")
         print(f"📁 Arquivo: {Path(file_path).name}")
         print(f"🎯 Ciclo: {ciclo if ciclo else 'Todos'}")
-        print(f"\n📈 Processamento:")
-        print(f"   • Total de linhas no arquivo: {stats['total_linhas_arquivo']}")
-        print(f"   • Linhas processadas (ULs válidas): {stats['linhas_processadas']}")
-        print(f"   • Linhas finais (após filtros): {stats['linhas_validas']}")
-        print(f"\n🚫 Filtros Aplicados:")
-        print(f"   • Filtradas por ciclo {ciclo}: {stats['filtradas_por_ciclo']}")
-        print(f"   • UL inválida (não 8 dígitos): {stats['ul_invalida']}")
-        print(f"   • Razão inválida: {stats['razao_invalida']}")
-        print(f"   • Sem mapeamento de localidade: {stats['sem_mapeamento']}")
-        print(f"\n📍 Mapeamento:")
-        print(f"   • Conjuntos de Contrato únicos: {len(stats['conjuntos_unicos'])}")
-        print(f"   • ULs Regionais encontradas: {len(stats['ul_regionais_encontradas'])}")
-        print(f"   • Conjuntos sem mapeamento: {len(stats['conjuntos_sem_mapeamento'])}")
-        
-        if stats['conjuntos_sem_mapeamento']:
-            print(f"\n⚠️  Conjuntos sem mapeamento (primeiros 10):")
-            for conj in list(stats['conjuntos_sem_mapeamento'])[:10]:
-                print(f"      - {conj}")
-        
-        if stats['ul_regionais_encontradas']:
-            print(f"\n🔍 ULs Regionais encontradas (primeiros 10):")
-            for ul_reg in list(stats['ul_regionais_encontradas'])[:10]:
-                info = localidade_map.get(ul_reg, {'localidade': 'NÃO MAPEADA'})
-                print(f"      - {ul_reg}: {info['localidade']}")
-        
+        print(f"📈 Válidas: {stats['linhas_validas']} / {stats['total_linhas_arquivo']}")
+        print(f"🚫 Filtradas por ciclo: {stats['filtradas_por_ciclo']}")
+        print(f"📍 Mapeamento: {len(stats['ul_regionais_encontradas'])} ULs regionais identificadas")
         print(f"{'='*80}\n")
 
         if not data_rows:
-            print("❌ Nenhum dado foi extraído do arquivo!")
+            print("❌ Nenhum dado válido extraído!")
             return []
 
-        # ==================== AGRUPAR E CALCULAR PORCENTAGENS ====================
+        # ==================== AGREGAÇÃO DOS DADOS ====================
         df = pd.DataFrame(data_rows)
+        # Agrupar por chaves principais para somar valores duplicados (se houver)
         df_grouped = df.groupby(
             ["Conjunto_Contrato", "UL", "UL_Regional", "Tipo_UL", "Razao", "Localidade_UL", 
              "Nome_Localidade", "Regiao", "Supervisao"], 
@@ -515,13 +499,12 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             "Impedimentos": "sum",
         })
 
-        # Percentual de não executada = (não executadas / total planejado) * 100
-        # (Agora o denominador está correto.)
+        # Cálculo da porcentagem de não execução
         df_grouped["Porcentagem_Nao_Executada"] = (
             (df_grouped["Leituras_Nao_Executadas"] / df_grouped["Total_Leituras"]) * 100
         ).replace([pd.NA, float("inf")], 0).fillna(0).round(2)
 
-        # ==================== RETORNAR LISTA DE DICIONÁRIOS ====================
+        # Converter para lista de dicionários
         details = []
         for _, r in df_grouped.iterrows():
             details.append({
@@ -542,11 +525,11 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
                 "Impedimentos": float(r.get("Impedimentos", 0)),
             })
 
-        print(f"✅ Processamento concluído: {len(details)} registros gerados\n")
+        print(f"✅ Processamento concluído: {len(details)} registros agregados gerados\n")
         return details
 
     except Exception as e:
-        print(f"❌ Erro ao analisar Excel da Porteira: {e}")
+        print(f"❌ Erro crítico ao analisar Excel da Porteira: {e}")
         import traceback
         traceback.print_exc()
         return None

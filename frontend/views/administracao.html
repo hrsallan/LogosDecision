@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Administração</title>
+    <!-- Estilos V2 -->
     <link rel="stylesheet" href="../css/v2_modern.css">
+    <!-- Ícones e Scripts -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
 </head>
 <body>
     <div class="v2-container">
-        <!-- SIDEBAR -->
+        <!-- BARRA LATERAL -->
         <aside class="v2-sidebar">
-            <div class="v2-logo-section"><button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu"><i data-lucide="panel-left"></i></button>
-                <div class="v2-logo-text v2-brand-text"><span class="logo-vigila">Vigila</span><span class="logo-core">Core</span></div>
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">Vigila</span><span class="logo-core">Core</span>
+                </div>
             </div>
 
             <nav class="v2-nav">
@@ -56,9 +63,9 @@
             </nav>
         </aside>
 
-        <!-- CONTENT -->
+        <!-- CONTEÚDO PRINCIPAL -->
         <div class="v2-content">
-            <!-- HEADER -->
+            <!-- CABEÇALHO -->
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Administração</h1>
@@ -73,8 +80,14 @@
                 </div>
             </header>
 
-            <!-- MAIN CONTENT -->
+            <!-- CONTEÚDO -->
             <main class="v2-main">
+                <!-- WIDGET DO SCHEDULER -->
+                <div id="scheduler-container">
+                    <!-- O widget será carregado aqui -->
+                </div>
+
+                <!-- PLACEHOLDER DE DESENVOLVIMENTO -->
                 <div class="v2-dev-page">
                     <i data-lucide="settings" class="v2-dev-icon"></i>
                     <h2 class="v2-dev-title">Em Breve</h2>
@@ -83,7 +96,7 @@
                 </div>
             </main>
 
-            <!-- FOOTER -->
+            <!-- RODAPÉ -->
             <footer class="v2-footer">
                 <span>VigilaCore  | Desenvolvimento Operacional Estratégico</span>
                 <span>Sistema em desenvolvimento</span>
@@ -94,6 +107,7 @@
     <script>
         lucide.createIcons();
 
+        // Relógio
         setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -101,6 +115,50 @@
             document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
             document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
         }, 1000);
+
+        // Carregar Widget do Scheduler
+        async function loadSchedulerWidget() {
+            try {
+                const response = await fetch('scheduler_widget.html');
+                if (response.ok) {
+                    const html = await response.text();
+                    document.getElementById('scheduler-container').innerHTML = html;
+
+                    // Re-executar scripts dentro do HTML inserido
+                    const scripts = document.getElementById('scheduler-container').querySelectorAll("script");
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement("script");
+                        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+
+                    // Atualizar ícones
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.error("Erro ao carregar scheduler widget:", e);
+            }
+        }
+
+        // Verifica se o usuário tem permissão para ver o scheduler
+        async function checkAdminPermission() {
+            try {
+                const res = await authFetch('/api/user/me', { method: 'GET' });
+                if (res.ok) {
+                    const user = await res.json();
+                    const role = String(user.role || '').toLowerCase();
+                    // Apenas Diretoria, Gerência e Desenvolvedor veem o scheduler
+                    if (['diretoria', 'gerencia', 'desenvolvedor'].includes(role)) {
+                        loadSchedulerWidget();
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkAdminPermission);
     </script>
 </body>
 </html>

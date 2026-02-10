@@ -1,20 +1,32 @@
-/* VigilaCore v2.0 - Enterprise Design System */
+/* ==========================================================================
+   VigilaCore v2.0 - Sistema de Design Enterprise (Global)
+
+   Este arquivo define as variáveis globais de cor, tipografia e layout,
+   além de estilos estruturais base compartilhados entre as páginas.
+   ========================================================================== */
+
+/* Importação de Fontes (Inter e JetBrains Mono) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root {
-    --color-bg: #05070a;
-    --color-surface: #0d1117;
-    --color-surface-light: #161b22;
-    --color-primary: #58a6ff;
+    /* --- Paleta de Cores --- */
+    --color-bg: #05070a;              /* Fundo principal (quase preto) */
+    --color-surface: #0d1117;         /* Superfície de cards e painéis */
+    --color-surface-light: #161b22;   /* Superfície secundária (hover/header) */
+
+    --color-primary: #58a6ff;         /* Azul primário */
     --color-primary-glow: rgba(88, 166, 255, 0.15);
-    --color-accent: #79c0ff;
-    --color-text: #c9d1d9;
-    --color-text-dim: #8b949e;
-    --color-border: #30363d;
-    --color-success: #3fb950;
-    --color-warning: #d29922;
-    --color-danger: #f85149;
+    --color-accent: #79c0ff;          /* Acento (azul claro) */
+
+    --color-text: #c9d1d9;            /* Texto principal */
+    --color-text-dim: #8b949e;        /* Texto secundário (dimmed) */
+    --color-border: #30363d;          /* Bordas sutis */
+
+    --color-success: #3fb950;         /* Verde (sucesso/realizado) */
+    --color-warning: #d29922;         /* Laranja/Ouro (pendente/alerta) */
+    --color-danger: #f85149;          /* Vermelho (erro/atraso) */
     
+    /* --- Layout e Dimensões --- */
     --sidebar-width: 280px;
     --header-height: 80px;
     --radius-lg: 16px;
@@ -22,6 +34,7 @@
     --shadow-premium: 0 10px 40px rgba(0,0,0,0.4);
 }
 
+/* Reset Básico */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
@@ -33,7 +46,9 @@ body {
     overflow: hidden;
 }
 
-/* SIDEBAR PREMIUM */
+/* ==========================================================================
+   SIDEBAR PREMIUM
+   ========================================================================== */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--color-surface);
@@ -94,13 +109,16 @@ body {
 
 .nav-item i { width: 20px; }
 
-/* MAIN CONTENT AREA */
+/* ==========================================================================
+   ÁREA DE CONTEÚDO PRINCIPAL
+   ========================================================================== */
 .main-wrapper {
     flex: 1;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow-y: auto;
+    /* Gradiente sutil de fundo */
     background: radial-gradient(circle at 50% -20%, rgba(0, 74, 153, 0.1), transparent 70%);
 }
 
@@ -120,7 +138,9 @@ body {
 .page-info h1 { font-size: 1.5rem; font-weight: 800; }
 .page-info p { font-size: 0.85rem; color: var(--color-text-dim); }
 
-/* CARDS & WIDGETS */
+/* ==========================================================================
+   CARDS & WIDGETS
+   ========================================================================== */
 .dashboard-grid {
     padding: 32px 40px;
     display: grid;
@@ -145,7 +165,7 @@ body {
 .metric-label { font-size: 0.75rem; font-weight: 800; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: 1px; }
 .metric-value { font-size: 2.2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin: 8px 0; }
 
-/* CHART AREA */
+/* ÁREA DE GRÁFICOS */
 .chart-box {
     grid-column: span 3;
     min-height: 400px;
@@ -155,7 +175,7 @@ body {
     grid-column: span 1;
 }
 
-/* UTILS */
+/* UTILITÁRIOS */
 .status-pill {
     padding: 6px 12px;
     border-radius: 20px;

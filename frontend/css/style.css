@@ -1,3 +1,10 @@
+/* ==========================================================================
+   Estilos Legados (V1) e Base
+
+   Mantido para compatibilidade com componentes mais antigos ou páginas simples.
+   Define estilos básicos para containers, sidebar, headers e tabelas.
+   ========================================================================== */
+
 :root {
     --primary: #00d1ff;
     --bg: #0a0c10;
@@ -27,7 +34,7 @@ body {
     height: 100vh;
 }
 
-/* SIDEBAR */
+/* ==================== SIDEBAR ==================== */
 .sidebar {
     width: 240px;
     background: var(--surface);
@@ -123,7 +130,7 @@ body {
     padding-top: 8px;
 }
 
-/* MAIN */
+/* ==================== LAYOUT PRINCIPAL ==================== */
 .main {
     flex: 1;
     display: flex;
@@ -131,7 +138,7 @@ body {
     overflow: hidden;
 }
 
-/* HEADER */
+/* CABEÇALHO (HEADER) */
 .header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -199,7 +206,7 @@ body {
     color: var(--text-dim);
 }
 
-/* CONTENT */
+/* CONTEÚDO */
 .content {
     flex: 1;
     overflow-y: auto;
@@ -214,7 +221,7 @@ body {
     margin-bottom: 12px;
 }
 
-/* CARD */
+/* ==================== CARD GENÉRICO ==================== */
 .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -295,7 +302,7 @@ body {
     color: var(--text-dim);
 }
 
-/* CHART CARD */
+/* CARD DE GRÁFICO */
 .card-chart {
     grid-column: span 3;
     min-height: 240px;
@@ -332,7 +339,7 @@ body {
     min-height: 200px;
 }
 
-/* TABLE */
+/* TABELAS */
 .card-table {
     grid-column: span 3;
     max-height: 200px;
@@ -389,7 +396,7 @@ tbody tr:hover {
     color: var(--danger);
 }
 
-/* FOOTER */
+/* RODAPÉ (FOOTER) */
 .footer {
     background: var(--surface);
     border-top: 1px solid var(--border);
@@ -401,7 +408,7 @@ tbody tr:hover {
     min-height: 36px;
 }
 
-/* DEV PAGE */
+/* PÁGINA DE DESENVOLVIMENTO (EM BREVE) */
 .dev-page {
     display: flex;
     flex-direction: column;
