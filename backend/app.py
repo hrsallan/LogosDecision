@@ -912,7 +912,18 @@ def porteira_abertura():
             qtd = int(round(float(raw.get("quantidade", 0) or 0)))
 
             # Atraso só conta quando há pendência (quantidade total > 0)
-            atraso = 1 if (qtd > 0 and due and today > due) else 0
+            # Atraso (binário):
+            # - Se houver pendência (qtd > 0), marca 1 quando a data de referência já passou.
+            # - Para evitar falso '0' quando a data não for encontrada no calendário,
+            #   assumimos atraso = 1 se qtd > 0 e não há data (due is None).
+            if qtd > 0: 
+                if due:
+                    atraso = 1 if (today > due) else 0
+                else:
+                     # Sem data de referência no calendário: mantém como atrasado para não mascarar pendências.
+                    atraso = 1
+            else:
+                atraso = 0
 
             total_osb += osb
             total_cnv += cnv

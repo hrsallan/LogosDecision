@@ -353,6 +353,39 @@
             color: rgba(63, 185, 80, 0.95);
         }
 
+
+        /* Legenda de cores (Abertura de Porteira) */
+        .abertura-porteira-legend{
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            text-align: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 12px 24px 18px;
+            border-top: 1px solid var(--v2-border);
+            background: rgba(255,255,255,0.01);
+        }
+        .abertura-porteira-legend .legend-item{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            color: var(--v2-muted-text);
+            letter-spacing: 0.2px;
+        }
+        .abertura-porteira-legend .legend-dot{
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-block;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+        }
+        .abertura-porteira-legend .legend-dot.legend-ok{ background: rgba(255, 193, 7, 0.95); }
+        .abertura-porteira-legend .legend-dot.legend-late{ background: rgba(248, 81, 73, 0.95); }
+        .abertura-porteira-legend .legend-dot.legend-zero{ background: rgba(63, 185, 80, 0.95); }
+
+
         .abertura-table tfoot tr {
             background: rgba(255, 255, 255, 0.02);
             font-weight: 700;
@@ -1333,6 +1366,21 @@
                                     </tr>
                                 </tfoot>
                             </table>
+                        </div>
+                    </div>
+
+                    <div class="abertura-porteira-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot legend-zero"></span>
+                            <span>Verde: Concluídas.</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot legend-ok"></span>
+                            <span>Amarelo: Pendências dentro do prazo.</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot legend-late"></span>
+                            <span>Vermelho: Pendências em atraso.</span>
                         </div>
                     </div>
                 </div>
