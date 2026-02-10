@@ -1,42 +1,50 @@
+"""
+Módulo de Autenticação e Segurança
+
+Este módulo gerencia a lógica de autenticação de usuários, hash de senhas
+e verificação de credenciais. Utiliza a biblioteca bcrypt para segurança robusta.
+"""
+
 import bcrypt
 import sqlite3
 from pathlib import Path
 from typing import Optional, Dict
 
+# Caminho absoluto para o banco de dados
 DB_PATH = Path(__file__).parent.parent / 'data' / 'vigilacore.db'
 
 
 def hash_password(password: str) -> str:
     """
-    Cria um hash seguro da senha usando bcrypt
+    Cria um hash seguro da senha usando o algoritmo bcrypt.
     
     Args:
-        password: Senha em texto plano
+        password: Senha em texto plano (string).
         
     Returns:
-        Hash da senha em formato string
+        String contendo o hash seguro da senha.
     """
-    # Converte a senha para bytes
+    # Converte a senha para bytes (necessário para o bcrypt)
     password_bytes = password.encode('utf-8')
     
-    # Gera o salt e cria o hash
-    salt = bcrypt.gensalt(rounds=12)  # 12 rounds = bom equilíbrio segurança/performance
+    # Gera o salt e cria o hash (12 rounds é um bom equilíbrio entre segurança e performance)
+    salt = bcrypt.gensalt(rounds=12)
     hashed = bcrypt.hashpw(password_bytes, salt)
     
-    # Retorna como string para armazenar no banco
+    # Retorna como string para facilitar o armazenamento no banco
     return hashed.decode('utf-8')
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
     """
-    Verifica se a senha corresponde ao hash armazenado
+    Verifica se uma senha em texto plano corresponde ao hash armazenado.
     
     Args:
-        password: Senha em texto plano fornecida pelo usuário
-        hashed_password: Hash armazenado no banco de dados
+        password: Senha em texto plano fornecida pelo usuário.
+        hashed_password: Hash armazenado no banco de dados.
         
     Returns:
-        True se a senha está correta, False caso contrário
+        True se a senha estiver correta, False caso contrário.
     """
     try:
         password_bytes = password.encode('utf-8')
@@ -50,14 +58,16 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 def authenticate_user(username: str, password: str) -> Optional[Dict]:
     """
-    Autentica um usuário verificando username e senha
+    Autentica um usuário verificando suas credenciais no banco de dados.
+    Suporta migração automática de senhas legadas (texto plano) para bcrypt.
     
     Args:
-        username: Nome de usuário
-        password: Senha em texto plano
+        username: Nome de usuário.
+        password: Senha em texto plano.
         
     Returns:
-        Dicionário com dados do usuário se autenticado, None caso contrário
+        Dicionário com dados do usuário (id, username, role) se autenticado,
+        ou None caso a autenticação falhe.
     """
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
@@ -75,15 +85,17 @@ def authenticate_user(username: str, password: str) -> Optional[Dict]:
     
     user_id, username_db, hashed_password, role = user
 
-    # Verifica a senha (bcrypt). Se o banco tiver senha legada em texto puro,
-    # fazemos fallback, autenticamos e fazemos upgrade para hash.
+    # Verifica a senha
+    # Se o hash começa com $2, é um hash bcrypt válido.
     if isinstance(hashed_password, str) and hashed_password.startswith("$2"):
         ok = verify_password(password, hashed_password)
     else:
+        # Fallback para senhas legadas (texto plano)
         ok = (password == hashed_password)
         if ok:
             try:
-                # upgrade para bcrypt
+                # Upgrade automático para bcrypt (segurança)
+                print(f"🔒 Atualizando senha do usuário {username_db} para bcrypt...")
                 conn2 = sqlite3.connect(str(DB_PATH))
                 cur2 = conn2.cursor()
                 cur2.execute('UPDATE users SET password = ? WHERE id = ?', (hash_password(password), user_id))
@@ -102,21 +114,20 @@ def authenticate_user(username: str, password: str) -> Optional[Dict]:
     return None
 
 
-
 def register_user(username: str, password: str, role: str = 'analistas') -> bool:
     """
-    Registra um novo usuário com senha hasheada
+    Registra um novo usuário no sistema.
     
     Args:
-        username: Nome de usuário
-        password: Senha em texto plano
-        role: Papel do usuário (analistas/gerencia/diretoria)
+        username: Nome de usuário desejado.
+        password: Senha em texto plano.
+        role: Papel/Cargo do usuário (ex: 'analistas', 'gerencia', 'diretoria').
         
     Returns:
-        True se registrado com sucesso, False se usuário já existe
+        True se o registro for bem-sucedido, False se o usuário já existir.
     """
     try:
-        # Hash da senha
+        # Gera o hash seguro da senha
         hashed_password = hash_password(password)
         
         conn = sqlite3.connect(str(DB_PATH))
@@ -132,7 +143,7 @@ def register_user(username: str, password: str, role: str = 'analistas') -> bool
         return True
         
     except sqlite3.IntegrityError:
-        # Usuário já existe
+        # Erro de integridade geralmente significa username duplicado
         return False
     except Exception as e:
         print(f"Erro ao registrar usuário: {e}")
@@ -141,14 +152,14 @@ def register_user(username: str, password: str, role: str = 'analistas') -> bool
 
 def update_user_password(username: str, new_password: str) -> bool:
     """
-    Atualiza a senha de um usuário
+    Atualiza a senha de um usuário existente.
     
     Args:
-        username: Nome de usuário
-        new_password: Nova senha em texto plano
+        username: Nome de usuário.
+        new_password: Nova senha em texto plano.
         
     Returns:
-        True se atualizado com sucesso, False caso contrário
+        True se atualizado com sucesso, False caso contrário.
     """
     try:
         hashed_password = hash_password(new_password)

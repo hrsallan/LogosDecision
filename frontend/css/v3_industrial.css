@@ -1,8 +1,16 @@
+/* ==========================================================================
+   VigilaCore v3 - Tema Industrial (Neon/Dark)
+
+   Design system focado em dashboards industriais de alta densidade.
+   Utiliza contraste elevado e elementos visuais estilo "cyberpunk"
+   para rápida leitura de métricas críticas.
+   ========================================================================== */
+
 :root {
     --v3-bg: #0a0c10;
     --v3-surface: #161b22;
     --v3-surface-light: #21262d;
-    --v3-primary: #00d1ff;
+    --v3-primary: #00d1ff;           /* Ciano Neon */
     --v3-success: #238636;
     --v3-warning: #d29922;
     --v3-danger: #f85149;
@@ -17,7 +25,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 
 .v3-container { display: flex; height: 100vh; width: 100vw; }
 
-/* Sidebar v3 */
+/* ==================== SIDEBAR V3 ==================== */
 .v3-sidebar { width: 260px; background: var(--v3-surface); border-right: 1px solid var(--v3-border); display: flex; flex-direction: column; }
 .v3-logo-area { padding: 30px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--v3-border); }
 .v3-logo-area img { width: 32px; height: 32px; }
@@ -30,7 +38,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 .v3-nav-item.active { background: rgba(0, 209, 255, 0.1); color: var(--v3-primary); font-weight: 600; }
 .v3-nav-item.logout { margin-top: auto; color: var(--v3-danger); }
 
-/* Content v3 */
+/* ==================== CONTEÚDO V3 ==================== */
 .v3-content { flex: 1; display: flex; flex-direction: column; padding: 30px; overflow-y: auto; }
 
 .v3-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
@@ -42,6 +50,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 .v3-pill.offline { background: rgba(248, 81, 73, 0.1); color: var(--v3-danger); }
 .v3-pill.online { background: rgba(35, 134, 54, 0.1); color: var(--v3-success); }
 
+/* PAINEL DE INFORMAÇÕES (USER INFO) */
 .v3-info-panel {
     background: var(--v3-surface);
     border: 1px solid var(--v3-border);
@@ -73,7 +82,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     font-weight: 700;
 }
 
-/* Grid v3 */
+/* ==================== GRID V3 ==================== */
 .v3-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
 .v3-card { background: var(--v3-surface); border: 1px solid var(--v3-border); border-radius: 16px; padding: 20px; }
@@ -90,6 +99,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 .v3-value.warning { color: var(--v3-warning); }
 .v3-value.success { color: var(--v3-success); }
 
+/* ÁREA DE GRÁFICOS */
 .v3-chart-area { grid-column: span 4; height: 350px; display: flex; flex-direction: column; }
 .v3-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .v3-card-header h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
@@ -97,6 +107,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 
 .v3-canvas-container { flex: 1; position: relative; }
 
+/* ÁREA DE TABELAS */
 .v3-table-area { grid-column: span 4; }
 .v3-table-scroll { max-height: 400px; overflow-y: auto; margin-top: 15px; }
 .v3-table { width: 100%; border-collapse: collapse; }
@@ -106,7 +117,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 
 .v3-status-tag { background: rgba(210, 153, 34, 0.1); color: var(--v3-warning); padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; }
 
-/* Regional Intelligence (Porteira) */
+/* INTELIGÊNCIA REGIONAL (PORTEIRA) */
 .v3-regional-card { grid-column: span 3; }
 .v3-regional-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
 .v3-regional-item {
@@ -123,7 +134,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 .v3-reg-percent { font-weight: 800; font-size: 0.9rem; }
 .v3-reg-percent.success { color: var(--v3-success); }
 
-/* ULs Grid */
+/* GRID DE ULS (Destaques) */
 .v3-uls-card { grid-column: span 4; }
 .v3-uls-grid {
     display: grid;
@@ -154,7 +165,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
 .v3-footer { margin-top: auto; padding-top: 30px; display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--v3-text-dim); letter-spacing: 1px; }
 #v3-clock { font-family: 'JetBrains Mono', monospace; color: var(--v3-primary); }
 
-/* Classes de coloração de prazo (Releitura) */
+/* CLASSES DE STATUS (RELEITURA) */
 .v3-status-tag.atrasada {
     background: rgba(248, 81, 73, 0.15); /* Vermelho */
     color: var(--v3-danger);
@@ -172,7 +183,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     color: var(--v3-primary);
 }
 
-/* Porteira v3.1.0 - Cyber-Industrial */
+/* ==================== PORTEIRA V3.1 - ESTILOS ESPECÍFICOS ==================== */
 .v3-porteira-grid {
     display: flex;
     flex-direction: column;
@@ -188,7 +199,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     background: var(--v3-surface-light);
     border: 1px solid var(--v3-border);
     border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0, 209, 255, 0.1); /* Neon Glow */
+    box-shadow: 0 0 15px rgba(0, 209, 255, 0.1); /* Brilho Neon */
 }
 
 .v3-controls-wrapper {
@@ -223,7 +234,8 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     cursor: pointer;
     min-width: 150px;
     transition: all 0.2s;
-    appearance: none; /* Remove default arrow */
+    appearance: none; /* Remove seta padrão */
+    /* Seta customizada SVG */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300d1ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 8px center;
@@ -250,7 +262,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     box-shadow: 0 0 15px rgba(0, 209, 255, 0.8);
 }
 
-/* Métricas Porteira */
+/* MÉTRICAS COMPACTAS */
 .v3-metrics-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -275,7 +287,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     font-size: 1.5rem;
 }
 
-/* Layout Central Porteira */
+/* LAYOUT CENTRAL */
 .v3-center-row {
     flex: 1;
     display: grid;
@@ -396,7 +408,7 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     background: rgba(0, 209, 255, 0.1);
 }
 
-/* Login Page Styles */
+/* ==================== PÁGINA DE LOGIN V3 ==================== */
 .v3-login-container {
     display: flex;
     align-items: center;
@@ -411,14 +423,14 @@ body { background: var(--v3-bg); color: var(--v3-text); overflow: hidden; }
     border-radius: 16px;
     padding: 40px;
     width: 400px;
-    box-shadow: 0 0 30px rgba(0, 209, 255, 0.1); /* Neon Glow */
+    box-shadow: 0 0 30px rgba(0, 209, 255, 0.1);
     text-align: center;
 }
 
 .v3-login-box h1 {
     font-size: 1.8rem;
     font-weight: 800;
-    color: var(--v3-text); /* Vigila em Branco */
+    color: var(--v3-text);
     margin-bottom: 10px;
 }
 

@@ -1,9 +1,11 @@
-"""Portal scraper (CEMIG SGL) to download the Releituras Excel report.
+"""
+Módulo de Coleta de Dados (Web Scraper) - Portal CEMIG SGL
 
-This module is intentionally implemented with *lazy imports* so the Flask
-backend can still start even if Selenium / PyAutoGUI are not installed.
+Este módulo automatiza o download de relatórios do portal SGL usando Selenium.
+Ele é implementado com importações preguiçosas (lazy imports) para permitir
+que o backend inicie mesmo sem as dependências de scraping instaladas.
 
-Default download folder (inside the project):
+Diretório padrão de download:
     VigilaCore/data/exports/
 """
 
@@ -14,16 +16,16 @@ import time
 import threading
 from pathlib import Path
 
-# --- Defaults (can be overridden by env vars) ---
+# --- Configurações Padrão (podem ser sobrescritas por variáveis de ambiente) ---
 URL_PORTAL = os.getenv("PORTAL_URL", "https://sglempreiteira.cemig.com.br/SGLEmpreiteira")
 UNIDADE_PADRAO_DE = os.getenv("PORTAL_UNIDADE_DE", "01000000")
 UNIDADE_PADRAO_ATE = os.getenv("PORTAL_UNIDADE_ATE", "18999999")
 
 
 def _find_project_root() -> Path:
-    """Find VigilaCore root folder robustly.
-
-    We walk upwards looking for 'frontend' and 'data' folders (or '.env').
+    """
+    Encontra a raiz do projeto VigilaCore de forma robusta.
+    Procura pelas pastas 'frontend' e 'data' ou pelo arquivo '.env'.
     """
     here = Path(__file__).resolve()
     for parent in [here] + list(here.parents):
@@ -31,15 +33,17 @@ def _find_project_root() -> Path:
             return parent
         if (parent / ".env").exists() and (parent / "data").exists():
             return parent
-    # Fallback to previous assumption: backend/core -> backend -> root
+    # Fallback para estrutura antiga: backend/core -> backend -> root
     return here.parents[2]
 
 
 def _default_download_dir() -> Path:
+    """Retorna o diretório padrão de downloads."""
     return _find_project_root() / "data" / "exports"
 
 
 def _clear_download_dir(download_dir: Path) -> None:
+    """Limpa arquivos existentes no diretório de download para evitar confusão."""
     download_dir.mkdir(parents=True, exist_ok=True)
     for f in download_dir.iterdir():
         try:
@@ -49,9 +53,11 @@ def _clear_download_dir(download_dir: Path) -> None:
             pass
 
 def switch_to_main_tab(driver):
+    """Foca na aba principal do navegador."""
     driver.switch_to.window(driver.window_handles[0])
 
 def _latest_file(download_dir: Path) -> Path | None:
+    """Retorna o arquivo mais recente no diretório."""
     files = [p for p in download_dir.iterdir() if p.is_file()]
     if not files:
         return None
@@ -60,7 +66,9 @@ def _latest_file(download_dir: Path) -> Path | None:
 
 
 def _wait_download_finished(download_dir: Path, timeout: int = 120) -> bool:
-    """Wait until at least one file exists and there are no unfinished downloads."""
+    """
+    Aguarda o término do download verificando a inexistência de arquivos temporários (.crdownload/.tmp).
+    """
     end = time.time() + timeout
     while time.time() < end:
         try:
@@ -87,12 +95,22 @@ def download_releitura_excel(
     unidade_ate: str | None = None,
     timeout: int = 120,
 ) -> str:
-    """Download the Releituras Excel report and return the downloaded file path.
+    """
+    Realiza o download do relatório de RELEITURAS NÃO EXECUTADAS.
 
-    Raises RuntimeError with a clear message on failure.
+    Args:
+        portal_user: Usuário do portal.
+        portal_pass: Senha do portal.
+        download_dir: Pasta de destino (opcional).
+
+    Returns:
+        Caminho do arquivo baixado.
+
+    Raises:
+        RuntimeError: Se houver falha no processo.
     """
 
-    # Lazy imports (so backend can start without these deps installed)
+    # Importações preguiçosas (Selenium/PyAutoGUI)
     try:
         import pyautogui  # type: ignore
         from selenium import webdriver  # type: ignore
@@ -109,7 +127,7 @@ def download_releitura_excel(
             f"Detalhe: {e}"
         )
     
-    # Load .env from project root
+    # Carregar .env
     project_root = _find_project_root()
     env_path = project_root / ".env"
     if env_path.exists():
@@ -128,22 +146,20 @@ def download_releitura_excel(
     unidade_de = unidade_de or UNIDADE_PADRAO_DE
     unidade_ate = unidade_ate or UNIDADE_PADRAO_ATE
 
-    # Locators
+    # Localizadores (XPaths e IDs)
     LOC_USER = (By.ID, "UserName")
     LOC_PASS = (By.ID, "Password")
     LOC_BTN_LOGIN = (By.XPATH, "//button[text()='Login']")
     LOC_MENU_RELATORIOS = (By.XPATH, "//ul[@id='side-menu']//li//span[text()='RELATÓRIOS']")
-    # Prefer href, but also try by link text if it changes
+    # Tenta href primeiro, depois texto
     LOC_RELEITURA_BY_HREF = (By.XPATH, "//a[contains(@href,'/SGLEmpreiteira/Relatorios/RlReleituraNaoExecutada')]")
     LOC_RELEITURA_BY_TEXT = (By.XPATH, "//a[contains(.,'Releit') or contains(.,'RELEIT')]")
     LOC_MES_ANO = (By.ID, "txtMesAno")
     LOC_DATA_HOJE = (By.XPATH, "/html/body/div[3]/div[2]/table/tfoot/tr[1]/th")
-    # LOC_UNIDADE_INI = (By.ID, "txtUnidadeLeituraIni")
-    # LOC_UNIDADE_FIM = (By.ID, "txtUnidadeLeituraFim")
     LOC_BTN_GERAR = (By.ID, "btnGerarExcel")
 
     def handle_certificate():
-        """Best-effort close Windows certificate pop-up."""
+        """Tenta fechar automaticamente o popup de certificado do Windows."""
         time.sleep(5)
         try:
             pyautogui.press("enter")
@@ -152,7 +168,7 @@ def download_releitura_excel(
         except Exception:
             pass
 
-    # Chrome prefs
+    # Opções do Chrome
     chrome_options = Options()
     if os.getenv("PORTAL_DETACH", "0") == "1":
         chrome_options.add_experimental_option("detach", True)
@@ -178,12 +194,13 @@ def download_releitura_excel(
     try:
         driver.get(URL_PORTAL)
         switch_to_main_tab(driver)
+
         # Login
         wait.until(EC.element_to_be_clickable(LOC_USER)).send_keys(user)
         driver.find_element(*LOC_PASS).send_keys(password)
         wait.until(EC.element_to_be_clickable(LOC_BTN_LOGIN)).click()
 
-        # Navigation
+        # Navegação
         wait.until(EC.element_to_be_clickable(LOC_MENU_RELATORIOS)).click()
         try:
             link = wait.until(EC.presence_of_element_located(LOC_RELEITURA_BY_HREF))
@@ -191,11 +208,11 @@ def download_releitura_excel(
             link = wait.until(EC.presence_of_element_located(LOC_RELEITURA_BY_TEXT))
         driver.execute_script("arguments[0].click();", link)
 
-        # Fill month/year (today)
+        # Preencher filtros (Mês/Ano = Hoje)
         wait.until(EC.element_to_be_clickable(LOC_MES_ANO)).click()
         wait.until(EC.element_to_be_clickable(LOC_DATA_HOJE)).click()
 
-        # Download
+        # Gerar e Baixar
         wait.until(EC.element_to_be_clickable(LOC_BTN_GERAR)).click()
 
         if not _wait_download_finished(dl_dir, timeout=timeout):
@@ -205,9 +222,7 @@ def download_releitura_excel(
         if latest is None:
             raise RuntimeError("Download finalizado, mas nenhum arquivo foi encontrado.")
 
-        # Basic validation: avoid returning an HTML error page
         if latest.suffix.lower() not in {".xls", ".xlsx"}:
-            # still return, but warn via exception for clarity
             raise RuntimeError(f"Arquivo baixado não parece Excel: {latest.name}")
 
         return str(latest)
@@ -228,9 +243,10 @@ def download_porteira_excel(
     report_date: str | None = None,
     timeout: int = 120,
 ) -> str:
-    """Download the 'Acompanhamento de Resultados de Leitura' Excel report (Porteira)."""
+    """
+    Realiza o download do relatório de ACOMPANHAMENTO DE RESULTADOS DE LEITURA (Porteira).
+    """
 
-    # Lazy imports
     try:
         import pyautogui  # type: ignore
         from selenium import webdriver  # type: ignore
@@ -265,7 +281,7 @@ def download_porteira_excel(
     unidade_de = unidade_de or UNIDADE_PADRAO_DE
     unidade_ate = unidade_ate or UNIDADE_PADRAO_ATE
 
-    # Locators (porteira)
+    # Localizadores (específicos da página Porteira)
     LOC_USER = (By.ID, "UserName")
     LOC_PASS = (By.ID, "Password")
     LOC_BTN_LOGIN = (By.XPATH, "//button[text()='Login']")
@@ -318,7 +334,7 @@ def download_porteira_excel(
         driver.find_element(*LOC_PASS).send_keys(password)
         wait.until(EC.element_to_be_clickable(LOC_BTN_LOGIN)).click()
 
-        # Navigation
+        # Navegação
         wait.until(EC.element_to_be_clickable(LOC_MENU_RELATORIOS)).click()
         try:
             link = wait.until(EC.presence_of_element_located(LOC_PORTEIRA_BY_HREF))
@@ -326,36 +342,32 @@ def download_porteira_excel(
             link = wait.until(EC.presence_of_element_located(LOC_PORTEIRA_BY_TEXT))
         driver.execute_script("arguments[0].click();", link)
 
-        # Fill month/year
-        # O portal usa um campo de mês/ano; para manter compatibilidade com o UX do calendário no front,
-        # aceitamos report_date (YYYY-MM-DD) e extraímos o MM/YYYY.
+        # Preenchimento de Data (Mês/Ano)
         mes_ano_el = wait.until(EC.element_to_be_clickable(LOC_MES_ANO))
         mes_ano_el.click()
 
         if report_date:
             try:
-                # suporta YYYY-MM-DD ou DD/MM/YYYY
+                # Converte formato YYYY-MM-DD ou DD/MM/YYYY para MM/YYYY do portal
                 if "-" in report_date:
                     y, m, _d = report_date.split("-", 2)
                 else:
                     _d, m, y = report_date.split("/", 2)
                 mm_yyyy = f"{int(m):02d}/{int(y)}"
 
-                # limpar e digitar
                 try:
                     mes_ano_el.clear()
                 except Exception:
                     pass
                 mes_ano_el.send_keys(mm_yyyy)
             except Exception:
-                # fallback: clicar em "hoje"
+                # Fallback para "Hoje"
                 wait.until(EC.element_to_be_clickable(LOC_DATA_HOJE)).click()
         else:
-            # padrão: hoje
+            # Padrão: "Hoje"
             wait.until(EC.element_to_be_clickable(LOC_DATA_HOJE)).click()
 
-        # Unidade range
-        # Unidade range (garante que não concatena com valor pré-preenchido)
+        # Filtro de Unidades (Range)
         ini = wait.until(EC.element_to_be_clickable(LOC_UNIDADE_INI))
         fim = driver.find_element(*LOC_UNIDADE_FIM)
         for el, val in ((ini, unidade_de), (fim, unidade_ate)):
@@ -365,7 +377,7 @@ def download_porteira_excel(
             except Exception:
                 pass
             try:
-                # fallback: CTRL+A + DEL
+                # Fallback: Selecionar tudo e apagar
                 el.send_keys(Keys.CONTROL, 'a')
                 el.send_keys(Keys.DELETE)
             except Exception:

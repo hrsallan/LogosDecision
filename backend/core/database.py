@@ -1,3 +1,11 @@
+"""
+Módulo de Banco de Dados e Persistência
+
+Este módulo centraliza todas as interações com o banco de dados SQLite (vigilacore.db).
+Gerencia a criação de tabelas, inserção de dados, consultas de métricas e
+relatórios para os módulos de Releitura e Porteira.
+"""
+
 import sqlite3
 from core.auth import hash_password, authenticate_user as secure_authenticate
 from core.crypto_utils import encrypt_text, decrypt_text
@@ -8,19 +16,20 @@ from dotenv import load_dotenv
 import time
 import unicodedata
 
-# Carregar variáveis do .env
+# Carregar variáveis de ambiente
 load_dotenv()
 
+# Caminho absoluto para o banco de dados
 DB_PATH = Path(__file__).parent.parent / 'data' / 'vigilacore.db'
 
-# --- Ciclos (Porteira) ---
-# Regras esperadas (conforme operação):
-#   • Razões 01..88 (urbano) entram SEMPRE em qualquer ciclo.
-#   • Razões rurais 89..99 entram conforme o ciclo selecionado:
-#       - Ciclo 97: 90, 91, 96 e 97
-#       - Ciclo 98: 92, 93, 96 e 98
-#       - Ciclo 99: 89, 94, 96 e 99
-#   • A Razão 96 entra sempre (rural fixa).
+# --- Configurações de Ciclos (Porteira) ---
+# Regras operacionais:
+#   • Razões urbanas (01..88) são incluídas em TODOS os ciclos.
+#   • Razões rurais (89..99) são distribuídas conforme o ciclo trimestral:
+#       - Ciclo 97: + 90, 91, 96, 97
+#       - Ciclo 98: + 92, 93, 96, 98
+#       - Ciclo 99: + 89, 94, 96, 99
+#   • A Razão 96 é fixa e entra sempre.
 PORTEIRA_URBANO_ALWAYS = list(range(1, 89))
 PORTEIRA_RURAL_ALWAYS = [96]
 PORTEIRA_CYCLE_EXTRAS = {
@@ -29,7 +38,7 @@ PORTEIRA_CYCLE_EXTRAS = {
     "99": [89, 94],
 }
 
-# Mapeamento de mês para ciclo
+# Mapeamento Mês -> Ciclo
 MONTH_TO_CYCLE = {
     1: "97",   # Janeiro
     2: "98",   # Fevereiro
@@ -55,10 +64,11 @@ MONTH_NAMES = {
 
 
 def get_current_cycle_info():
-    """Retorna informações do ciclo atual baseado no mês.
+    """
+    Retorna informações sobre o ciclo de leitura atual baseado no mês vigente.
     
     Returns:
-        dict: {"ciclo": "97", "mes": "Janeiro", "mes_numero": 1}
+        dict: {"ciclo": "97", "mes": "Janeiro", "mes_numero": 1, "ano": 2024}
     """
     from datetime import datetime
     now = datetime.now()
@@ -74,9 +84,8 @@ def get_current_cycle_info():
     }
 
 
-
-
-# --- Referência de Localidades (Porteira) ---
+# --- Dados de Referência Fallback (Porteira) ---
+# Usados caso o Excel de referência não seja encontrado.
 LOCALIDADES_REFERENCIA_DATA = [
     ('3427', 'SANTA ROSA', 'Araxa', 'Araxa'),
     ('5101', 'ARAXÁ', 'Araxa', 'Araxa'),
@@ -113,7 +122,7 @@ LOCALIDADES_REFERENCIA_DATA = [
 
 
 def _normalize_region_name(name: str | None) -> str:
-    """Normaliza nomes de região/supervisão (acentos e espaçamentos)."""
+    """Normaliza nomes de região/supervisão (remove acentos e padroniza capitalização)."""
     if not name:
         return ""
     s = str(name).strip()
@@ -124,15 +133,13 @@ def _normalize_region_name(name: str | None) -> str:
         return "Uberaba"
     if s_low == "frutal":
         return "Frutal"
-    # fallback: capitaliza
     return s.strip()
 
 
 def _find_localidades_ref_xlsx(project_root: Path) -> Path | None:
-    """Procura o Excel de referência de localidades.
-
-    Permite override por env PORTEIRA_REF_XLSX, mas por padrão busca o mesmo
-    arquivo já usado na releitura_routing_v2.
+    """
+    Procura o arquivo Excel de referência de localidades.
+    Tenta várias localizações possíveis no projeto.
     """
     env_path = (os.environ.get("PORTEIRA_REF_XLSX") or os.environ.get("RELEITURA_REF_XLSX") or "").strip()
     if env_path:
@@ -145,7 +152,7 @@ def _find_localidades_ref_xlsx(project_root: Path) -> Path | None:
         project_root / "data" / "REFERENCIA_LOCALIDADE_TR_4680006773.xlsx",
         project_root / "data" / "reference" / "REFERENCIA_LOCALIDADE_TR_4680006773.xlsx",
         project_root / "data" / "refs" / "REFERENCIA_LOCALIDADE_TR_4680006773.xlsx",
-        # fallback: já vimos usuários colocarem dentro de backend/data
+        # Fallback para estrutura antiga
         project_root / "backend" / "data" / "REFERENCIA_LOCALIDADE_TR_4680006773.xlsx",
     ]
     for c in candidates:
@@ -155,14 +162,14 @@ def _find_localidades_ref_xlsx(project_root: Path) -> Path | None:
 
 
 def _load_localidades_from_xlsx(ref_path: Path) -> list[tuple[str, str, str, str]]:
-    """Carrega (ul4, localidade, supervisao, regiao) a partir do Excel."""
+    """Carrega tuplas (ul4, localidade, supervisao, regiao) do Excel de referência."""
     rows: list[tuple[str, str, str, str]] = []
     try:
         from openpyxl import load_workbook  # type: ignore
         wb = load_workbook(ref_path, read_only=True, data_only=True)
         ws = wb.active
 
-        # Header
+        # Processar cabeçalho para encontrar índices das colunas
         header = []
         for cell in next(ws.iter_rows(min_row=1, max_row=1)):
             header.append(str(cell.value).strip().lower() if cell.value is not None else "")
@@ -181,6 +188,7 @@ def _load_localidades_from_xlsx(ref_path: Path) -> list[tuple[str, str, str, str
         if ul_idx is None:
             return rows
 
+        # Iterar linhas de dados
         for r in ws.iter_rows(min_row=2, values_only=True):
             ulv = r[ul_idx] if ul_idx < len(r) else None
             if ulv is None:
@@ -189,7 +197,7 @@ def _load_localidades_from_xlsx(ref_path: Path) -> list[tuple[str, str, str, str
             ul_s = "".join(ch for ch in ul_s if ch.isdigit())
             if not ul_s:
                 continue
-            ul_s = ul_s.zfill(4)[-4:]
+            ul_s = ul_s.zfill(4)[-4:]  # Garantir 4 dígitos (UL Regional)
 
             localidade = ""
             if loc_idx is not None and loc_idx < len(r) and r[loc_idx] is not None:
@@ -208,10 +216,9 @@ def _load_localidades_from_xlsx(ref_path: Path) -> list[tuple[str, str, str, str
 
 
 def init_localidades_table(conn: sqlite3.Connection | None = None) -> None:
-    """Cria e popula a tabela de referência de localidades.
-
-    Preferência: usa o Excel REFERENCIA_LOCALIDADE_TR_4680006773.xlsx (se existir).
-    Fallback: usa LOCALIDADES_REFERENCIA_DATA embutida.
+    """
+    Inicializa e popula a tabela de referência de localidades no banco de dados.
+    Esta tabela é crucial para o roteamento correto de dados por região.
     """
     created_own = False
     if conn is None:
@@ -240,14 +247,14 @@ def init_localidades_table(conn: sqlite3.Connection | None = None) -> None:
         rows = _load_localidades_from_xlsx(ref_path)
 
     if not rows:
-        # Fallback: lista embutida (ul, localidade, supervisao, regiao)
+        # Fallback: lista embutida
         for ul, local, sup, reg in LOCALIDADES_REFERENCIA_DATA:
             ul_s = str(ul).strip()
             ul_s = "".join(ch for ch in ul_s if ch.isdigit()).zfill(4)[-4:]
             reg_norm = _normalize_region_name(reg or sup)
             rows.append((ul_s, str(local or "").strip(), str(sup or "").strip(), reg_norm))
 
-    # Upsert por (ul, contrato)
+    # Inserção ou Atualização (Upsert)
     for ul, local, sup, reg in rows:
         cur.execute('''
             INSERT OR REPLACE INTO localidades_referencia (ul, localidade, supervisao, regiao)
@@ -261,29 +268,24 @@ def init_localidades_table(conn: sqlite3.Connection | None = None) -> None:
         conn.close()
 
 def _porteira_cycle_where(ciclo: str | None, prefix: str = "WHERE"):
-    """Retorna (where_sql, params) para filtrar Porteira por ciclo.
-
-    No módulo Porteira, o "ciclo" (97/98/99) controla a inclusão das razões rurais (89..99),
-    mas as razões urbanas (01..88) entram sempre.
+    """
+    Gera a cláusula WHERE para filtrar Porteira por ciclo.
+    O filtro é baseado nos 2 últimos dígitos da UL (não na razão).
     """
     if not ciclo:
         return "", tuple()
     c = str(ciclo).strip()
 
-    # Sempre inclui urbano 01..88
     allowed = set(PORTEIRA_URBANO_ALWAYS)
 
-    # Inclui rurais fixas
     for x in PORTEIRA_RURAL_ALWAYS:
         allowed.add(int(x))
 
-    # Inclui ciclo + extras
     extras = PORTEIRA_CYCLE_EXTRAS.get(c, [])
     for x in extras:
         allowed.add(int(x))
 
     try:
-        # também inclui a própria razão do ciclo (97/98/99)
         allowed.add(int(c))
     except Exception:
         pass
@@ -291,30 +293,26 @@ def _porteira_cycle_where(ciclo: str | None, prefix: str = "WHERE"):
     allowed_list = sorted(allowed)
     placeholders = ",".join(["?"] * len(allowed_list))
 
-    # IMPORTANTÍSSIMO:
-    # O filtro de ciclo na Porteira NÃO é pela coluna "Razao" do Excel.
-    # Pela regra operacional do projeto, o ciclo (97/98/99) filtra pelas ULs
-    # cujo *código* é o(s) 2 últimos dígitos do campo UL (ex.: 02532597 -> código 97).
-    # As urbanas entram sempre (01..88) e as rurais variam por ciclo.
-    #
-    # Se filtrarmos por Razao, ULs com código 97/98/99 mas Razao=02 (exemplo real)
-    # acabam aparecendo no ciclo errado.
+    # Filtro SQL: Extrai os 2 últimos caracteres da UL e compara
     where = f"{prefix} (CAST(SUBSTR(COALESCE(UL,''), -2) AS INTEGER) IN ({placeholders}))"
     return where, tuple(int(x) for x in allowed_list)
 
 
 def _porteira_region_where(regiao: str | None, prefix: str = "WHERE"):
-    """Retorna (where_sql, params) para filtrar Porteira por região (Araxá/Uberaba/Frutal)."""
+    """Gera a cláusula WHERE para filtrar Porteira por região."""
     if not regiao:
         return "", tuple()
     r = str(regiao).strip()
     if not r:
         return "", tuple()
-    # Usa COALESCE para alinhar com o SELECT (evita NULL)
     return f"{prefix} (COALESCE(Regiao,'Não Mapeado') = ?)", (r,)
 
 
 def init_db():
+    """
+    Inicializa o esquema do banco de dados.
+    Cria tabelas se não existirem e aplica migrações de colunas.
+    """
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
@@ -335,15 +333,13 @@ def init_db():
         )
     ''')
 
-    # Garantir colunas de credenciais do portal (migração segura)
+    # Migrações: garantir colunas novas em bases existentes
     cursor.execute("PRAGMA table_info(users)")
     cols = {row[1] for row in cursor.fetchall()}
     if "portal_user" not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN portal_user TEXT")
     if "portal_password" not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN portal_password TEXT")
-
-    # Garantir colunas de perfil (migração segura)
     if "nome" not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN nome TEXT")
     if "base" not in cols:
@@ -351,11 +347,11 @@ def init_db():
     if "matricula" not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN matricula TEXT")
 
-    # Normalizar roles antigos para o novo padrão (migração segura)
+    # Normalizar roles
     cursor.execute("UPDATE users SET role = 'diretoria' WHERE role = 'admin'")
     cursor.execute("UPDATE users SET role = 'analistas' WHERE role IS NULL OR role = '' OR role IN ('user', 'usuario')")
 
-    # Releituras - com user_id
+    # Tabela de Releituras
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS releituras (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -372,7 +368,7 @@ def init_db():
         )
     ''')
 
-    # Migração: colunas de roteamento na tabela releituras
+    # Migrações Releitura
     cursor.execute("PRAGMA table_info(releituras)")
     rcols = {row[1] for row in cursor.fetchall()}
     if "route_status" not in rcols:
@@ -386,7 +382,7 @@ def init_db():
     if "localidade" not in rcols:
         cursor.execute("ALTER TABLE releituras ADD COLUMN localidade TEXT")
 
-    # Histórico de uploads - Releitura
+    # Tabela Histórico de Releitura
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS history_releitura (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -399,7 +395,7 @@ def init_db():
         )
     ''')
 
-    # Configuração: destino por região (matrícula) para Releitura
+    # Configuração de alvos por região (Roteamento)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS releitura_region_targets (
             region TEXT PRIMARY KEY,
@@ -407,7 +403,6 @@ def init_db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    # Seed das regiões
     cursor.execute("SELECT COUNT(*) FROM releitura_region_targets")
     if (cursor.fetchone() or [0])[0] == 0:
         cursor.executemany(
@@ -415,7 +410,7 @@ def init_db():
             [("Araxá", None), ("Uberaba", None), ("Frutal", None)]
         )
 
-    # Porteiras - com user_id
+    # Tabela de Porteiras (simplificada)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS porteiras (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -428,7 +423,7 @@ def init_db():
         )
     ''')
 
-    # Histórico de uploads - Porteira
+    # Histórico de Porteira
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS history_porteira (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -441,7 +436,7 @@ def init_db():
         )
     ''')
 
-    # Gráfico histórico (snapshots por hora) - com user_id
+    # Tabela de Gráfico Histórico (Snapshots diários/horários)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS grafico_historico (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -459,7 +454,7 @@ def init_db():
         )
     ''')
 
-    # Resultados de leitura (porteira) - com user_id
+    # Tabela Resultados de Leitura (Dados detalhados da Porteira)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS resultados_leitura (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -478,7 +473,7 @@ def init_db():
         )
     ''')
 
-    # Migração defensiva: garantir colunas de roteamento (Regiao/Localidade/Matricula) na tabela resultados_leitura
+    # Migrações Resultados de Leitura
     try:
         cursor.execute("PRAGMA table_info(resultados_leitura)")
         pcols = {row[1] for row in cursor.fetchall()}
@@ -491,50 +486,35 @@ def init_db():
     except Exception:
         pass
 
-    # Carrega/atualiza a referência de localidades (a partir do Excel, se disponível)
+    # Inicializa tabela de referência de localidades
     try:
         init_localidades_table(conn)
     except Exception as e:
-        try:
-            print(f"⚠️  Falha ao inicializar localidades_referencia: {e}")
-        except Exception:
-            pass
+        pass
 
-    # ==================== CRIAR USUÁRIO PADRÃO ====================
-    # Cria o usuário mgsetel (diretoria) automaticamente se não existir
+    # Criação do usuário padrão 'mgsetel' (Diretoria)
     try:
         cursor.execute("SELECT id FROM users WHERE username = 'mgsetel'")
         if not cursor.fetchone():
-            # Importar hash_password do módulo auth
             from core.auth import hash_password as _hash_password
-            hashed_pw = _hash_password('mgsetel@')  # Senha padrão
+            hashed_pw = _hash_password('mgsetel@')
             cursor.execute(
                 'INSERT INTO users (id, username, password, role, nome, base, matricula) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (1, 'mgsetel', hashed_pw, 'diretoria', 'Administrador', 'Diretoria', None)
             )
-            print("✅ Usuário padrão 'mgsetel' criado com sucesso (ID: 1, Role: diretoria)")
+            print("✅ Usuário padrão 'mgsetel' criado com sucesso.")
         else:
-            # Se o usuário já existe, garantir que tem ID 1 e role diretoria
+            # Garantir privilégios
             cursor.execute("SELECT id, role FROM users WHERE username = 'mgsetel'")
             row = cursor.fetchone()
             if row:
                 user_id, current_role = row
-                if user_id != 1:
-                    print(f"⚠️ Usuário 'mgsetel' existe com ID {user_id} (esperado: 1)")
                 if current_role != 'diretoria':
                     cursor.execute("UPDATE users SET role = 'diretoria' WHERE username = 'mgsetel'")
-                    print("✅ Role do usuário 'mgsetel' atualizada para 'diretoria'")
     except Exception as e:
-        try:
-            print(f"⚠️ Erro ao criar/verificar usuário padrão: {e}")
-        except Exception:
-            pass
+        pass
 
-    
-
-    # --- Porteira: Abertura de Porteira (histórico mensal por razão) ---
-    # Armazena, por usuário, a soma de "Leituras_Nao_Executadas" por Razão (01..18),
-    # segmentado por (ciclo, regiao) para permitir comparação Mês Atual vs Mês Anterior com filtros.
+    # Tabela de Abertura de Porteira (Histórico Mensal)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS porteira_abertura_monthly (
             user_id INTEGER NOT NULL,
@@ -553,7 +533,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Usar a função segura de autenticação do módulo auth.py
+# Alias para autenticação segura
 authenticate_user = secure_authenticate
 
 
@@ -565,15 +545,12 @@ def register_user(
     base: str | None = None,
     matricula: str | None = None,
 ):
-    """Registra um novo usuário com senha hasheada usando bcrypt.
-
-    Observação: em ambientes com scheduler/threads ou DB Browser aberto, o SQLite pode
-    acusar "database is locked". Por isso configuramos timeout/busy_timeout.
-    Além disso, garantimos (best-effort) que as colunas `nome` e `base` existam.
+    """
+    Registra um novo usuário no sistema.
+    Lida com concorrência do SQLite (retries em caso de 'locked').
     """
     hashed_password = hash_password(password)
 
-    # Tentativas para lidar com "database is locked" (scheduler/DB Browser aberto, etc.)
     for attempt in range(4):
         conn = None
         try:
@@ -581,7 +558,7 @@ def register_user(
             conn.execute("PRAGMA busy_timeout = 30000")
             cursor = conn.cursor()
 
-            # Migração defensiva: garante colunas, mesmo se o DB for antigo.
+            # Garantia de colunas antes do insert
             cursor.execute("PRAGMA table_info(users)")
             cols = {row[1] for row in cursor.fetchall()}
             if "nome" not in cols:
@@ -598,7 +575,6 @@ def register_user(
             conn.commit()
             return True
         except sqlite3.IntegrityError:
-            # username duplicado
             return False
         except sqlite3.OperationalError as e:
             msg = str(e).lower()
@@ -617,7 +593,7 @@ def register_user(
 
 
 def get_user_by_id(user_id):
-    """Retorna os dados do usuário pelo ID"""
+    """Busca dados de um usuário pelo ID."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -628,11 +604,7 @@ def get_user_by_id(user_id):
 
 
 def list_users(include_admin: bool = True):
-    """Lista usuários cadastrados (sem credenciais sensíveis).
-
-    Returns:
-        list[dict]: [{'id': int, 'username': str, 'role': str, 'created_at': str}, ...]
-    """
+    """Lista usuários do sistema."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -651,10 +623,7 @@ def list_users(include_admin: bool = True):
     return [dict(r) for r in rows]
 
 def set_portal_credentials(user_id: int, portal_user: str, portal_password_plain: str) -> None:
-    """Salva as credenciais do portal para o usuário.
-
-    portal_password é armazenada criptografada (Fernet).
-    """
+    """Salva credenciais do portal SGL criptografadas."""
     if not portal_user:
         raise ValueError("portal_user é obrigatório")
     if portal_password_plain is None or portal_password_plain == "":
@@ -672,6 +641,7 @@ def set_portal_credentials(user_id: int, portal_user: str, portal_password_plain
 
 
 def clear_portal_credentials(user_id: int) -> None:
+    """Remove credenciais do portal SGL."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute(
@@ -683,9 +653,9 @@ def clear_portal_credentials(user_id: int) -> None:
 
 
 def get_portal_credentials(user_id: int) -> dict | None:
-    """Retorna {portal_user, portal_password} descriptografado para uso interno.
-
-    Retorna None se não estiver configurado.
+    """
+    Recupera e descriptografa as credenciais do portal.
+    Retorna None se não configurado ou se a chave de criptografia mudou.
     """
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
@@ -703,9 +673,6 @@ def get_portal_credentials(user_id: int) -> dict | None:
     if not pu or not pp:
         return None
 
-    # If the Fernet key was rotated/lost, old encrypted values cannot be decrypted.
-    # In that case, reset the stored credentials for this user so they can re-register,
-    # instead of crashing the scraping flow.
     try:
         plain = decrypt_text(pp)
     except Exception:
@@ -719,10 +686,7 @@ def get_portal_credentials(user_id: int) -> dict | None:
 
 
 def get_user_id_by_username(username: str) -> int | None:
-    """Retorna o ID do usuário a partir do username (case-insensitive).
-
-    Retorna None se não existir.
-    """
+    """Retorna ID do usuário pelo nome de login."""
     if not username:
         return None
 
@@ -743,20 +707,8 @@ def get_user_id_by_username(username: str) -> int | None:
         return None
 
 
-def get_portal_credentials_by_username(username: str) -> dict | None:
-    """Retorna credenciais do portal a partir do username.
-
-    Útil para rotinas automatizadas (scheduler) que precisam usar as credenciais
-    de um usuário específico (ex.: gerente).
-    """
-    uid = get_user_id_by_username(username)
-    if not uid:
-        return None
-    return get_portal_credentials(uid)
-
-
 def get_portal_credentials_status(user_id: int) -> dict:
-    """Retorna status seguro para o frontend (sem vazar a senha)."""
+    """Retorna status das credenciais (configurado ou não) sem revelar a senha."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -774,7 +726,6 @@ def get_portal_credentials_status(user_id: int) -> dict:
     if not pu or not pp:
         return {"configured": False, "portal_user": pu or ""}
 
-    # Validate decryptability without exposing the password.
     try:
         _ = decrypt_text(pp)
         ok = True
@@ -790,7 +741,7 @@ def get_portal_credentials_status(user_id: int) -> dict:
 
 
 def reset_database(user_id):
-    """Reseta apenas os dados do usuário especificado"""
+    """Zera dados de releitura do usuário especificado."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute('DELETE FROM releituras WHERE user_id = ?', (user_id,))
@@ -802,7 +753,10 @@ def reset_database(user_id):
 
 
 def _save_grafico_snapshot(module: str, total: int, pendentes: int, realizadas: int, file_hash: str | None, timestamp_iso: str, user_id: int):
-    """Salva 1 ponto do gráfico por hora (consolida por (user_id, module, data, hora))."""
+    """
+    Salva um snapshot das métricas para o gráfico histórico.
+    A granularidade é por HORA (um registro por hora por usuário/módulo).
+    """
     try:
         ts = datetime.fromisoformat(timestamp_iso)
     except Exception:
@@ -830,7 +784,7 @@ def _save_grafico_snapshot(module: str, total: int, pendentes: int, realizadas: 
 
 
 def is_file_duplicate(file_hash, module, user_id):
-    """Verifica se o arquivo já foi processado por este usuário"""
+    """Verifica se um arquivo já foi processado pelo hash."""
     if not file_hash:
         return False
     conn = sqlite3.connect(str(DB_PATH))
@@ -845,15 +799,17 @@ def is_file_duplicate(file_hash, module, user_id):
 
 
 def save_releitura_data(details, file_hash, user_id):
-    """Salva dados de releitura para o usuário especificado usando merge inteligente (otimizado)."""
+    """
+    Salva ou atualiza registros de Releitura.
+    Usa transação única para performance.
+    Detecta novos itens vs atualizações.
+    """
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     now = datetime.now().isoformat()
 
-    # Performance: uma transação única + batch operations
     cursor.execute("BEGIN")
 
-    # Pega instalações existentes (somente o necessário)
     cursor.execute('SELECT instalacao, status FROM releituras WHERE user_id = ?', (user_id,))
     existing = {row[0]: row[1] for row in cursor.fetchall()}
 
@@ -878,7 +834,7 @@ def save_releitura_data(details, file_hash, user_id):
         localidade = item.get('localidade')
 
         if instalacao in existing:
-            # mantém CONCLUÍDA
+            # Se já estava CONCLUÍDA, não reabre.
             if existing[instalacao] == 'CONCLUÍDA':
                 continue
             updates.append(
@@ -902,7 +858,7 @@ def save_releitura_data(details, file_hash, user_id):
             VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDENTE', ?, ?, ?, ?, ?, ?)
         ''', inserts)
 
-    # Instalações removidas do relatório: marca como concluída se estavam pendentes
+    # Fechar pendências que não estão mais no relatório
     instalacoes_removidas = set(existing.keys()) - new_instalacoes
     removed_to_close = [(user_id, inst) for inst in instalacoes_removidas if existing.get(inst) == 'PENDENTE']
     if removed_to_close:
@@ -912,7 +868,6 @@ def save_releitura_data(details, file_hash, user_id):
             WHERE user_id = ? AND instalacao = ?
         ''', removed_to_close)
 
-    # Histórico do upload
     cursor.execute('''
         INSERT INTO history_releitura (user_id, module, count, file_hash, timestamp)
         VALUES (?, ?, ?, ?, ?)
@@ -920,13 +875,11 @@ def save_releitura_data(details, file_hash, user_id):
 
     conn.commit()
 
-    # Métricas + snapshot (após commit)
+    # Métricas para snapshot
     cursor.execute('SELECT COUNT(*) FROM releituras WHERE user_id = ?', (user_id,))
     total = int(cursor.fetchone()[0] or 0)
-
     cursor.execute("SELECT COUNT(*) FROM releituras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
     pendentes = int(cursor.fetchone()[0] or 0)
-
     realizadas = max(total - pendentes, 0)
 
     conn.close()
@@ -934,14 +887,16 @@ def save_releitura_data(details, file_hash, user_id):
     return
 
 def save_porteira_data(details, file_hash, user_id):
-    """Salva dados de porteira para o usuário especificado (otimizado)."""
+    """
+    Salva dados na tabela 'porteiras' (simplificada).
+    Geralmente usada em paralelo ou como fallback da tabela completa 'resultados_leitura'.
+    """
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     now = datetime.now().isoformat()
 
     cursor.execute("BEGIN")
 
-    # Pega instalações existentes para evitar SELECT por linha
     cursor.execute('SELECT instalacao FROM porteiras WHERE user_id = ?', (user_id,))
     existing = {row[0] for row in cursor.fetchall()}
 
@@ -965,7 +920,6 @@ def save_porteira_data(details, file_hash, user_id):
 
     conn.commit()
 
-    # Snapshot para gráfico (sem abrir nova conexão)
     cursor.execute('SELECT COUNT(*) FROM porteiras WHERE user_id = ?', (user_id,))
     total = int(cursor.fetchone()[0] or 0)
     cursor.execute("SELECT COUNT(*) FROM porteiras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
@@ -976,7 +930,7 @@ def save_porteira_data(details, file_hash, user_id):
     _save_grafico_snapshot('porteira', total, pendentes, realizadas, file_hash, now, user_id)
 
 def update_installation_status(installation_list, new_status, module, user_id):
-    """Atualiza status de instalações para o usuário especificado"""
+    """Atualiza o status de um lote de instalações."""
     if not installation_list:
         return
     conn = sqlite3.connect(str(DB_PATH))
@@ -996,11 +950,7 @@ def update_installation_status(installation_list, new_status, module, user_id):
 
 
 def get_releitura_details(user_id, date_str: str | None = None):
-    """Retorna detalhes das releituras do usuário.
-
-    Se date_str (YYYY-MM-DD) for informado, filtra pelo dia do upload_time,
-    mantendo consistência com o calendário no frontend.
-    """
+    """Consulta detalhes de releitura pendentes."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     if date_str:
@@ -1023,6 +973,7 @@ def get_releitura_details(user_id, date_str: str | None = None):
         item = {"ul": r[0], "inst": r[1], "endereco": r[2], "razao": r[3], "venc": r[4], "reg": r[5], "status": r[6], "region": r[7], "route_status": r[8], "route_reason": r[9], "ul_regional": r[10], "localidade": r[11]}
         details.append(item)
 
+    # Ordenação por data de vencimento
     def sort_key(item):
         try:
             return (datetime.strptime(item['venc'], '%d/%m/%Y'), item['reg'])
@@ -1034,11 +985,7 @@ def get_releitura_details(user_id, date_str: str | None = None):
 
 
 def get_releitura_metrics(user_id, date_str: str | None = None):
-    """Retorna métricas de releitura do usuário.
-
-    Se date_str (YYYY-MM-DD) for informado, filtra pelo dia do upload_time
-    para que as métricas mudem quando o usuário muda a data no calendário.
-    """
+    """Calcula métricas de Releitura (Total, Pendente, Atrasado)."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
@@ -1076,7 +1023,7 @@ def get_releitura_metrics(user_id, date_str: str | None = None):
 
 
 def get_porteira_metrics(user_id):
-    """Retorna métricas de porteira do usuário usando resultados_leitura"""
+    """Calcula métricas agregadas da Porteira."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute('''
@@ -1096,7 +1043,7 @@ def get_porteira_metrics(user_id):
 
 
 def get_releitura_chart_data(user_id, date_str=None):
-    """Retorna dados do gráfico de pendências de releitura por horário do usuário"""
+    """Consulta dados para o gráfico de barras (por hora) da Releitura."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute('''
@@ -1122,7 +1069,7 @@ def get_releitura_chart_data(user_id, date_str=None):
 
 
 def get_releitura_due_chart_data(user_id, date_str=None):
-    """Retorna dados do gráfico de vencimento de releituras do usuário"""
+    """Consulta dados para o gráfico de Vencimentos da Releitura."""
     try:
         if date_str:
             ref = datetime.strptime(date_str, "%Y-%m-%d")
@@ -1141,7 +1088,6 @@ def get_releitura_due_chart_data(user_id, date_str=None):
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     
-    # Aplicar filtro de data se fornecido
     if date_str:
         cursor.execute("SELECT vencimento FROM releituras WHERE user_id = ? AND status = 'PENDENTE' AND DATE(upload_time)=DATE(?)", (user_id, date_str))
     else:
@@ -1160,7 +1106,7 @@ def get_releitura_due_chart_data(user_id, date_str=None):
 
 
 def get_porteira_chart_data(user_id, date_str=None):
-    """Retorna dados do gráfico de porteira do usuário"""
+    """Consulta dados para o gráfico de barras (por hora) da Porteira."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
     cursor.execute('''
@@ -1186,7 +1132,7 @@ def get_porteira_chart_data(user_id, date_str=None):
 
 
 def get_porteira_table_data(user_id, ciclo: str | None = None, regiao: str | None = None):
-    """Retorna todos os dados da tabela resultados_leitura do usuário"""
+    """Retorna dados detalhados para a tabela da Porteira."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -1233,7 +1179,7 @@ def get_porteira_table_data(user_id, ciclo: str | None = None, regiao: str | Non
 
 
 def get_porteira_stats_by_region(user_id, ciclo: str | None = None, regiao: str | None = None):
-    """Retorna estatísticas agregadas por região."""
+    """Calcula estatísticas de Porteira agrupadas por Região."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -1284,7 +1230,7 @@ def get_porteira_stats_by_region(user_id, ciclo: str | None = None, regiao: str 
 
 
 def get_porteira_totals(user_id, ciclo: str | None = None, regiao: str | None = None):
-    """Retorna os totalizadores da tabela resultados_leitura do usuário"""
+    """Calcula somatórios totais da Porteira."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
@@ -1327,19 +1273,14 @@ def get_porteira_totals(user_id, ciclo: str | None = None, regiao: str | None = 
 
 
 def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
-    """Salva dados na tabela resultados_leitura do usuário.
-
-    Regras de sigilo:
-      - gerencia/diretoria/desenvolvedor: vê tudo (todas as regiões)
-      - analistas/supervisor (e demais): vê apenas a sua matrícula (região)
-    Mapeamento de localidade/região:
-      - usa os 4 últimos dígitos do 'Conjunto_Contrato' para identificar a localidade (UL4)
-      - cruza com 'localidades_referencia' (carregada do Excel de referência)
+    """
+    Salva dados na tabela completa de resultados de leitura (Porteira).
+    Aplica regras de sigilo baseadas em Região e Matrícula.
     """
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
-    # Garantir colunas (em caso de DB antigo)
+    # Garantir colunas
     try:
         cursor.execute("PRAGMA table_info(resultados_leitura)")
         cols = {row[1] for row in cursor.fetchall()}
@@ -1352,13 +1293,12 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
     except Exception:
         pass
 
-    # Carregar referência (se ainda não existir/populada)
     try:
         init_localidades_table(conn)
     except Exception:
         pass
 
-    # Descobrir role + matrícula do usuário
+    # Obter dados do usuário
     role = ""
     user_matricula = None
     user_base = None
@@ -1367,7 +1307,6 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
         r = cursor.fetchone()
         if r:
             role = str(r[0] or "").strip().lower()
-            # normaliza (remove acentos)
             role = ''.join(c for c in unicodedata.normalize('NFKD', role) if not unicodedata.combining(c))
             role = role.replace(' ', '')
             user_matricula = (str(r[1]).strip() if r[1] is not None else None) or None
@@ -1395,14 +1334,12 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
         user_matricula = norm_base_to_matricula(user_base)
         print(f"📊 [Porteira] Matrícula mapeada da base: {user_matricula}")
 
-    # Quem pode ver tudo (provisório: gerência + diretoria + dev)
+    # Permissões de visualização
     can_see_all = role in ("gerencia", "diretoria", "desenvolvedor")
     print(f"📊 [Porteira] Usuário pode ver tudo: {can_see_all}")
 
-    # Em caso de usuário restrito sem matrícula, bloqueia para evitar vazamento
     if (not can_see_all) and (not user_matricula):
-        print(f"⚠️  Usuário {user_id} (role={role}) sem matrícula/base definida. Nenhum dado de porteira foi salvo (proteção de sigilo).")
-        # Ainda assim, limpa os dados antigos do usuário para evitar inconsistência
+        print(f"⚠️  Usuário {user_id} (role={role}) sem matrícula/base definida. Protegendo dados.")
         cursor.execute('DELETE FROM resultados_leitura WHERE user_id = ?', (int(user_id),))
         conn.commit()
         conn.close()
@@ -1421,7 +1358,6 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
             return digits[-4:]
         return ""
 
-    # Limpa dados antigos DESTE USUÁRIO
     cursor.execute('DELETE FROM resultados_leitura WHERE user_id = ?', (int(user_id),))
 
     inserted = 0
@@ -1432,7 +1368,6 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
         conjunto = data.get('Conjunto_Contrato')
         ul4 = extract_ul4_from_conjunto(conjunto)
 
-        # Busca referência por UL4 (últimos 4 do conjunto)
         regiao = 'Não Mapeado'
         localidade = 'Não Mapeado'
         try:
@@ -1453,19 +1388,16 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
 
         matricula_row = REGION_TO_MATRICULA.get(regiao)
 
-        # Filtro por matrícula para usuários não-gerenciais
         if (not can_see_all) and matricula_row and user_matricula and (matricula_row != user_matricula):
             skipped_by_region += 1
             continue
 
-        # Se não conseguimos determinar matrícula da linha, também não vaza para usuário restrito
         if (not can_see_all) and (not matricula_row):
             skipped_no_matricula += 1
             continue
 
         ul = str(data.get('UL') or '').strip()
         
-        # Garantir que a coluna Impedimentos existe
         try:
             cursor.execute("PRAGMA table_info(resultados_leitura)")
             cols = {row[1] for row in cursor.fetchall()}
@@ -1498,7 +1430,7 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
         ))
         inserted += 1
 
-    # Calcular totais para o gráfico histórico
+    # Calcular totais para snapshot
     cursor.execute('''
         SELECT
             SUM(Total_Leituras),
@@ -1512,7 +1444,6 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
     pendentes = int((row[1] or 0) if row else 0)
     realizadas = max(total - pendentes, 0)
 
-    # Atualiza histórico mensal da "Abertura de Porteira" (mês atual vs anterior)
     try:
         refresh_porteira_abertura_monthly(conn, int(user_id), file_hash=file_hash)
     except Exception as e:
@@ -1521,7 +1452,6 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
     conn.commit()
     conn.close()
 
-    # Salvar snapshot no gráfico histórico
     now = datetime.now().isoformat()
     _save_grafico_snapshot('porteira', total, pendentes, realizadas, None, now, int(user_id))
 
@@ -1529,21 +1459,10 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
     print(f"   ✅ Linhas inseridas: {inserted}")
     print(f"   ⚠️  Puladas por região diferente: {skipped_by_region}")
     print(f"   ⚠️  Puladas sem matrícula identificada: {skipped_no_matricula}")
-    print(f"   📈 Total de leituras: {total}")
-    print(f"   📊 Pendentes: {pendentes}")
-    
-    if inserted == 0:
-        print(f"⚠️  ATENÇÃO: Nenhuma linha foi salva!")
-        print(f"   - Usuário: {user_id}")
-        print(f"   - Role: {role}")
-        print(f"   - Base: {user_base}")
-        print(f"   - Matrícula: {user_matricula}")
-        print(f"   - Pode ver tudo: {can_see_all}")
-        print(f"   - Total de linhas no Excel: {len(data_list or [])}")
 
 
 def get_porteira_chart_summary(user_id, ciclo: str | None = None, regiao: str | None = None):
-    """Retorna dados agregados para o gráfico de barras da porteira do usuário"""
+    """Gera o resumo para o gráfico da Porteira (Executadas vs Não Executadas)."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
@@ -1596,7 +1515,7 @@ def get_porteira_chart_summary(user_id, ciclo: str | None = None, regiao: str | 
 
 
 def get_porteira_nao_executadas_chart(user_id, ciclo: str | None = None, regiao: str | None = None):
-    """Retorna dados para o gráfico de leituras não executadas por razão do usuário"""
+    """Gera gráfico de 'Não Executadas' quebrado por Razão."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
@@ -1644,11 +1563,11 @@ def get_porteira_nao_executadas_chart(user_id, ciclo: str | None = None, regiao:
 
 
 # =========================
-# Porteira: Abertura de Porteira (histórico mensal por Razão)
+# Porteira: Abertura de Porteira (Histórico Mensal)
 # =========================
 
 def _ensure_porteira_abertura_monthly_table(conn: sqlite3.Connection) -> None:
-    """Garante a existência (e migra colunas) da tabela de histórico mensal da Abertura de Porteira."""
+    """Garante existência da tabela de histórico mensal."""
     cur = conn.cursor()
     cur.execute('''
         CREATE TABLE IF NOT EXISTS porteira_abertura_monthly (
@@ -1666,8 +1585,6 @@ def _ensure_porteira_abertura_monthly_table(conn: sqlite3.Connection) -> None:
             PRIMARY KEY (user_id, ano, mes, ciclo, regiao, razao)
         )
     ''')
-
-    # Migração defensiva (caso a tabela já exista sem as novas colunas)
     try:
         cur.execute("PRAGMA table_info(porteira_abertura_monthly)")
         cols = {row[1] for row in cur.fetchall()}
@@ -1683,14 +1600,7 @@ def compute_porteira_abertura_latest_quantities(
     regiao: str | None = None,
     conn: sqlite3.Connection | None = None,
 ) -> dict[str, dict[str, float]]:
-    """
-    Calcula SOMENTE a partir do snapshot atual (tabela resultados_leitura),
-    a soma de Leituras_Nao_Executadas por Razão (01..18), com quebra por Tipo_UL (OSB/CNV),
-    respeitando filtros de ciclo/região.
-
-    Retorno:
-      { "01": {"quantidade": 10, "osb": 4, "cnv": 6}, ... }
-    """
+    """Calcula quantidades (Total, OSB, CNV) a partir do snapshot atual."""
     close_conn = False
     if conn is None:
         conn = sqlite3.connect(str(DB_PATH))
@@ -1747,13 +1657,7 @@ def refresh_porteira_abertura_monthly(
     ano: int | None = None,
     mes: int | None = None,
 ) -> None:
-    """
-    Atualiza/Upsert do histórico mensal da Abertura de Porteira para o mês vigente,
-    para todas as combinações (ciclo, regiao) relevantes.
-
-    Observação: o "Atraso" é calculado em tempo real na API (comparando hoje com o calendário),
-    então aqui gravamos apenas as QUANTIDADES (total + quebra OSB/CNV).
-    """
+    """Atualiza o histórico mensal para o mês atual."""
     _ensure_porteira_abertura_monthly_table(conn)
 
     now = datetime.now()
@@ -1761,7 +1665,6 @@ def refresh_porteira_abertura_monthly(
     mes = int(mes or now.month)
     updated_at = now.isoformat()
 
-    # Remove registros existentes do mês (evita "valores antigos" ficarem gravados quando a quantidade zera)
     cur = conn.cursor()
     cur.execute(
         'DELETE FROM porteira_abertura_monthly WHERE user_id = ? AND ano = ? AND mes = ?',
@@ -1784,7 +1687,6 @@ def refresh_porteira_abertura_monthly(
                 qtd_osb = float(d.get("osb", 0) or 0)
                 qtd_cnv = float(d.get("cnv", 0) or 0)
 
-                # Mantém a regra: não gravar linhas zeradas (mês sem histórico fica "vazio" na UI)
                 if qtd_total > 0:
                     rows.append((
                         int(user_id), int(ano), int(mes),
@@ -1807,16 +1709,7 @@ def get_porteira_abertura_monthly_quantities(
     regiao: str | None = None,
     fallback_latest: bool = False,
 ) -> dict[str, dict[str, float]]:
-    """
-    Retorna a quantidade (soma de Leituras_Nao_Executadas) por Razão (01..18) do histórico mensal,
-    com quebra por Tipo_UL (OSB/CNV).
-
-    Retorno:
-      { "01": {"quantidade": 10, "osb": 4, "cnv": 6}, ... }
-
-    Se não houver histórico para o mês solicitado e fallback_latest=True,
-    calcula no ato a partir do snapshot atual.
-    """
+    """Consulta o histórico mensal de Abertura de Porteira."""
     conn = sqlite3.connect(str(DB_PATH))
     try:
         _ensure_porteira_abertura_monthly_table(conn)
@@ -1840,8 +1733,6 @@ def get_porteira_abertura_monthly_quantities(
             osb = float(rr[2] or 0)
             cnv = float(rr[3] or 0)
 
-            # Mantém o comportamento: gravamos somente >0, então aqui normalmente só virão >0.
-            # (mas fica robusto se existir algum registro legado)
             if (qtd > 0) or (osb > 0) or (cnv > 0):
                 out[raz] = {"quantidade": qtd, "osb": osb, "cnv": cnv}
 
@@ -1852,7 +1743,7 @@ def get_porteira_abertura_monthly_quantities(
     finally:
         conn.close()
 def reset_porteira_database(user_id):
-    """Limpa apenas os dados da porteira do usuário"""
+    """Reseta todos os dados da Porteira para um usuário específico."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
@@ -1869,7 +1760,7 @@ def reset_porteira_database(user_id):
 
 
 def save_file_history(module, count, file_hash, user_id):
-    """Salva histórico de upload de arquivo do usuário"""
+    """Registra histórico de upload de arquivos."""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
 
@@ -1888,10 +1779,11 @@ def save_file_history(module, count, file_hash, user_id):
     conn.close()
 
 # -------------------------------
-# Releitura: targets por região
+# Utilitários de Roteamento e Reset Global
 # -------------------------------
 
 def get_user_id_by_username(username: str):
+    """Busca ID por username."""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     cur.execute("SELECT id FROM users WHERE username = ?", (username,))
@@ -1901,6 +1793,7 @@ def get_user_id_by_username(username: str):
 
 
 def get_user_id_by_matricula(matricula: str):
+    """Busca ID por matrícula."""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     cur.execute("SELECT id FROM users WHERE matricula = ?", (matricula,))
@@ -1910,6 +1803,7 @@ def get_user_id_by_matricula(matricula: str):
 
 
 def get_releitura_region_targets():
+    """Retorna configuração de alvos regionais (Região -> Matrícula)."""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     cur.execute("SELECT region, matricula FROM releitura_region_targets")
@@ -1919,6 +1813,7 @@ def get_releitura_region_targets():
 
 
 def set_releitura_region_targets(mapping: dict):
+    """Atualiza configuração de alvos regionais."""
     now = datetime.now().isoformat()
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
@@ -1934,10 +1829,7 @@ def set_releitura_region_targets(mapping: dict):
 
 
 def count_releitura_unrouted(user_id: int, date_str: str | None = None) -> int:
-    """Conta pendências não roteadas do usuário (status PENDENTE e route_status=UNROUTED).
-
-    Se date_str (YYYY-MM-DD) for informado, filtra pelo dia do upload_time.
-    """
+    """Conta itens não roteados (UNROUTED) pendentes."""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     if date_str:
@@ -1949,6 +1841,7 @@ def count_releitura_unrouted(user_id: int, date_str: str | None = None) -> int:
     return int(row[0] or 0)
 
 def get_releitura_unrouted(date_str: str | None = None):
+    """Retorna lista detalhada de itens não roteados."""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     if date_str:
@@ -1975,37 +1868,27 @@ def get_releitura_unrouted(date_str: str | None = None):
 
 
 def reset_releitura_global():
-    """Zera somente as tabelas relacionadas à Releitura (global)."""
+    """Zera globalmente (para todos usuários) dados de Releitura."""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     cur.execute("DELETE FROM releituras")
     cur.execute("DELETE FROM history_releitura")
-    # grafico_historico: apenas módulo releitura
     cur.execute("DELETE FROM grafico_historico WHERE module='releitura'")
     conn.commit()
     conn.close()
 
 
 def reset_porteira_global():
-    """Zera somente as tabelas relacionadas à Porteira (global).
-
-    Observação: mantém a tabela users e credenciais; apenas dados/relatórios.
-    """
+    """Zera globalmente (para todos usuários) dados de Porteira."""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
-    # Tabelas de dados porteira
     cur.execute("DELETE FROM resultados_leitura")
     cur.execute("DELETE FROM porteiras")
     cur.execute("DELETE FROM history_porteira")
-    # Histórico mensal da Abertura de Porteira
     try:
         cur.execute("DELETE FROM porteira_abertura_monthly")
     except Exception:
-        # Em versões antigas essa tabela pode não existir
         pass
-    # grafico_historico: apenas módulo porteira
     cur.execute("DELETE FROM grafico_historico WHERE module='porteira'")
     conn.commit()
     conn.close()
-
-
