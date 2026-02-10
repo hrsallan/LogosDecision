@@ -5,11 +5,9 @@
     const body = document.body;
     if (!body) return;
 
-    // Apply saved preference
     const saved = localStorage.getItem(KEY);
     if (saved === "1") body.classList.add("sidebar-collapsed");
 
-    // Bind toggle
     const btn = document.getElementById("v2-sidebar-toggle");
     if (!btn) return;
 

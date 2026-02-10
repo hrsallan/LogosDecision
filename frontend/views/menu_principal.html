@@ -243,10 +243,6 @@
                     <i data-lucide="globe"></i>
                     <span class="v2-nav-text">Menu Principal</span>
                 </a>
-                <a href="dashboard.html" class="v2-nav-item" data-title="Dashboard">
-                    <i data-lucide="layout-dashboard"></i>
-                    <span class="v2-nav-text">Dashboard</span>
-                </a>
                 <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
                     <i data-lucide="refresh-cw"></i>
                     <span class="v2-nav-text">Releituras</span>
@@ -319,7 +315,7 @@
                                     </div>
                                 </div>
                                 <p class="v2-text-dim" style="margin: 0 0 16px 0; font-size: 1.05rem; line-height: 1.6;" data-i18n="hero.description">
-                                    Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, dashboards em tempo real e controle avançado de operações.
+                                    Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, relatórios em tempo real e controle avançado de operações.
                                 </p>
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                     <span class="tech-badge"><i data-lucide="code" style="width: 14px; height: 14px;"></i> Python + Flask</span>
@@ -340,23 +336,11 @@
                     <div>
                         <h3 style="margin: 0 0 16px 0; font-size: 1.3rem;" data-i18n="modules.title">Módulos Principais</h3>
                         
-                        <div class="v2-grid animate-fade-in animate-delay-1" style="grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px;">
-                            <a href="dashboard.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
-                                <div style="display: flex; gap: 16px; align-items: flex-start;">
-                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(88, 166, 255, 0.2) 0%, rgba(88, 166, 255, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i data-lucide="layout-dashboard" style="width: 28px; height: 28px; color: var(--v2-primary)"></i>
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.dashboard.title">Dashboard</div>
-                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.dashboard.description">Visualização completa de métricas, gráficos e indicadores em tempo real</div>
-                                    </div>
-                                </div>
-                            </a>
-
+                        <div class="v2-grid animate-fade-in animate-delay-1" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
                             <a href="releitura.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
-                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i data-lucide="refresh-cw" style="width: 28px; height: 28px; color: #22c55e"></i>
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(88, 166, 255, 0.2) 0%, rgba(88, 166, 255, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="refresh-cw" style="width: 28px; height: 28px; color: var(--v2-primary)"></i>
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.rereading.title">Releituras</div>
@@ -377,6 +361,46 @@
                                 </div>
                             </a>
 
+                            <a href="relatorios.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
+                                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="file-bar-chart" style="width: 28px; height: 28px; color: #22c55e"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.reports.title">Relatórios</div>
+                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.reports.description">Geração e exportação de relatórios personalizados</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <h3 style="margin: 24px 0 16px 0; font-size: 1.3rem;" data-i18n="modules.advanced">Módulos Avançados</h3>
+                        
+                        <div class="v2-grid animate-fade-in animate-delay-2" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+                            <a href="usuario.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
+                                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="users" style="width: 28px; height: 28px; color: #6366f1"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.users.title">Usuários</div>
+                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.users.description">Gerenciamento de perfis e permissões</div>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="administracao.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
+                                <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                    <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i data-lucide="settings" style="width: 28px; height: 28px; color: #ef4444"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;" data-i18n="modules.admin.title">Administração</div>
+                                        <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.admin.description">Configurações e gerenciamento do sistema</div>
+                                    </div>
+                                </div>
+                            </a>
+
                             <a href="ia.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
                                     <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -390,26 +414,6 @@
                                         <div class="v2-text-dim" style="font-size: 0.9rem; line-height: 1.4;" data-i18n="modules.ai.description">Inteligência artificial para análise preditiva e detecção de anomalias</div>
                                     </div>
                                 </div>
-                            </a>
-                        </div>
-
-                        <h3 style="margin: 24px 0 16px 0; font-size: 1.3rem;" data-i18n="actions.title">Ações Rápidas</h3>
-                        <div class="v2-grid animate-fade-in animate-delay-2" style="grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                            <a href="relatorios.html" class="quick-action">
-                                <i data-lucide="file-text"></i>
-                                <span data-i18n="actions.report">Gerar Relatório</span>
-                            </a>
-                            <a href="usuario.html" class="quick-action">
-                                <i data-lucide="user-plus"></i>
-                                <span data-i18n="actions.users">Área do Usuário</span>
-                            </a>
-                            <a href="administracao.html" class="quick-action">
-                                <i data-lucide="settings"></i>
-                                <span data-i18n="actions.settings">Administração</span>
-                            </a>
-                            <a href="login.html" class="quick-action">
-                                <i data-lucide="log-out"></i>
-                                <span data-i18n="actions.export">Logout</span>
                             </a>
                         </div>
                     </div>
@@ -536,23 +540,23 @@ async function displayUsername() {
             'pt-BR': {
                 'hero.welcome': 'Seja Bem-Vindo',
                 'hero.status': 'Ativo',
-                'hero.description': 'Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, dashboards em tempo real e controle avançado de operações.',
+                'hero.description': 'Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, relatórios em tempo real e controle avançado de operações.',
                 'tech.secure': 'Seguro',
                 'modules.title': 'Módulos Principais',
-                'modules.dashboard.title': 'Dashboard',
-                'modules.dashboard.description': 'Visualização completa de métricas, gráficos e indicadores em tempo real',
                 'modules.rereading.title': 'Releituras',
                 'modules.rereading.description': 'Gestão e análise de releituras não executadas com processamento Excel',
                 'modules.gate.title': 'Porteira',
                 'modules.gate.description': 'Controle de acesso e monitoramento de entradas e saídas do sistema',
+                'modules.reports.title': 'Relatórios',
+                'modules.reports.description': 'Geração e exportação de relatórios personalizados',
+                'modules.advanced': 'Módulos Avançados',
+                'modules.users.title': 'Usuários',
+                'modules.users.description': 'Gerenciamento de perfis e permissões',
+                'modules.admin.title': 'Administração',
+                'modules.admin.description': 'Configurações e gerenciamento do sistema',
                 'modules.ai.title': 'Análise IA',
                 'modules.ai.badge': 'Em breve',
                 'modules.ai.description': 'Inteligência artificial para análise preditiva e detecção de anomalias',
-                'actions.title': 'Ações Rápidas',
-                'actions.report': 'Gerar Relatório',
-                'actions.users': 'Área do Usuário',
-                'actions.settings': 'Administração',
-                'actions.export': 'Logout',
                 'developer.role': 'Desenvolvedor Full Stack',
                 'developer.stack': 'Stack Tecnológico',
                 'developer.about.title': 'Sobre o Projeto',
@@ -565,23 +569,23 @@ async function displayUsername() {
             'en-US': {
                 'hero.welcome': 'Welcome',
                 'hero.status': 'Active',
-                'hero.description': 'Complete system for monitoring and analyzing readings — intelligent data processing, real-time dashboards and advanced operations control.',
+                'hero.description': 'Complete system for monitoring and analyzing readings — intelligent data processing, real-time reports and advanced operations control.',
                 'tech.secure': 'Secure',
                 'modules.title': 'Main Modules',
-                'modules.dashboard.title': 'Dashboard',
-                'modules.dashboard.description': 'Complete visualization of metrics, charts and real-time indicators',
                 'modules.rereading.title': 'Re-readings',
                 'modules.rereading.description': 'Management and analysis of unexecuted re-readings with Excel processing',
                 'modules.gate.title': 'Gateway',
                 'modules.gate.description': 'Access control and monitoring of system entries and exits',
+                'modules.reports.title': 'Reports',
+                'modules.reports.description': 'Generation and export of custom reports',
+                'modules.advanced': 'Advanced Modules',
+                'modules.users.title': 'Users',
+                'modules.users.description': 'Profile and permission management',
+                'modules.admin.title': 'Administration',
+                'modules.admin.description': 'System settings and management',
                 'modules.ai.title': 'AI Analysis',
                 'modules.ai.badge': 'Coming soon',
                 'modules.ai.description': 'Artificial intelligence for predictive analysis and anomaly detection',
-                'actions.title': 'Quick Actions',
-                'actions.report': 'Generate Report',
-                'actions.users': 'User Area',
-                'actions.settings': 'Administration',
-                'actions.export': 'Logout',
                 'developer.role': 'Full Stack Developer',
                 'developer.stack': 'Technology Stack',
                 'developer.about.title': 'About the Project',

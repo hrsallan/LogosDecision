@@ -74,22 +74,79 @@
             border-color: rgba(248, 81, 73, 0.5);
         }
 
-        /* Enhanced Metrics Cards */
+        /* Region Filter Dropdown */
+        .region-filter-container {
+            display: inline-block;
+        }
+
+        .region-select {
+            min-width: 200px;
+            padding: 10px 16px;
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+            color: var(--v2-text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .region-select:hover {
+            border-color: rgba(0, 209, 255, 0.5);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .region-select:focus {
+            border-color: var(--v2-primary);
+            box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+        }
+
+        .region-select option {
+            background: var(--v2-bg);
+            color: var(--v2-text);
+            padding: 10px;
+        }
+
+        /* Enhanced Metrics Cards - All in one row */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
             margin-bottom: 24px;
+        }
+
+        @media (max-width: 1400px) {
+            .metrics-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .metric-card {
             background: var(--v2-surface);
             border: 1px solid var(--v2-border);
             border-radius: 16px;
-            padding: 20px;
+            padding: 16px;
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .metric-card::before {
@@ -128,23 +185,24 @@
         .metric-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
         .metric-icon {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 10px;
             background: rgba(0, 209, 255, 0.1);
+            flex-shrink: 0;
         }
 
         .metric-icon i {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             color: var(--v2-primary);
         }
 
@@ -173,21 +231,23 @@
         }
 
         .metric-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--v2-text-dim);
+            line-height: 1.2;
         }
 
         .metric-value {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 900;
             font-family: 'JetBrains Mono', monospace;
             color: var(--v2-text);
             line-height: 1;
             position: relative;
             z-index: 1;
+            margin-top: 4px;
         }
 
         .metric-card.warning .metric-value {
@@ -200,6 +260,75 @@
 
         .metric-card.danger .metric-value {
             color: var(--v2-danger);
+        }
+
+        /* Region Detail Cards */
+        .region-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .region-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .region-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .region-detail-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .region-detail-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .region-detail-header {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .region-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .region-metric {
+            text-align: center;
+        }
+
+        .region-metric-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            margin-bottom: 4px;
+        }
+
+        .region-metric-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--v2-text);
         }
 
         /* Enhanced Chart Cards */
@@ -343,12 +472,12 @@
             border-bottom: none;
         }
 
-        .status-tag {
+         .status-tag {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 5px 10px;
+            border-radius: 999px;
             font-size: 0.7rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -357,9 +486,10 @@
         }
 
         .status-tag.pendente {
-            background: rgba(210, 153, 34, 0.15);
-            color: var(--v2-warning);
-            border: 1px solid rgba(210, 153, 34, 0.3);
+            background: rgba(255, 215, 0, 0.18);
+            color: rgba(255, 215, 0, 0.95);
+            border: 1px solid rgba(255, 215, 0, 0.28);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.0);
         }
 
         .status-tag.atrasado {
@@ -368,7 +498,19 @@
             border: 1px solid rgba(248, 81, 73, 0.3);
         }
 
-        .status-tag i {
+        
+        .status-tag.realizada {
+            background: rgba(63, 185, 80, 0.14);
+            color: rgba(63, 185, 80, 0.95);
+            border: 1px solid rgba(63, 185, 80, 0.28);
+        }
+
+        .status-tag.neutral {
+            background: rgba(147, 160, 170, 0.12);
+            color: rgba(230, 237, 243, 0.85);
+            border: 1px solid rgba(147, 160, 170, 0.22);
+        }
+.status-tag i {
             width: 12px;
             height: 12px;
         }
@@ -640,10 +782,6 @@
                     <i data-lucide="globe"></i>
                     <span class="v2-nav-text">Menu Principal</span>
                 </a>
-                <a href="dashboard.html" class="v2-nav-item" data-title="Dashboard">
-                    <i data-lucide="layout-dashboard"></i>
-                    <span class="v2-nav-text">Dashboard</span>
-                </a>
                 <a href="releitura.html" class="v2-nav-item active" data-title="Releituras">
                     <i data-lucide="refresh-cw"></i>
                     <span class="v2-nav-text">Releituras</span>
@@ -687,7 +825,7 @@
                     <p class="v2-header-subtitle">Análise das Releituras Não Executadas | CEMIG SGL</p>
                 </div>
                 <div class="v2-header-right">
-                    <div class="header-actions-group">
+                    <div class="header-actions-group" style="gap: 12px;">
                         <!-- Date Picker Calendário -->
                         <div class="date-picker-container">
                             <button id="date-picker-btn" type="button" class="date-picker-btn" title="Selecionar data">
@@ -728,6 +866,30 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Region Filter Dropdown -->
+                        <div class="region-filter-container" id="region-filter-container">
+                            <select id="region-filter" class="region-select">
+                                <option value="all">Geral (todas)</option>
+                                <option value="Araxá">Araxá</option>
+                                <option value="Uberaba">Uberaba</option>
+                                <option value="Frutal">Frutal</option>
+                            </select>
+                        </div>
+
+                        <!-- Manager Actions -->
+                        <button id="btn-sync-teste" type="button" class="action-btn primary" style="display:none;">
+                            <i data-lucide="refresh-cw"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                        <button id="btn-reset-releitura" type="button" class="action-btn danger" style="display:none;">
+                            <i data-lucide="trash-2"></i>
+                            <span>Zerar Releitura</span>
+                        </button>
+                        <button id="btn-unrouted" type="button" class="action-btn" style="display:none;">
+                            <i data-lucide="alert-triangle"></i>
+                            <span>Não roteados: <span id="unrouted-count">0</span></span>
+                        </button>
                     </div>
                     
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
@@ -737,7 +899,8 @@
                         <div class="v2-date-display" id="v2-date">--/--/----</div>
                     </div>
                 </div>
-            </header>
+            
+    </header>
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
@@ -782,6 +945,87 @@
                         </div>
                         <div class="metric-value" id="v2-atrasadas">0</div>
                     </div>
+                    
+                    <div class="metric-card" style="--glow-color: rgba(100, 120, 255, 0.12);">
+                        <div class="metric-header">
+                            <div class="metric-icon" style="background: rgba(100, 120, 255, 0.1);">
+                                <i data-lucide="help-circle" style="color: #6478ff;"></i>
+                            </div>
+                            <span class="metric-label">Não Roteados</span>
+                        </div>
+                        <div class="metric-value" id="v2-nao-roteados" style="color: #6478ff;">0</div>
+                    </div>
+
+                    <!-- MÉTRICAS REMOVIDAS: Roteados e Taxa de Roteamento -->
+                </div>
+
+                <!-- REGION DETAIL CARDS -->
+                <div class="region-cards-grid">
+                    <div class="region-detail-card">
+                        <div class="region-detail-header">Araxá</div>
+                        <div class="region-metrics">
+                            <div class="region-metric">
+                                <div class="region-metric-label">Total</div>
+                                <div class="region-metric-value" id="araxa-total">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Pend</div>
+                                <div class="region-metric-value" id="araxa-pend">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Real</div>
+                                <div class="region-metric-value" id="araxa-real">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Atras</div>
+                                <div class="region-metric-value" id="araxa-atras">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="region-detail-card">
+                        <div class="region-detail-header">Uberaba</div>
+                        <div class="region-metrics">
+                            <div class="region-metric">
+                                <div class="region-metric-label">Total</div>
+                                <div class="region-metric-value" id="uberaba-total">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Pend</div>
+                                <div class="region-metric-value" id="uberaba-pend">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Real</div>
+                                <div class="region-metric-value" id="uberaba-real">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Atras</div>
+                                <div class="region-metric-value" id="uberaba-atras">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="region-detail-card">
+                        <div class="region-detail-header">Frutal</div>
+                        <div class="region-metrics">
+                            <div class="region-metric">
+                                <div class="region-metric-label">Total</div>
+                                <div class="region-metric-value" id="frutal-total">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Pend</div>
+                                <div class="region-metric-value" id="frutal-pend">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Real</div>
+                                <div class="region-metric-value" id="frutal-real">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Atras</div>
+                                <div class="region-metric-value" id="frutal-atras">0</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- MAIN CHART -->
@@ -813,6 +1057,39 @@
                     </div>
                     <div class="chart-canvas">
                         <canvas id="v2-due-chart"></canvas>
+                    </div>
+                </div>
+
+
+                <!-- REGION ROUTING CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="map"></i>
+                                <h3>Distribuição por Região</h3>
+                            </div>
+                            <p class="chart-subtitle">Pendências (apenas pendentes) por região/roteamento</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="v2-region-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TOP LOCALIDADES CHART -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="building-2"></i>
+                                <h3>Top Localidades</h3>
+                            </div>
+                            <p class="chart-subtitle">As 10 localidades com mais pendências</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="v2-localidade-chart"></canvas>
                     </div>
                 </div>
 
@@ -875,9 +1152,16 @@
         // Charts initialization
         let v2ChartInstance = null;
         let v2DueChartInstance = null;
+        let v2RegionChartInstance = null;
+        let v2LocalidadeChartInstance = null;
 
         function initV2Chart(labels, values) {
-            const ctx = document.getElementById('v2-chart').getContext('2d');
+            const canvas = document.getElementById('v2-chart');
+            if (!canvas) {
+                console.warn('Canvas v2-chart não encontrado');
+                return;
+            }
+            const ctx = canvas.getContext('2d');
             if (v2ChartInstance) v2ChartInstance.destroy();
             
             v2ChartInstance = new Chart(ctx, {
@@ -924,7 +1208,12 @@
         }
 
         function initV2DueChart(labels, values) {
-            const ctx = document.getElementById('v2-due-chart').getContext('2d');
+            const canvas = document.getElementById('v2-due-chart');
+            if (!canvas) {
+                console.warn('Canvas v2-due-chart não encontrado');
+                return;
+            }
+            const ctx = canvas.getContext('2d');
             if (v2DueChartInstance) v2DueChartInstance.destroy();
             
             v2DueChartInstance = new Chart(ctx, {
@@ -1045,7 +1334,12 @@
             currentCalendarDate = new Date();
             renderCalendar();
             calendarDropdown.classList.remove('active');
-            checkV2Status();
+            // Atualizar dados com a data selecionada
+            if (window.loadReleitura) {
+                window.loadReleitura();
+            } else {
+                checkV2Status();
+            }
             lucide.createIcons();
         });
 
@@ -1058,7 +1352,12 @@
             currentCalendarDate = new Date(today);
             renderCalendar();
             calendarDropdown.classList.remove('active');
-            checkV2Status();
+            // Atualizar dados com a data selecionada
+            if (window.loadReleitura) {
+                window.loadReleitura();
+            } else {
+                checkV2Status();
+            }
             lucide.createIcons();
         });
 
@@ -1150,7 +1449,12 @@
                     
                     // Close dropdown and refresh data
                     calendarDropdown.classList.remove('active');
-                    checkV2Status();
+                    // Atualizar dados com a data selecionada
+                    if (window.loadReleitura) {
+                        window.loadReleitura();
+                    } else {
+                        checkV2Status();
+                    }
                 });
             });
         }
@@ -1158,72 +1462,503 @@
         // Initialize calendar
         renderCalendar();
 
-        // Status check
+        
+        function initV2RegionChart(labels, values) {
+            const canvas = document.getElementById('v2-region-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (v2RegionChartInstance) {
+                v2RegionChartInstance.destroy();
+            }
+
+            v2RegionChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.75)',
+                            'rgba(245, 158, 11, 0.75)',
+                            'rgba(139, 92, 246, 0.75)',
+                            'rgba(239, 68, 68, 0.75)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#cbd5e1', padding: 16 }
+                        },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)' }
+                    }
+                }
+            });
+        }
+
+        function initV2LocalidadeChart(labels, values) {
+            const canvas = document.getElementById('v2-localidade-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (v2LocalidadeChartInstance) {
+                v2LocalidadeChartInstance.destroy();
+            }
+
+            v2LocalidadeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pendências',
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                        borderWidth: 0,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)' }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#cbd5e1' },
+                            grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#cbd5e1' },
+                            grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                        }
+                    }
+                }
+            });
+        }
+
+// Status check - DESABILITADO (conflita com loadReleitura que já atualiza tudo)
+        // A função loadReleitura() já gerencia todas as métricas, gráficos e tabelas
+        // Manter checkV2Status rodando causava o bug de sobrescrever os dados filtrados
         let lastChartData = null;
         let lastDueChartData = null;
         let lastTableData = null;
         
+        // Função mantida apenas para compatibilidade, mas não é mais chamada periodicamente
         function checkV2Status() {
-            authFetch('/api/status/releitura?date=' + encodeURIComponent(selectedDateISO))
-                .then(res => res.json())
-                .then(data => {
-                    const pill = document.getElementById('v2-conn');
-                    pill.innerText = "SISTEMA ONLINE";
-                    pill.className = "v2-status-pill online";
-                    
-                    if (data.metrics) {
-                        document.getElementById('v2-total').innerText = data.metrics.total;
-                        document.getElementById('v2-pend').innerText = data.metrics.pendentes;
-                        const realizadas = (data.metrics.realizadas !== undefined) ? data.metrics.realizadas : (data.metrics.total - data.metrics.pendentes);
-                        document.getElementById('v2-realizadas').innerText = realizadas || 0;
-                        
-                        const atrasadasEl = document.getElementById('v2-atrasadas');
-                        if (atrasadasEl && data.metrics.atrasadas !== undefined) {
-                            atrasadasEl.innerText = data.metrics.atrasadas;
-                        }
-                    }
-                    
-                    if (data.chart && JSON.stringify(data.chart) !== JSON.stringify(lastChartData)) {
-                        lastChartData = data.chart;
-                        initV2Chart(data.chart.labels, data.chart.values);
-                    }
-                    
-                    if (data.due_chart && JSON.stringify(data.due_chart) !== JSON.stringify(lastDueChartData)) {
-                        lastDueChartData = data.due_chart;
-                        initV2DueChart(data.due_chart.labels, data.due_chart.values);
-                    }
-                    
-                    if (data.details && data.details.length > 0 && JSON.stringify(data.details) !== JSON.stringify(lastTableData)) {
-                        lastTableData = data.details;
-                        const tbody = document.getElementById('v2-table-body');
-                        tbody.innerHTML = data.details.map(row => `
-                            <tr>
-                                <td>
-                                    <span class="status-tag ${row.status.toLowerCase().includes('atrasado') ? 'atrasado' : 'pendente'}">
-                                        <i data-lucide="${row.status.toLowerCase().includes('atrasado') ? 'alert-triangle' : 'clock'}"></i>
-                                        ${row.status}
-                                    </span>
-                                </td>
-                                <td>${row.ul}</td>
-                                <td>${row.inst}</td>
-                                <td>${row.endereco || '-'}</td>
-                                <td>${row.razao}</td>
-                                <td>${row.reg || '03'}</td>
-                                <td>${row.venc}</td>
-                            </tr>
-                        `).join('');
-                        lucide.createIcons();
-                    }
-                })
-                .catch(() => {
-                    const pill = document.getElementById('v2-conn');
-                    pill.innerText = "SISTEMA OFFLINE";
-                    pill.className = "v2-status-pill offline";
-                });
+            // Esta função foi desabilitada - use loadReleitura() do script principal
+            console.log('checkV2Status desabilitada - dados gerenciados por loadReleitura()');
         }
         
-        setInterval(checkV2Status, 5000);
-        checkV2Status();
+        // REMOVIDO: setInterval(checkV2Status, 5000);
+        // REMOVIDO: checkV2Status();
     </script>
+
+<div id="unrouted-modal" style="display:none; position:fixed; top:8%; left:8%; right:8%; bottom:8%; background:#0f172a; border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:16px; overflow:auto; z-index:9999;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h3 style="margin:0;">Registros não roteados</h3>
+    <button class="btn btn-secondary" onclick="closeUnrouted()">Fechar</button>
+  </div>
+  <table class="table" id="unrouted-table" style="width:100%;"></table>
+</div>
+
+<script>
+// Função para fechar o modal de não roteados
+function closeUnrouted() {
+    const modal = document.getElementById('unrouted-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
+
+
+<script>
+/**
+ * Releituras - loader oficial (usa utils.js: window.authFetch + API_BASE).
+ * Corrige:
+ * - Não sobrescrever authFetch
+ * - Atualizar IDs corretos (v2-total, v2-pend, v2-realizadas, v2-atrasadas, v2-table-body)
+ * - Renderizar charts (initV2Chart / initV2DueChart)
+ * - Exibir ações de gerência (sincronizar/zerar) + filtro região quando role for privilegiada
+ */
+(function(){
+  function getToken(){
+    return localStorage.getItem('vigilacore_token') || '';
+  }
+  function getRoleFromToken(){
+    try{
+      const token = getToken();
+      if (!token || token.split('.').length < 2) return '';
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      return String(payload.role || payload.user?.role || '').toLowerCase();
+    }catch(e){ return ''; }
+  }
+
+  function setText(id, val){
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val ?? 0);
+  }
+
+  function renderEmptyTable(message){
+    const body = document.getElementById('v2-table-body');
+    if (!body) return;
+    body.innerHTML = `
+      <tr>
+        <td colspan="7">
+          <div class="empty-state">
+            <i data-lucide="inbox"></i>
+            <p>${message}</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    try{ lucide.createIcons(); }catch(e){}
+  }
+
+  async function safeJson(res){
+    try{
+      return await res.json();
+    }catch(e){
+      return null;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const regionSel = document.getElementById('region-filter');
+    const regionContainer = document.getElementById('region-filter-container');
+    const btnSync = document.getElementById('btn-sync-teste');
+    const btnReset = document.getElementById('btn-reset-releitura');
+    const btnUnrouted = document.getElementById('btn-unrouted');
+    const unroutedCountEl = document.getElementById('unrouted-count');
+
+    const role = getRoleFromToken();
+    const canSelectRegion = ['gerencia','diretoria','desenvolvedor'].includes(role);
+    const canSync = (role === 'desenvolvedor');
+    const canReset = (role === 'desenvolvedor');
+    // "privileged" era usado em trechos antigos do script.
+    // Mantemos para evitar ReferenceError e para controlar visibilidade de cards.
+    const privileged = canSelectRegion;
+
+    // Região: gerência/diretoria/desenvolvedor
+    if (regionContainer) regionContainer.style.display = (canSelectRegion ? 'block' : 'none');
+
+    // Sincronizar + Zerar: SOMENTE desenvolvedor
+    if (btnSync) btnSync.style.display = (canSync ? 'inline-flex' : 'none');
+    if (btnReset) btnReset.style.display = (canReset ? 'inline-flex' : 'none');
+
+    async function loadReleitura(){
+      try{
+        // default: usuário comum sempre "all" (o backend ignora region nesse caso)
+        const region = (canSelectRegion && regionSel) ? (regionSel.value || 'all') : 'all';
+        // Adicionar data selecionada do calendário
+        const date = (typeof selectedDateISO !== 'undefined') ? selectedDateISO : '';
+        const qs = `?region=${encodeURIComponent(region)}&date=${encodeURIComponent(date)}`;
+        const res = await window.authFetch('/api/status/releitura' + qs, { method:'GET' });
+
+        const js = await safeJson(res);
+        if (!res.ok){
+          const msg = (js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
+        if (!js){
+          throw new Error('Resposta inválida do servidor');
+        }
+
+        // Metrics
+        const m = js.metrics || {};
+        setText('v2-total', m.total ?? 0);
+        setText('v2-pend', m.pendentes ?? 0);
+        setText('v2-realizadas', m.realizadas ?? 0);
+        setText('v2-atrasadas', m.atrasadas ?? 0);
+        setText('v2-nao-roteados', js.unrouted_count ?? 0);
+
+        // Region metrics
+        const regions = js.regions || {};
+
+        // Se precisarmos renderizar uma base que NÃO é Araxá/Uberaba/Frutal,
+        // vamos preencher o card manualmente e NÃO sobrescrever pelos IDs fixos abaixo.
+        let skipFixedRegionIds = false;
+
+        // Visibilidade por permissão (analistas/supervisor só enxergam a própria base)
+        try {
+          const cards = Array.from(document.querySelectorAll('.region-cards-grid .region-detail-card'));
+          const norm = (s) => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          if (!privileged) {
+            const keys = Object.keys(regions || {});
+            // Se o backend devolveu somente uma base (esperado), esconda as outras.
+            if (keys.length === 1) {
+              const onlyKey = keys[0];
+              const onlyNorm = norm(onlyKey);
+              const standard = ['araxa','uberaba','frutal'];
+              const isStandard = standard.includes(onlyNorm);
+              let matchedCard = null;
+              for (const c of cards) {
+                const h = c.querySelector('.region-detail-header');
+                const name = (h?.textContent || '').trim();
+                if (norm(name) === onlyNorm) {
+                  matchedCard = c;
+                }
+              }
+              // Esconde tudo
+              for (const c of cards) c.style.display = 'none';
+
+              // Se não bater com Araxá/Uberaba/Frutal, reutiliza o primeiro card e renomeia
+              const targetCard = matchedCard || cards[0] || null;
+              if (targetCard) {
+                if (!matchedCard && !isStandard) {
+                  // vai usar IDs fixos de outro card (ex.: araxa-total), então evitamos sobrescrever
+                  skipFixedRegionIds = true;
+                }
+                targetCard.style.display = '';
+                const header = targetCard.querySelector('.region-detail-header');
+                if (header) header.textContent = onlyKey;
+                const vals = targetCard.querySelectorAll('.region-metric-value');
+                const d = regions[onlyKey] || {};
+                if (vals[0]) vals[0].textContent = String(d.total ?? 0);
+                if (vals[1]) vals[1].textContent = String(d.pendentes ?? 0);
+                if (vals[2]) vals[2].textContent = String(d.realizadas ?? 0);
+                if (vals[3]) vals[3].textContent = String(d.atrasadas ?? 0);
+              }
+            } else {
+              // fallback: se por algum motivo veio mais de uma base, só mostra as presentes no payload
+              for (const c of cards) {
+                const h = c.querySelector('.region-detail-header');
+                const name = (h?.textContent || '').trim();
+                const exists = keys.some(k => norm(k) === norm(name));
+                c.style.display = exists ? '' : 'none';
+              }
+            }
+          } else {
+            // Usuário privilegiado vê todas as regiões
+            for (const c of cards) c.style.display = '';
+          }
+        } catch(e) { /* no-op */ }
+
+        // Atualização via IDs fixos (Araxá/Uberaba/Frutal)
+        if (!skipFixedRegionIds) {
+          const araxa = regions['Araxá'] || {};
+          setText('araxa-total', araxa.total ?? 0);
+          setText('araxa-pend', araxa.pendentes ?? 0);
+          setText('araxa-real', araxa.realizadas ?? 0);
+          setText('araxa-atras', araxa.atrasadas ?? 0);
+
+          const uberaba = regions['Uberaba'] || {};
+          setText('uberaba-total', uberaba.total ?? 0);
+          setText('uberaba-pend', uberaba.pendentes ?? 0);
+          setText('uberaba-real', uberaba.realizadas ?? 0);
+          setText('uberaba-atras', uberaba.atrasadas ?? 0);
+
+          const frutal = regions['Frutal'] || {};
+          setText('frutal-total', frutal.total ?? 0);
+          setText('frutal-pend', frutal.pendentes ?? 0);
+          setText('frutal-real', frutal.realizadas ?? 0);
+          setText('frutal-atras', frutal.atrasadas ?? 0);
+        }
+
+        // Charts (quando trocar de data, pode vir array vazio: renderiza placeholder para não "sumir")
+        try {
+          const cl = (js.chart && Array.isArray(js.chart.labels)) ? js.chart.labels : null;
+          const cv = (js.chart && Array.isArray(js.chart.values)) ? js.chart.values : null;
+          const has = cl && cv && cl.length && cv.length;
+          initV2Chart(has ? cl : ['Sem dados'], has ? cv : [0]);
+        } catch(e) {
+          try { if (v2ChartInstance) v2ChartInstance.destroy(); } catch(_){}
+        }
+
+        try {
+          const dl = (js.due_chart && Array.isArray(js.due_chart.labels)) ? js.due_chart.labels : null;
+          const dv = (js.due_chart && Array.isArray(js.due_chart.values)) ? js.due_chart.values : null;
+          const hasD = dl && dv && dl.length && dv.length;
+          initV2DueChart(hasD ? dl : ['Sem dados'], hasD ? dv : [0]);
+        } catch(e) {
+          try { if (v2DueChartInstance) v2DueChartInstance.destroy(); } catch(_){}
+        }
+
+
+        function renderStatusTag(status){
+          const s = (status || '').toString().trim();
+          if (!s) return '';
+          const sl = s.toLowerCase();
+          if (sl.includes('pend')) {
+            return `<span class="status-tag pendente"><i data-lucide="clock"></i>${s}</span>`;
+          }
+          if (sl.includes('atras') || sl.includes('venc')) {
+            return `<span class="status-tag atrasado"><i data-lucide="alert-triangle"></i>${s}</span>`;
+          }
+          if (sl.includes('real') || sl.includes('exec')) {
+            return `<span class="status-tag realizada"><i data-lucide="check-circle"></i>${s}</span>`;
+          }
+          return `<span class="status-tag neutral"><i data-lucide="info"></i>${s}</span>`;
+        }
+
+        // Details table
+        const body = document.getElementById('v2-table-body');
+        if (body){
+          const details = Array.isArray(js.details) ? js.details : [];
+          if (!details.length){
+            renderEmptyTable('Nenhum dado encontrado');
+          } else {
+            body.innerHTML = '';
+            for (const row of details){
+              const ul = row.ul ?? '';
+              const razao = (typeof ul === 'string' && ul.length >= 2) ? ul.slice(0,2) : '';
+              body.innerHTML += `
+                <tr>
+                  <td>${renderStatusTag(row.status ?? '')}</td>
+                  <td>${ul}</td>
+                  <td>${row.inst ?? row.instalacao ?? ''}</td>
+                  <td title="${String((row.endereco ?? row.localidade ?? '')).replace(/"/g,'&quot;')}">${row.endereco ?? row.localidade ?? ''}</td>
+                  <td>${razao || ''}</td>
+                  <td>${row.reg ?? ''}</td>
+                  <td>${row.venc ?? row.vencimento ?? ''}</td>
+                </tr>
+              `;
+            }
+          }
+
+          // Atualizar gráficos de região e localidade com base nos detalhes filtrados
+          try {
+            // Distribuição por região (inclui Não roteado)
+            const regionCounts = {};
+            for (const r of details) {
+              const isUnrouted = (String(r.route_status || '').toUpperCase() === 'UNROUTED') || !r.region;
+              const region = isUnrouted ? 'Não roteado' : String(r.region);
+              regionCounts[region] = (regionCounts[region] || 0) + 1;
+            }
+
+            const regionOrder = ['Araxá', 'Uberaba', 'Frutal', 'Não roteado'];
+            const regionLabels = regionOrder.filter(x => regionCounts[x]).concat(
+              Object.keys(regionCounts).filter(k => !regionOrder.includes(k)).sort()
+            );
+            const regionValues = regionLabels.map(l => regionCounts[l] || 0);
+
+            if (typeof initV2RegionChart === 'function') {
+              initV2RegionChart(regionLabels.length ? regionLabels : ['Sem dados'], regionLabels.length ? regionValues : [0]);
+            }
+
+            // Top Localidades
+            const locCounts = {};
+            for (const r of details) {
+              const loc = (r.localidade || '').toString().trim();
+              if (!loc) continue;
+              locCounts[loc] = (locCounts[loc] || 0) + 1;
+            }
+            const topLoc = Object.entries(locCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const locLabels = topLoc.map(x => x[0]);
+            const locValues = topLoc.map(x => x[1]);
+
+            if (typeof initV2LocalidadeChart === 'function') {
+              initV2LocalidadeChart(locLabels.length ? locLabels : ['Sem dados'], locLabels.length ? locValues : [0]);
+            }
+          } catch (e) {
+            console.error('Erro ao atualizar gráficos:', e);
+          }
+        }
+
+        // Unrouted badge
+        if (privileged && btnUnrouted && unroutedCountEl){
+          const c = Number(js.unrouted_count || 0);
+          unroutedCountEl.textContent = String(c);
+          btnUnrouted.style.display = c > 0 ? 'inline-flex' : 'none';
+        }
+
+        try{ lucide.createIcons(); }catch(e){}
+      }catch(err){
+        console.error('Erro ao carregar Releituras:', err);
+        setText('v2-total', 0);
+        setText('v2-pend', 0);
+        setText('v2-realizadas', 0);
+        setText('v2-atrasadas', 0);
+        renderEmptyTable('Falha ao carregar dados. Verifique se está logado e se o backend está rodando.');
+      }
+    }
+
+    // Expor para o calendário (script acima) conseguir atualizar a tela
+    window.loadReleitura = loadReleitura;
+
+    // Actions
+    btnSync?.addEventListener('click', async () => {
+      if (!canSync) return;
+      btnSync.disabled = true;
+      const old = btnSync.innerText;
+      btnSync.innerText = 'Sincronizando...';
+      try{
+        const r = await window.authFetch('/api/sync/releitura', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+        const js = await safeJson(r);
+        if (!r.ok){
+          throw new Error((js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${r.status}`);
+        }
+        alert((js && (js.message || js.msg)) ? (js.message || js.msg) : 'Sincronização concluída');
+        await loadReleitura();
+      }catch(e){
+        alert('Falha ao sincronizar: ' + (e?.message || e));
+      }finally{
+        btnSync.disabled = false;
+        btnSync.innerText = old;
+      }
+    });
+
+    btnReset?.addEventListener('click', async () => {
+      if (!canReset) return;
+      if(!confirm('Tem certeza que deseja zerar a Releitura (GLOBAL — todos os usuários)?')) return;
+      try{
+        const r = await window.authFetch('/api/releitura/reset', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+        const js = await safeJson(r);
+        if (!r.ok){
+          throw new Error((js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${r.status}`);
+        }
+        alert((js && (js.message || js.msg)) ? (js.message || js.msg) : 'Releitura zerada');
+        await loadReleitura();
+      }catch(e){
+        alert('Falha ao zerar: ' + (e?.message || e));
+      }
+    });
+
+    btnUnrouted?.addEventListener('click', async () => {
+      try{
+        const r = await window.authFetch('/api/releitura/unrouted', { method:'GET' });
+        const js = await safeJson(r);
+        if (!r.ok){
+          throw new Error((js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${r.status}`);
+        }
+        const items = (js && js.items) ? js.items : [];
+        const modal = document.getElementById('unrouted-modal');
+        const t = document.getElementById('unrouted-table');
+        if (!modal || !t) return;
+        t.innerHTML = '<tr><th>Motivo</th><th>Região</th><th>UL</th><th>Instalação</th><th>Endereço</th><th>Vencimento</th></tr>';
+        for (const row of items){
+          t.innerHTML += `
+            <tr>
+              <td>${row.reason || ''}</td>
+              <td>${row.region || ''}</td>
+              <td>${row.ul || ''}</td>
+              <td>${row.instalacao || ''}</td>
+              <td>${row.endereco || ''}</td>
+              <td>${row.vencimento || ''}</td>
+            </tr>
+          `;
+        }
+        modal.style.display = 'block';
+      }catch(e){
+        alert('Falha ao carregar não roteados: ' + (e?.message || e));
+      }
+    });
+
+    regionSel?.addEventListener('change', loadReleitura);
+
+    // Initial load
+    loadReleitura();
+  });
+})();
+</script>
+
 </body>
 </html>

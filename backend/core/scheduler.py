@@ -193,65 +193,22 @@ class AutoScheduler:
         return creds, int(manager_id)
 
     def _execute_releitura_sync(self):
-        """Executa download e processamento de releitura"""
+        """Executa download e processamento de releitura (REGIONAL)"""
         if not self.auto_releitura:
             return
-        
+
         if not self._is_within_schedule():
             logger.info("⏰ Fora do horário agendado - pulando sync de releitura")
             return
-        
-        logger.info("🔄 Iniciando sync automático de RELEITURA...")
-        
+
+        logger.info("🔄 Iniciando sync automático de RELEITURA (regional)...")
+
         try:
-            from core.portal_scraper import download_releitura_excel
-            from core.analytics import get_file_hash, deep_scan_excel
-            from core.database import is_file_duplicate, save_releitura_data
-            from core.portal_scraper import _default_download_dir
-
-            creds, manager_id = self._get_scheduler_portal_credentials()
-            # Se não há credenciais, apenas avisa no console e não trava o app.
-            if not creds:
-                return
-
-            # ID do usuário para salvar dados (prioriza o .env, senão usa o gerente)
-            save_user_id = int(self.user_id) if self.user_id else int(manager_id) if manager_id else None
-            if not save_user_id:
-                logger.error("❌ Scheduler: nenhum user_id disponível para salvar dados (SCHEDULER_USER_ID ausente e gerente não encontrado)")
-                return
-
-            # Download (sempre salva em data/exports na raiz do projeto)
-            downloaded_path = download_releitura_excel(
-                portal_user=creds['portal_user'],
-                portal_pass=creds['portal_password'],
-                download_dir=str(_default_download_dir()),
-            )
-            if not downloaded_path or not os.path.exists(downloaded_path):
-                logger.error("❌ Falha no download do relatório de releitura")
-                return
-            
-            logger.info(f"✅ Arquivo baixado: {downloaded_path}")
-            
-            # Processar
-            file_hash = get_file_hash(downloaded_path)
-            details = deep_scan_excel(downloaded_path) or []
-            
-            if not details:
-                logger.warning("⚠️ Nenhum dado encontrado no Excel de releitura")
-                return
-            
-            # Verificar duplicata
-            if is_file_duplicate(file_hash, 'releitura', save_user_id):
-                logger.info("ℹ️ Relatório já processado anteriormente (duplicado)")
-                return
-            
-            # Salvar
-            save_releitura_data(details, file_hash, save_user_id)
-            logger.info(f"✅ Releitura sincronizada: {len(details)} registros processados")
-            
+            # Reusa a rotina regional consolidada (no final deste arquivo)
+            sync_releitura_task()
         except Exception as e:
-            logger.error(f"❌ Erro no sync de releitura: {e}", exc_info=True)
-    
+            logger.error(f"❌ Erro no sync regional de releitura: {e}", exc_info=True)
+
     def _execute_porteira_sync(self):
         """Executa download e processamento de porteira"""
         if not self.auto_porteira:
@@ -304,8 +261,21 @@ class AutoScheduler:
                 logger.info("ℹ️ Relatório já processado anteriormente (duplicado)")
                 return
             
-            # Salvar
-            save_porteira_table_data(details, save_user_id)
+            # Salvar (distribui para todos os usuários para que cada base veja seus dados)
+            try:
+                import sqlite3
+                from core.database import DB_PATH as _DB
+                conn = sqlite3.connect(str(_DB))
+                cur = conn.cursor()
+                cur.execute('SELECT id FROM users')
+                all_ids = [int(r[0]) for r in cur.fetchall() if r and r[0] is not None]
+                conn.close()
+            except Exception:
+                all_ids = [int(save_user_id)]
+
+            for _uid in all_ids:
+                save_porteira_table_data(details, _uid, file_hash=file_hash)
+
             save_file_history('porteira', len(details), file_hash, save_user_id)
             logger.info(f"✅ Porteira sincronizada: {len(details)} registros processados")
             
@@ -469,3 +439,69 @@ if __name__ == "__main__":
             print("\n👋 Scheduler parado")
     else:
         print("⚠️ Scheduler desabilitado no .env")
+
+# -------------------------------
+# Scheduler: Releitura (regional)
+# -------------------------------
+def sync_releitura_task():
+    try:
+        from core.database import get_user_id_by_username, get_portal_credentials, get_releitura_region_targets, get_user_id_by_matricula, save_releitura_data
+        from core.portal_scraper import download_releitura_excel
+        from core.analytics import deep_scan_excel, get_file_hash
+        from core.releitura_routing_v2 import route_releituras
+        import os
+
+        manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
+        manager_id = get_user_id_by_username(manager_username)
+        if not manager_id:
+            print(f"⚠️ [scheduler] Gerente '{manager_username}' não existe no banco. Sync Releitura abortado.")
+            return
+
+        creds = get_portal_credentials(manager_id)
+        if not creds:
+            print(f"⚠️ [scheduler] Credenciais do portal não configuradas para '{manager_username}'.")
+            return
+
+        downloaded_path = download_releitura_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
+        if not downloaded_path or not os.path.exists(downloaded_path):
+            print("❌ [scheduler] Releitura: arquivo não baixado.")
+            return
+
+        file_hash = get_file_hash(downloaded_path)
+        details = deep_scan_excel(downloaded_path)
+        
+        # Roteamento V2
+        details_v2 = route_releituras(details)
+        
+        # Compatibilidade com o loop abaixo
+        routed_map = {"Araxá": [], "Uberaba": [], "Frutal": []}
+        unrouted_list = []
+        for it in details_v2:
+            reg = it.get("region")
+            if it.get("route_status") == "ROUTED" and reg in routed_map:
+                routed_map[reg].append(it)
+            else:
+                unrouted_list.append(it)
+
+        targets = get_releitura_region_targets()
+
+        for region, items in routed_map.items():
+            matricula = targets.get(region)
+            uid = get_user_id_by_matricula(matricula) if matricula else None
+            if not uid:
+                for it in items:
+                    it["route_status"]="UNROUTED"
+                    it["route_reason"]="REGIAO_SEM_MATRICULA"
+                    it["region"]=region
+                if items:
+                    save_releitura_data(items, file_hash, manager_id)
+                continue
+            if items:
+                save_releitura_data(items, file_hash, uid)
+
+        if unrouted_list:
+            save_releitura_data(unrouted_list, file_hash, manager_id)
+
+        print("✅ [scheduler] Sync Releitura concluído.")
+    except Exception as e:
+        print(f"❌ [scheduler] Erro no sync Releitura: {e}")

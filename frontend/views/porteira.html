@@ -125,129 +125,38 @@
             color: var(--v2-danger);
         }
 
-        /* Cycle Selector Card */
-        .cycle-selector-card {
-            background: var(--v2-surface);
-            border: 1px solid var(--v2-border);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-
-        .cycle-header {
+        /* Cycle Indicator - Minimalista ao lado do Relógio */
+        .cycle-indicator {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .cycle-info {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .cycle-label {
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--v2-primary);
-            margin-bottom: 6px;
-        }
-
-        .cycle-title {
-            font-size: 1.2rem;
-            font-weight: 900;
-            color: var(--v2-text);
-            margin-bottom: 4px;
-        }
-
-        .cycle-subtitle {
-            font-size: 0.85rem;
-            color: var(--v2-text-dim);
-        }
-
-        .cycle-buttons {
-            display: flex;
+            flex-direction: row;
             align-items: center;
             gap: 8px;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--v2-border);
-            border-radius: 12px;
-        }
-
-        .cycle-btn {
-            padding: 10px 18px;
-            border: none;
+            background: rgba(0, 209, 255, 0.06);
+            border: 1px solid rgba(0, 209, 255, 0.15);
+            padding: 8px 14px;
             border-radius: 10px;
-            background: transparent;
-            color: var(--v2-text-dim);
-            font-size: 0.8rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
             white-space: nowrap;
         }
 
-        .cycle-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
+        .cycle-indicator:hover {
+            background: rgba(0, 209, 255, 0.1);
+            border-color: rgba(0, 209, 255, 0.25);
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 209, 255, 0.15);
         }
 
-        .cycle-btn.is-active {
-            background: rgba(35, 134, 54, 0.15);
-            color: var(--v2-success);
-            box-shadow: 0 0 0 1px rgba(35, 134, 54, 0.3) inset;
+        .cycle-indicator i {
+            color: var(--v2-primary);
+            flex-shrink: 0;
         }
 
-        .cycle-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-        }
-
-        .cycle-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--v2-border);
-            border-radius: 12px;
-            padding: 14px;
-            text-align: center;
-        }
-
-        .cycle-card.base {
-            border-color: rgba(88, 166, 255, 0.3);
-        }
-
-        .cycle-card.rural {
-            border-color: rgba(35, 134, 54, 0.3);
-        }
-
-        .cycle-card.cycle {
-            border-color: rgba(210, 153, 34, 0.3);
-        }
-
-        .cycle-card.always {
-            border-color: rgba(248, 81, 73, 0.3);
-        }
-
-        .cycle-card-label {
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--v2-text-dim);
-            margin-bottom: 8px;
-        }
-
-        .cycle-card-value {
-            font-size: 1rem;
-            font-weight: 900;
-            color: var(--v2-text);
+        .cycle-indicator span {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--v2-primary);
+            letter-spacing: 0.3px;
         }
 
         /* Chart Cards */
@@ -310,6 +219,204 @@
             border-radius: 16px;
             overflow: hidden;
             margin-bottom: 20px;
+        }
+
+        /* Abertura de Porteira Table Styles */
+        .abertura-porteira-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .abertura-porteira-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--v2-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .abertura-porteira-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .abertura-porteira-title i {
+            width: 22px;
+            height: 22px;
+            color: var(--v2-primary);
+        }
+
+        .abertura-porteira-title h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .abertura-porteira-container {
+            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .abertura-month-section {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .abertura-month-section:first-child {
+            border-right: 1px solid var(--v2-border);
+        }
+
+        .abertura-month-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--v2-border);
+            text-align: center;
+        }
+
+        .abertura-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .abertura-table thead th {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--v2-text-dim);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .abertura-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .abertura-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .abertura-table tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .abertura-table tbody td {
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .abertura-table tbody td:first-child {
+            font-weight: 700;
+            color: var(--v2-primary);
+        }
+
+        .abertura-table tbody td.atraso-value {
+            color: var(--v2-primary);
+            font-weight: 700;
+        }
+
+        /* Cores para OSB/CNV na Abertura de Porteira */
+        .abertura-table tbody td.abertura-qty {
+            font-weight: 800;
+        }
+        /* Dentro do prazo: amarelo */
+        .abertura-table tbody td.abertura-qty.qty-ok {
+            color: rgba(255, 193, 7, 0.95);
+        }
+        /* Atrasado: vermelho */
+        .abertura-table tbody td.abertura-qty.qty-late {
+            color: rgba(248, 81, 73, 0.95);
+        }
+        /* Zero: verde */
+        .abertura-table tbody td.abertura-qty.qty-zero {
+            color: rgba(63, 185, 80, 0.95);
+        }
+
+        .abertura-table tfoot tr {
+            background: rgba(255, 255, 255, 0.02);
+            font-weight: 700;
+        }
+
+        .abertura-table tfoot td {
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-top: 1px solid var(--v2-border);
+            border-bottom: none;
+        }
+
+        .abertura-table tfoot td:first-child {
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.7rem;
+        }
+
+        /* Empty State para Abertura de Porteira */
+        .abertura-empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            background: rgba(248, 81, 73, 0.03);
+            border: 2px dashed var(--v2-danger);
+            border-radius: 12px;
+            margin: 16px;
+        }
+
+        .abertura-empty-state i {
+            width: 48px;
+            height: 48px;
+            color: var(--v2-danger);
+            margin-bottom: 16px;
+        }
+
+        .abertura-empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-danger);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .abertura-empty-state-message {
+            font-size: 0.9rem;
+            color: var(--v2-text-dim);
+            line-height: 1.5;
+        }
+
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .abertura-porteira-container {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            
+            .abertura-month-section:first-child {
+                border-right: none;
+                border-bottom: 1px solid var(--v2-border);
+            }
         }
 
         .table-header {
@@ -500,6 +607,41 @@
             border-color: rgba(248, 81, 73, 0.5);
         }
 
+        /* Region Filter Dropdown (igual ao Releitura) */
+        .region-filter-container {
+            display: inline-block;
+        }
+
+        .region-select {
+            min-width: 200px;
+            padding: 10px 16px;
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+            color: var(--v2-text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .region-select:hover {
+            border-color: rgba(0, 209, 255, 0.5);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .region-select:focus {
+            border-color: var(--v2-primary);
+            box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+        }
+
+        .region-select option {
+            background: var(--v2-bg);
+            color: var(--v2-text);
+            padding: 10px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .metrics-grid {
@@ -536,7 +678,69 @@
                 min-width: 100px;
             }
         }
-    </style>
+    
+/* Toast Notifications */
+@keyframes slideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(400px); opacity: 0; }
+}
+.spinning { animation: spin 1s linear infinite; }
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Badge de Região */
+.region-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.region-badge.araxa {
+    background: rgba(88, 166, 255, 0.15);
+    color: #58a6ff;
+    border: 1px solid rgba(88, 166, 255, 0.3);
+}
+.region-badge.uberaba {
+    background: rgba(35, 134, 54, 0.15);
+    color: #238636;
+    border: 1px solid rgba(35, 134, 54, 0.3);
+}
+.region-badge.frutal {
+    background: rgba(210, 153, 34, 0.15);
+    color: #d29922;
+    border: 1px solid rgba(210, 153, 34, 0.3);
+}
+.region-badge.nao-mapeado {
+    background: rgba(139, 148, 158, 0.15);
+    color: #8b949e;
+    border: 1px solid rgba(139, 148, 158, 0.3);
+}
+
+    
+/* Top filters bar (moved from table header to superior area) */
+.top-filters-bar{
+    margin: 18px 0 6px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.03);
+    box-shadow: 0 8px 24px rgba(0,0,0,.22);
+}
+.top-filters-bar .table-filters{
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+</style>
 </head>
 <body class="page-porteira">
     <div class="v2-container">
@@ -555,10 +759,6 @@
                 <a href="menu_principal.html" class="v2-nav-item" data-title="Menu Principal">
                     <i data-lucide="globe"></i>
                     <span class="v2-nav-text">Menu Principal</span>
-                </a>
-                <a href="dashboard.html" class="v2-nav-item" data-title="Dashboard">
-                    <i data-lucide="layout-dashboard"></i>
-                    <span class="v2-nav-text">Dashboard</span>
                 </a>
                 <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
                     <i data-lucide="refresh-cw"></i>
@@ -604,14 +804,45 @@
                     <p class="v2-header-subtitle">Análise de Leituras e Releituras | CEMIG SGL</p>
                 </div>
                 <div class="v2-header-right">
+<div class="header-actions-group" style="gap: 12px;">
+                        <div class="region-filter-container">
+                            <select id="regiao-filter" class="region-select">
+                                <option value="">Geral (todas)</option>
+                                <option value="Araxá">Araxá</option>
+                                <option value="Uberaba">Uberaba</option>
+                                <option value="Frutal">Frutal</option>
+                            </select>
+                        </div>
+    <button type="button" class="action-btn primary" id="btn-sync-porteira" title="Sincronizar com Portal CEMIG">
+        <i data-lucide="refresh-ccw"></i>
+        <span>Sincronizar</span>
+    </button>
+<button type="button" class="action-btn danger" id="btn-reset-porteira" title="Zerar banco de dados">
+        <i data-lucide="trash-2"></i>
+        <span>Zerar Banco</span>
+    </button>
+</div>
+
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
                     
-                    <div class="v2-clock-widget">
-                        <div class="v2-time-display" id="v2-clock-val">--:--</div>
-                        <div class="v2-date-display" id="v2-date">--/--/----</div>
+                    <!-- Grupo de Relógio e Ciclo -->
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <!-- Indicador de Ciclo Minimalista -->
+                        <div class="cycle-indicator">
+                            <i data-lucide="calendar" style="width: 16px; height: 16px;"></i>
+                            <span id="current-cycle-display">Ciclo 98</span>
+                        </div>
+                        
+                        <div class="v2-clock-widget">
+                            <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                            <div class="v2-date-display" id="v2-date">--/--/----</div>
+                        </div>
                     </div>
                 </div>
+
+
             </header>
+
 
             <!-- MAIN CONTENT -->
             <main class="v2-main">
@@ -632,29 +863,9 @@
                             <div class="metric-icon">
                                 <i data-lucide="x-circle"></i>
                             </div>
-                            <span class="metric-label">Leituras Não Exec.</span>
+                            <span class="metric-label">Não Executadas</span>
                         </div>
                         <div class="metric-value" id="v2-leituras-nao-exec">0</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <div class="metric-icon">
-                                <i data-lucide="refresh-cw"></i>
-                            </div>
-                            <span class="metric-label">Total Releituras</span>
-                        </div>
-                        <div class="metric-value" id="v2-total-releituras">0</div>
-                    </div>
-                    
-                    <div class="metric-card danger">
-                        <div class="metric-header">
-                            <div class="metric-icon">
-                                <i data-lucide="alert-triangle"></i>
-                            </div>
-                            <span class="metric-label">Releituras Não Exec.</span>
-                        </div>
-                        <div class="metric-value" id="v2-releituras-nao-exec">0</div>
                     </div>
                     
                     <div class="metric-card danger">
@@ -662,30 +873,31 @@
                             <div class="metric-icon">
                                 <i data-lucide="percent"></i>
                             </div>
-                            <span class="metric-label">% Releit. Não Exec.</span>
+                            <span class="metric-label">% Não Executada</span>
                         </div>
-                        <div class="metric-value" id="v2-perc-releituras-nao-exec">0%</div>
+                        <div class="metric-value" id="v2-perc-nao-executada">0.0%</div>
                     </div>
-                </div>
-
-                <!-- CYCLE SELECTOR -->
-                <div class="cycle-selector-card">
-                    <div class="cycle-header">
-                        <div class="cycle-info">
-                            <div class="cycle-label">Rural OSB</div>
-                            <div class="cycle-title">Selecionar Ciclo</div>
-                            <p class="cycle-subtitle">Razões rurais por mês de vencimento</p>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="alert-octagon"></i>
+                            </div>
+                            <span class="metric-label">Impedimentos</span>
                         </div>
-                        
-                        <div class="cycle-buttons">
-                            <button type="button" class="cycle-btn is-active" data-cycle="" id="cycle-btn-all">Todos</button>
-                            <button type="button" class="cycle-btn" data-cycle="97" id="cycle-btn-97">Ciclo 97</button>
-                            <button type="button" class="cycle-btn" data-cycle="98" id="cycle-btn-98">Ciclo 98</button>
-                            <button type="button" class="cycle-btn" data-cycle="99" id="cycle-btn-99">Ciclo 99</button>
+                        <div class="metric-value" id="v2-impedimentos">0</div>
+                    </div>
+                    
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="trending-up"></i>
+                            </div>
+                            <span class="metric-label">% Impedimento</span>
                         </div>
+                        <div class="metric-value" id="v2-perc-impedimento">0.0%</div>
                     </div>
 
-                    <div class="cycle-cards-grid" id="cycle-ul-cards"></div>
                 </div>
 
                 <!-- MAIN CHART -->
@@ -727,34 +939,36 @@
                             <i data-lucide="table"></i>
                             <h3>Pendências Separadas por Contrato</h3>
                         </div>
-                        
                         <div class="table-filters">
                             <label for="razao-filter" class="filter-label">Razão:</label>
                             <select id="razao-filter" class="filter-select">
                                 <option value="">Todas</option>
                             </select>
-                            
-                            <input type="text" id="search-input" class="filter-input" 
-                                   placeholder="Buscar UL, Contrato, Tipo UL...">
+
+                            <input type="text" id="search-input" class="filter-input" placeholder="Buscar UL, Contrato, Localidade, Região...">
                         </div>
+
                     </div>
                     <div class="table-scroll">
                         <table class="data-table">
                             <thead>
-                                <tr>
-                                    <th>Contrato</th>
-                                    <th>UL</th>
-                                    <th>Tipo UL</th>
-                                    <th>Razão</th>
-                                    <th>Total Leituras</th>
-                                    <th>Não Executadas</th>
-                                    <th>Releituras</th>
-                                    <th>Releit. Não Exec.</th>
-                                </tr>
-                            </thead>
+    <tr>
+        <th>Região</th>
+        <th>Localidade</th>
+        <th>Contrato</th>
+        <th>UL</th>
+        <th>Tipo UL</th>
+        <th>Razão</th>
+        <th>Total Leituras</th>
+        <th>Não Executadas</th>
+        <th>% Não Exec.</th>
+        <th>Impedimentos</th>
+    </tr>
+</thead>
+
                             <tbody id="v2-table-body">
                                 <tr>
-                                    <td colspan="8">
+                                    <td colspan="10">
                                         <div class="empty-state">
                                             <i data-lucide="inbox"></i>
                                             <p>Nenhum dado carregado</p>
@@ -763,6 +977,363 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- ABERTURA DE PORTEIRA TABLE -->
+                <div class="abertura-porteira-card">
+                    <div class="abertura-porteira-header">
+                        <div class="abertura-porteira-title">
+                            <i data-lucide="calendar-check"></i>
+                            <h3>Abertura de Porteira</h3>
+                        </div>
+                    </div>
+                    <div class="abertura-porteira-container">
+                        <!-- MÊS ANTERIOR -->
+                        <div class="abertura-month-section">
+                            <div class="abertura-month-title" id="previous-month-title">Mês Anterior</div>
+                            <table class="abertura-table">
+                                <thead>
+                                    <tr>
+                                        <th>Razão</th>
+                                        <th>Data</th>
+                                        <th>OSB</th>
+                                        <th>CNV</th>
+                                        <th>Quantidade</th>
+                                        <th>Atraso</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="abertura-previous-tbody">
+                                    <tr>
+                                        <td>RZ 01</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 02</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 03</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 04</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 05</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 06</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 07</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 08</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 09</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 10</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 11</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 12</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 13</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 14</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 15</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 16</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 17</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 18</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td>-</td>
+                                        <td id="previous-total-osb">0</td>
+                                        <td id="previous-total-cnv">0</td>
+                                        <td id="previous-total-quantidade">0</td>
+                                        <td id="previous-total-atraso">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- MÊS ATUAL -->
+                        <div class="abertura-month-section">
+                            <div class="abertura-month-title" id="current-month-title">Mês Atual</div>
+                            <table class="abertura-table">
+                                <thead>
+                                    <tr>
+                                        <th>Razão</th>
+                                        <th>Data</th>
+                                        <th>OSB</th>
+                                        <th>CNV</th>
+                                        <th>Quantidade</th>
+                                        <th>Atraso</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="abertura-current-tbody">
+                                    <tr>
+                                        <td>RZ 01</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 02</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 03</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 04</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 05</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 06</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 07</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 08</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 09</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 10</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 11</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 12</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 13</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 14</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 15</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 16</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 17</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td>RZ 18</td>
+                                        <td>--/--</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td class="atraso-value">0</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td>-</td>
+                                        <td id="current-total-osb">0</td>
+                                        <td id="current-total-cnv">0</td>
+                                        <td id="current-total-quantidade">0</td>
+                                        <td id="current-total-atraso">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -788,13 +1359,80 @@
         let universeNeedsRefresh = true;
         let universeRows = [];
 
-        // Cycle rules
+        // Cycle rules (Porteira)
+        // A coluna "Razao" no relatório fica em 01..18 (2 primeiros dígitos da UL)
+        // e cada ciclo (97/98/99) agrupa essas razões.
         const CYCLE_RAZOES = {
-            "97": [90, 91],
-            "98": [92, 93],
-            "99": [89, 94],
+            "97": [1, 4, 7, 10, 13, 16],
+            "98": [2, 5, 8, 11, 14, 17],
+            "99": [3, 6, 9, 12, 15, 18],
         };
-        const RURAL_ALWAYS = [96];
+
+        /**
+         * Busca informações do ciclo atual do backend
+         */
+        async function fetchCurrentCycleInfo() {
+            try {
+                const res = await authFetch(buildUrl('/api/porteira/current-cycle', false, false));
+                const data = await res.json();
+                
+                if (data.success && data.data) {
+                    const cycleInfo = data.data;
+                    selectedCycle = cycleInfo.ciclo;
+                    
+                    // Atualiza o display do ciclo atual (formato minimalista)
+                    const displayEl = document.getElementById('current-cycle-display');
+                    if (displayEl) {
+                        displayEl.textContent = `Ciclo ${cycleInfo.ciclo} • ${cycleInfo.mes}`;
+                    }
+                    
+                    console.log(`🔄 Ciclo automático obtido do servidor: Ciclo ${cycleInfo.ciclo} (${cycleInfo.mes})`);
+                    return cycleInfo;
+                } else {
+                    console.warn('Falha ao obter ciclo atual do servidor');
+                    // Fallback para cálculo local
+                    return getAutoCycleFallback();
+                }
+            } catch (error) {
+                console.error('Erro ao buscar ciclo atual:', error);
+                // Fallback para cálculo local
+                return getAutoCycleFallback();
+            }
+        }
+
+        /**
+         * Calcula o ciclo atual localmente como fallback
+         */
+        function getAutoCycleFallback() {
+            const now = new Date();
+            const month = now.getMonth() + 1; // 1-12
+            
+            const monthToCycle = {
+                1: "97", 2: "98", 3: "99",
+                4: "97", 5: "98", 6: "99",
+                7: "97", 8: "98", 9: "99",
+                10: "97", 11: "98", 12: "99"
+            };
+            
+            const monthNames = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                              "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            
+            selectedCycle = monthToCycle[month];
+            
+            const displayEl = document.getElementById('current-cycle-display');
+            if (displayEl) {
+                displayEl.textContent = `Ciclo ${selectedCycle} • ${monthNames[month]}`;
+            }
+            
+            console.log(`🔄 Ciclo automático calculado localmente: Ciclo ${selectedCycle} (${monthNames[month]})`);
+            
+            return {
+                ciclo: selectedCycle,
+                mes: monthNames[month],
+                mes_numero: month,
+                ano: now.getFullYear()
+            };
+        }
 
         // Clock
         setInterval(() => {
@@ -806,18 +1444,24 @@
         }, 1000);
 
         // Helper functions
-        function getAllowedRuralRazoens(cycle) {
-            const c = (cycle || "").toString().trim();
-            const base = (CYCLE_RAZOES[c] || []).slice();
-            const cycNum = (c && String(parseInt(c,10)) === c) ? [parseInt(c,10)] : [];
-            return [...base, ...cycNum, ...RURAL_ALWAYS];
+        function getSelectedRegion() {
+            return (document.getElementById('regiao-filter')?.value || '').toString().trim();
         }
 
-        function buildUrl(path, includeCycle = true) {
+        function getAllowedRuralRazoens(cycle) {
+            const c = (cycle || "").toString().trim();
+            return (CYCLE_RAZOES[c] || []).slice();
+        }
+
+        function buildUrl(path, includeCycle = true, includeRegion = true) {
             const base = (window.VIGILACORE_API_BASE || '').replace(/\/$/, '') || 'http://127.0.0.1:5000';
             const url = new URL(path, base);
             if (includeCycle && selectedCycle) {
                 url.searchParams.set('ciclo', selectedCycle);
+            }
+            if (includeRegion) {
+                const regiao = getSelectedRegion();
+                if (regiao) url.searchParams.set('regiao', regiao);
             }
             if (cacheBust) {
                 url.searchParams.set('_t', String(cacheBust));
@@ -838,7 +1482,6 @@
 
         function setCycle(cycle) {
             selectedCycle = (cycle || "").toString().trim();
-            updateCycleButtons();
 
             const razaoSel = document.getElementById('razao-filter');
             if (razaoSel) razaoSel.value = "";
@@ -848,56 +1491,49 @@
             refreshAll(true);
         }
 
-        function updateCycleButtons() {
-            const btnAll = document.getElementById('cycle-btn-all');
-            const btn97 = document.getElementById('cycle-btn-97');
-            const btn98 = document.getElementById('cycle-btn-98');
-            const btn99 = document.getElementById('cycle-btn-99');
 
-            const buttons = [btnAll, btn97, btn98, btn99].filter(Boolean);
-            buttons.forEach(b => b.classList.remove('is-active'));
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    const colors = {
+        success: { bg: '#238636', icon: 'check-circle' },
+        error: { bg: '#f85149', icon: 'x-circle' },
+        warning: { bg: '#d29922', icon: 'alert-triangle' },
+        info: { bg: '#58a6ff', icon: 'info' }
+    };
 
-            const map = {"": btnAll, "97": btn97, "98": btn98, "99": btn99};
-            const activeBtn = map[selectedCycle] || btnAll;
-            if (activeBtn) activeBtn.classList.add('is-active');
-        }
+    const config = colors[type] || colors.info;
 
-        function renderCycleUniverseInfo() {
-            const cards = document.getElementById('cycle-ul-cards');
-            if (!cards) return;
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <i data-lucide="${config.icon}" style="width: 20px; height: 20px;"></i>
+            <span>${message}</span>
+        </div>
+    `;
 
-            let cardModels = [];
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${config.bg};
+        color: white;
+        padding: 14px 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 300px;
+        animation: slideIn 0.3s ease;
+    `;
 
-            if (!selectedCycle) {
-                cardModels = [
-                    {label: "BASE", value: "R01–R88", tone: "base"},
-                    {label: "C97", value: "R90 • R91 • R97", tone: "cycle"},
-                    {label: "C98", value: "R92 • R93 • R98", tone: "cycle"},
-                    {label: "C99", value: "R89 • R94 • R99", tone: "cycle"},
-                    {label: "SEMPRE", value: "R96", tone: "always"},
-                ];
-            } else {
-                const allowed = getAllowedRuralRazoens(selectedCycle).map(r => "R" + String(r).padStart(2,"0"));
-                const cycleNum = "R" + String(parseInt(selectedCycle,10)).padStart(2,"0");
-                const always = "R96";
-                const rurals = allowed.filter(x => x !== always && x !== cycleNum);
+    document.body.appendChild(toast);
+    lucide.createIcons();
 
-                cardModels = [
-                    {label: "BASE", value: "R01–R88", tone: "base"},
-                    {label: "RURAL", value: rurals[0] || "—", tone: "rural"},
-                    {label: "RURAL", value: rurals[1] || "—", tone: "rural"},
-                    {label: "CICLO", value: cycleNum, tone: "cycle"},
-                    {label: "SEMPRE", value: always, tone: "always"},
-                ];
-            }
-
-            cards.innerHTML = cardModels.map(m => `
-                <div class="cycle-card ${m.tone}">
-                    <div class="cycle-card-label">${m.label}</div>
-                    <div class="cycle-card-value">${m.value}</div>
-                </div>
-            `).join("");
-        }
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
 
         // Chart rendering
         async function renderChart() {
@@ -1041,12 +1677,11 @@
                     allTableData = (data.data || []).filter(r =>
                         (Number(r.Leituras_Nao_Executadas || 0) > 0) || (Number(r.Releituras_Nao_Executadas || 0) > 0)
                     );
-                    filteredTableData = [...allTableData];
-                    
+
                     updateMetrics(data.totals);
                     updateRazaoFilter();
-                    renderTable();
-                    renderCycleUniverseInfo();
+                    // Aplica filtros atuais (Região no topo + Razão/Busca na tabela)
+                    filterTable();
                     
                     updateConnectionStatus(true);
                 } else {
@@ -1059,39 +1694,162 @@
             }
         }
 
-        function updateMetrics(totals) {
-            document.getElementById('v2-total-leituras').innerText = totals.total_leituras || 0;
-            document.getElementById('v2-leituras-nao-exec').innerText = totals.leituras_nao_exec || 0;
-            document.getElementById('v2-total-releituras').innerText = totals.total_releituras || 0;
-            document.getElementById('v2-releituras-nao-exec').innerText = totals.releituras_nao_exec || 0;
-            const totalRel = Number(totals.total_releituras || 0);
-            const naoExecRel = Number(totals.releituras_nao_exec || 0);
-            const perc = totalRel > 0 ? ((naoExecRel / totalRel) * 100) : 0;
-            const percEl = document.getElementById('v2-perc-releituras-nao-exec');
-            if (percEl) percEl.innerText = `${perc.toFixed(1)}%`;
+        
+        // Abertura de Porteira (Mês atual x Mês anterior)
+        async function loadAberturaPorteira() {
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/abertura"));
+                const data = await res.json();
+
+                if (data && data.success) {
+                    renderAberturaSide('previous', data.previous);
+                    renderAberturaSide('current', data.current);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar Abertura de Porteira:", error);
+            }
+        }
+
+        
+        function _formatRazaoRZ(raw) {
+            // Aceita: "01", "R01", "RZ 01" e similares.
+            const s = String(raw || '').trim();
+            if (!s) return '';
+            const matches = s.match(/\d+/g) || [];
+            const digits = matches.join('');
+            if (!digits) return '';
+            const two = digits.slice(-2).padStart(2, '0');
+            return `RZ ${two}`;
+        }
+
+        function _fmtNumberOrBlank(v) {
+            // null/undefined => lacuna (mês sem dados). 0 deve aparecer como "0".
+            if (v === null || v === undefined) return '';
+            const n = Number(v);
+            return Number.isFinite(n) ? String(n) : '';
+        }
+
+        function _aberturaQtyClass(v, atraso, hasData) {
+            // Regras solicitadas:
+            // - Dentro do prazo: amarelo
+            // - Atrasado: vermelho
+            // - Zero: verde
+            // - Se mês SEM dados (lacuna), não aplica classe
+            if (!hasData && (v === null || v === undefined)) return '';
+            const n = Number((v === null || v === undefined) ? 0 : v);
+            if (!Number.isFinite(n)) return '';
+            if (n === 0) return 'qty-zero';
+            const a = Number((atraso === null || atraso === undefined) ? 0 : atraso);
+            return a === 1 ? 'qty-late' : 'qty-ok';
+        }
+
+        function renderAberturaSide(which, payload) {
+            if (!payload) return;
+
+            const titleId = (which === 'previous') ? 'previous-month-title' : 'current-month-title';
+            const tbodyId = (which === 'previous') ? 'abertura-previous-tbody' : 'abertura-current-tbody';
+
+            const totalOsbId = (which === 'previous') ? 'previous-total-osb' : 'current-total-osb';
+            const totalCnvId = (which === 'previous') ? 'previous-total-cnv' : 'current-total-cnv';
+            const totalQtdId = (which === 'previous') ? 'previous-total-quantidade' : 'current-total-quantidade';
+            const totalAtrId = (which === 'previous') ? 'previous-total-atraso' : 'current-total-atraso';
+
+            const titleEl = document.getElementById(titleId);
+            if (titleEl && payload.label) titleEl.textContent = payload.label;
+
+            const tbody = document.getElementById(tbodyId);
+            if (tbody) {
+                const rows = payload.rows || [];
+                const hasData = !!payload.has_data;
+
+                tbody.innerHTML = rows.map(r => {
+                    const razao = _formatRazaoRZ(r.razao);
+                    const dataStr = (r.data && String(r.data).trim()) ? r.data : '--/--';
+
+                    // Regra:
+                    // - se o mês tem dados: zeros aparecem como 0
+                    // - se o mês não tem dados (ex.: Janeiro sem histórico): lacuna (null/undefined)
+                    const osbDisp = hasData ? _fmtNumberOrBlank((r.osb ?? 0)) : _fmtNumberOrBlank(r.osb);
+                    const cnvDisp = hasData ? _fmtNumberOrBlank((r.cnv ?? 0)) : _fmtNumberOrBlank(r.cnv);
+                    const qtdDisp = hasData ? _fmtNumberOrBlank((r.quantidade ?? 0)) : _fmtNumberOrBlank(r.quantidade);
+                    const atrDisp = hasData ? _fmtNumberOrBlank((r.atraso ?? 0)) : _fmtNumberOrBlank(r.atraso);
+
+                    const osbClass = _aberturaQtyClass(r.osb, r.atraso, hasData);
+                    const cnvClass = _aberturaQtyClass(r.cnv, r.atraso, hasData);
+                    const qtdClass = _aberturaQtyClass(r.quantidade, r.atraso, hasData);
+
+                    return `
+                        <tr>
+                            <td>${razao}</td>
+                            <td>${dataStr}</td>
+                            <td class="abertura-qty ${osbClass}">${osbDisp}</td>
+                            <td class="abertura-qty ${cnvClass}">${cnvDisp}</td>
+                            <td class="abertura-qty ${qtdClass}">${qtdDisp}</td>
+                            <td class="atraso-value">${atrDisp}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const tOsb = document.getElementById(totalOsbId);
+            const tCnv = document.getElementById(totalCnvId);
+            const tQtd = document.getElementById(totalQtdId);
+            const tAtr = document.getElementById(totalAtrId);
+
+            if (tOsb) tOsb.textContent = _fmtNumberOrBlank(payload.totals?.osb);
+            if (tCnv) tCnv.textContent = _fmtNumberOrBlank(payload.totals?.cnv);
+            if (tQtd) tQtd.textContent = _fmtNumberOrBlank(payload.totals?.quantidade);
+            if (tAtr) tAtr.textContent = _fmtNumberOrBlank(payload.totals?.atraso);
+        }
+
+function updateMetrics(totals) {
+            const totalLeit = Number(totals.total_leituras || 0);
+            const naoExec = Number(totals.leituras_nao_exec || 0);
+            const impedimentos = Number(totals.impedimentos || 0);
+            
+            // Atualizar valores absolutos
+            document.getElementById('v2-total-leituras').innerText = totalLeit;
+            document.getElementById('v2-leituras-nao-exec').innerText = naoExec;
+            document.getElementById('v2-impedimentos').innerText = impedimentos;
+            
+            // Calcular e atualizar porcentagens
+            const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
+            const percImpedimento = totalLeit > 0 ? ((impedimentos / totalLeit) * 100).toFixed(1) : '0.0';
+            
+            document.getElementById('v2-perc-nao-executada').innerText = `${percNaoExec}%`;
+            document.getElementById('v2-perc-impedimento').innerText = `${percImpedimento}%`;
         }
 
         function updateRazaoFilter() {
             const razoes = [...new Set(allTableData.map(row => row.Razao))].sort();
             const select = document.getElementById('razao-filter');
+
+            const current = (select?.value || '').trim();
             
             select.innerHTML = '<option value="">Todas</option>';
             
             razoes.forEach(razao => {
                 const option = document.createElement('option');
                 option.value = razao;
-                option.textContent = `R${razao}`;
+                const rz = String(razao || '').padStart(2, '0');
+                option.textContent = `RZ ${rz}`;
                 select.appendChild(option);
             });
+
+            if (current && [...select.options].some(o => o.value === current)) {
+                select.value = current;
+            }
         }
 
+        
         function renderTable() {
             const tbody = document.getElementById('v2-table-body');
-            
-            if (filteredTableData.length === 0) {
+            if (!tbody) return;
+
+            if (!filteredTableData || filteredTableData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8">
+                        <td colspan="10">
                             <div class="empty-state">
                                 <i data-lucide="inbox"></i>
                                 <p>Nenhuma pendência encontrada para os filtros atuais</p>
@@ -1106,40 +1864,62 @@
             tbody.innerHTML = filteredTableData.map(row => {
                 const totalLeit = Number(row.Total_Leituras || 0);
                 const naoExec = Number(row.Leituras_Nao_Executadas || 0);
+                const impedimentos = Number(row.Impedimentos || 0);
                 const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
-                
+                const __rz = (row.Razao !== undefined && row.Razao !== null && String(row.Razao).trim() !== '') 
+                    ? String(row.Razao).padStart(2, '0') 
+                    : '';
+                const __razaoLabel = __rz ? `RZ ${__rz}` : '-';
+
                 return `
-                    <tr>
-                        <td><strong>${row.Conjunto_Contrato}</strong></td>
-                        <td>${row.UL}</td>
-                        <td>${row.Tipo_UL || '-'}</td>
-                        <td><strong>R${row.Razao}</strong></td>
-                        <td>${Math.round(row.Total_Leituras)}</td>
-                        <td><span style="color: var(--v2-warning);">${Math.round(row.Leituras_Nao_Executadas)}</span></td>
-                        <td>${Math.round(row.Releituras_Totais)}</td>
-                        <td><span style="color: var(--v2-danger);">${Math.round(row.Releituras_Nao_Executadas)}</span></td>
-                    </tr>
+                <tr>
+                    <td><span class="badge badge-primary">${row.Regiao || '-'}</span></td>
+                    <td>${row.Localidade || '-'}</td>
+                    <td><strong>${row.Conjunto_Contrato || '-'}</strong></td>
+                    <td>${row.UL || '-'}</td>
+                    <td>${row.Tipo_UL || '-'}</td>
+                    <td><strong style="color: var(--v2-primary);">${__razaoLabel}</strong></td>
+                    <td>${Math.round(totalLeit)}</td>
+                    <td><span style="color: var(--v2-warning); font-weight: 700;">${Math.round(naoExec)}</span></td>
+                    <td><span style="color: var(--v2-danger); font-weight: 600;">${percNaoExec}%</span></td>
+                    <td><span style="color: var(--v2-danger);">${Math.round(impedimentos)}</span></td>
+                </tr>
                 `;
             }).join('');
+
+            lucide.createIcons();
+        }
+
+        function _normStr(v) {
+            return String(v || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
         }
 
         function filterTable() {
-            const razaoValue = document.getElementById('razao-filter').value;
-            const searchValue = document.getElementById('search-input').value.toLowerCase();
+            const normalize = (s) => String(s || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
 
-            filteredTableData = allTableData.filter(row => {
-                const matchRazao = !razaoValue || row.Razao === razaoValue;
-                const matchSearch = !searchValue || 
-                    String(row.UL || '').toLowerCase().includes(searchValue) ||
-                    String(row.Razao || '').toLowerCase().includes(searchValue) ||
-                    String(row.Tipo_UL || '').toLowerCase().includes(searchValue) ||
-                    String(row.Conjunto_Contrato || '').toLowerCase().includes(searchValue);
-                
-                return matchRazao && matchSearch;
+            const regiaoValue = normalize(document.getElementById('regiao-filter')?.value || '');
+            const razaoValue = (document.getElementById('razao-filter')?.value || '').trim();
+            const searchValue = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+
+            filteredTableData = (allTableData || []).filter(row => {
+                const matchRegiao = !regiaoValue || normalize(row.Regiao) === regiaoValue;
+                const matchRazao = !razaoValue || String(row.Razao || '') === razaoValue;
+
+                const haystack = [
+                    row.UL, row.Razao, row.Tipo_UL, row.Conjunto_Contrato, row.Regiao, row.Localidade
+                ].map(v => String(v || '').toLowerCase());
+
+                const matchSearch = !searchValue || haystack.some(v => v.includes(searchValue));
+                return matchRegiao && matchRazao && matchSearch;
             });
 
             renderTable();
         }
+
 
         async function loadUniverse() {
             try {
@@ -1155,13 +1935,11 @@
 
                 if (res.ok && data && data.success) {
                     universeRows = data.data || [];
-                    renderCycleUniverseInfo();
                     return;
                 }
 
                 if (res.ok && !data) {
                     universeRows = [];
-                    renderCycleUniverseInfo();
                     return;
                 }
 
@@ -1180,20 +1958,243 @@
                 await loadUniverse();
                 universeNeedsRefresh = false;
             }
-            await Promise.all([renderChart(), renderNaoExecutadasChart(), loadTableData()]);
+            await Promise.all([renderChart(), renderNaoExecutadasChart(), loadTableData(), loadAberturaPorteira()]);
         }
 
-        // Event listeners
-        document.getElementById('razao-filter').addEventListener('change', filterTable);
-        document.getElementById('search-input').addEventListener('input', filterTable);
 
-        document.getElementById('cycle-btn-all').addEventListener('click', () => setCycle(''));
-        document.getElementById('cycle-btn-97').addEventListener('click', () => setCycle('97'));
-        document.getElementById('cycle-btn-98').addEventListener('click', () => setCycle('98'));
-        document.getElementById('cycle-btn-99').addEventListener('click', () => setCycle('99'));
+function getRoleFromToken() {
+    try {
+        const token = localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
+        if (!token) return '';
+        const payload = token.split('.')[1];
+        const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+        return String(json.role || '').toLowerCase();
+    } catch (e) {
+        return '';
+    }
+}
+
+// RBAC (provisório)
+const __role = getRoleFromToken();
+const __canSelectRegion = ['gerencia','diretoria','desenvolvedor'].includes(__role);
+const __canResetPorteira = (__role === 'desenvolvedor'); // somente desenvolvedor
+
+// Região no topo: somente usuários privilegiados (gerência/diretoria/dev)
+const __regiaoContainer = document.querySelector('.header-actions-group .region-filter-container');
+if (!__canSelectRegion && __regiaoContainer) {
+    __regiaoContainer.style.display = 'none';
+}
+
+// Sincronizar: somente desenvolvedor
+const __canSyncPorteira = (__role === 'desenvolvedor');
+const __btnSyncPorteira = document.getElementById('btn-sync-porteira');
+if (!__canSyncPorteira && __btnSyncPorteira) {
+    __btnSyncPorteira.style.display = 'none';
+}
+
+// Zerar banco: somente gerência (provisório)
+const __btnResetPorteira = document.getElementById('btn-reset-porteira');
+if (!__canResetPorteira && __btnResetPorteira) {
+    __btnResetPorteira.style.display = 'none';
+}
+
+// Event listeners
+// Região (no topo) precisa atualizar métricas + gráficos + tabela
+document.getElementById('regiao-filter').addEventListener('change', () => {
+    refreshAll(true);
+});
+document.getElementById('razao-filter').addEventListener('change', filterTable);
+document.getElementById('search-input').addEventListener('input', filterTable);
+
+// Botão Sincronizar Portal
+document.getElementById('btn-sync-porteira').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-sync-porteira');
+    const originalHTML = btn.innerHTML;
+
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" class="spinning"></i><span>Sincronizando...</span>';
+        lucide.createIcons();
+
+        const res = await authFetch(buildUrl('/api/sync/porteira', false, false), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('✓ Dados sincronizados com sucesso!', 'success');
+            await refreshAll(true);
+        } else {
+            showToast('✗ Erro: ' + (data.error || 'Falha na sincronização'), 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao sincronizar:', error);
+        showToast('✗ Erro ao conectar com o servidor', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        lucide.createIcons();
+    }
+});
+
+// Botão Zerar Banco
+if (__canResetPorteira) {
+  document.getElementById('btn-reset-porteira').addEventListener('click', async () => {
+    const confirmMessage = `⚠️ ATENÇÃO!
+
+Esta ação irá APAGAR PERMANENTEMENTE todos os dados de porteira de TODOS os usuários.
+
+Você não poderá desfazer esta ação.
+
+Deseja realmente continuar?`;
+
+    if (!confirm(confirmMessage)) return;
+
+    const doubleConfirm = confirm('Última confirmação: Tem certeza ABSOLUTA?');
+    if (!doubleConfirm) return;
+
+    try {
+        const res = await authFetch(buildUrl('/api/reset/porteira', false), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast('✓ Banco de porteira zerado!', 'success');
+            await refreshAll(true);
+        } else {
+            showToast('✗ ' + (data.message || data.error || 'Falha ao zerar banco'), 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('✗ Erro ao conectar com o servidor', 'error');
+    }
+  });
+}
 
         // Initial load
-        refreshAll(true);
+        (async function init() {
+            await fetchCurrentCycleInfo();
+            await refreshAll(true);
+            updateAberturaPorteiraMonthTitles();
+        })();
+
+        // Função para atualizar os títulos dos meses na tabela Abertura de Porteira
+        function updateAberturaPorteiraMonthTitles() {
+            const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 
+                               'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+            
+            const currentDate = new Date();
+            const currentMonth = monthNames[currentDate.getMonth()];
+            const currentYear = String(currentDate.getFullYear()).slice(-2);
+            
+            const previousDate = new Date(currentDate);
+            previousDate.setMonth(previousDate.getMonth() - 1);
+            const previousMonth = monthNames[previousDate.getMonth()];
+            const previousYear = String(previousDate.getFullYear()).slice(-2);
+            
+            const currentMonthTitle = document.getElementById('current-month-title');
+            const previousMonthTitle = document.getElementById('previous-month-title');
+            
+            if (currentMonthTitle) {
+                currentMonthTitle.textContent = `${currentMonth}/${currentYear}`;
+            }
+            
+            if (previousMonthTitle) {
+                previousMonthTitle.textContent = `${previousMonth}/${previousYear}`;
+            }
+        }
+
+        // Função para renderizar a tabela Abertura de Porteira
+        function renderAberturaPorteira(currentMonthData = null, previousMonthData = null) {
+            const currentTbody = document.getElementById('abertura-current-tbody');
+            const previousTbody = document.getElementById('abertura-previous-tbody');
+            
+            // Renderizar mês atual
+            if (currentMonthData && currentMonthData.length > 0) {
+                renderAberturaMonth(currentTbody, currentMonthData, 'current');
+            } else {
+                renderAberturaEmptyState(currentTbody, 'current');
+            }
+            
+            // Renderizar mês anterior
+            if (previousMonthData && previousMonthData.length > 0) {
+                renderAberturaMonth(previousTbody, previousMonthData, 'previous');
+            } else {
+                renderAberturaEmptyState(previousTbody, 'previous');
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Função para renderizar dados de um mês
+        function renderAberturaMonth(tbody, data, period) {
+            let totalQuantidade = 0;
+            let totalAtraso = 0;
+            
+            let html = '';
+            for (let i = 1; i <= 18; i++) {
+                const __rzKey = String(i).padStart(2, '0');
+                const razaoLabel = `RZ ${__rzKey}`;
+                // Compatível com formatos: "01", "R01", "RZ 01"
+                const row = data.find(r => _formatRazaoRZ(r.razao) === razaoLabel) || {};
+                
+                const quantidade = Number(row.quantidade || 0);
+                const atraso = Number(row.atraso || 0);
+                const data_abertura = row.data || '--/--';
+
+                // Se existem dados para o período (função usada em versões antigas), 0 deve aparecer como 0
+                const qtdDisp = String(quantidade);
+                const atrDisp = String(atraso);
+                const qtdClass = _aberturaQtyClass(quantidade, atraso, true);
+                
+                
+                totalQuantidade += quantidade;
+                totalAtraso += atraso;
+                
+                html += `
+                    <tr>
+                        <td>${razaoLabel}</td>
+                        <td>${data_abertura}</td>
+                        <td class="abertura-qty ${qtdClass}">${qtdDisp}</td>
+                        <td class="atraso-value">${atrDisp}</td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+            
+            // Atualizar totais
+            document.getElementById(`${period}-total-quantidade`).textContent = String(totalQuantidade);
+            document.getElementById(`${period}-total-atraso`).textContent = String(totalAtraso);
+        }
+
+        // Função para renderizar estado vazio
+        function renderAberturaEmptyState(tbody, period) {
+            const monthName = period === 'current' ? 'MÊS ATUAL' : 'MÊS ANTERIOR';
+            
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="padding: 0; border: none;">
+                        <div class="abertura-empty-state">
+                            <i data-lucide="alert-triangle"></i>
+                            <div class="abertura-empty-state-title">⚠️ SEM DADOS DO ${monthName}</div>
+                            <div class="abertura-empty-state-message">
+                                Não há informações de abertura de porteira disponíveis para este período.<br>
+                                Os dados serão exibidos assim que forem registrados no sistema.
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            // Zerar totais
+            document.getElementById(`${period}-total-quantidade`).textContent = '0';
+            document.getElementById(`${period}-total-atraso`).textContent = '0';
+        }
     </script>
 </body>
 </html>

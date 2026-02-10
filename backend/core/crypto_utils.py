@@ -1,15 +1,3 @@
-"""Utilities for encrypting/decrypting sensitive fields (e.g. portal passwords).
-
-We use Fernet (symmetric authenticated encryption).
-
-Key management:
-- Preferred: set VIGILACORE_FERNET_KEY in the environment (.env). It must be a valid Fernet key.
-  You can generate one with:
-      python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-- Fallback: derive a stable key from JWT_SECRET if VIGILACORE_FERNET_KEY is not set.
-  This is better than plaintext, but you should set a dedicated Fernet key in production.
-"""
-
 from __future__ import annotations
 
 import base64

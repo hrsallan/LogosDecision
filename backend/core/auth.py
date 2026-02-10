@@ -1,7 +1,3 @@
-"""
-Módulo de autenticação segura com bcrypt
-Arquivo: backend/core/auth.py
-"""
 import bcrypt
 import sqlite3
 from pathlib import Path

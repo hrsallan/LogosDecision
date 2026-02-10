@@ -273,7 +273,7 @@ def download_porteira_excel(
     LOC_PORTEIRA_BY_HREF = (By.XPATH, "//a[contains(@href,'/SGLEmpreiteira/Relatorios/RlAcompanhamentoResultadoLeitura')]")
     LOC_PORTEIRA_BY_TEXT = (By.XPATH, "//a[contains(.,'Acompanh') or contains(.,'Resultado') or contains(.,'Leitura')]")
     LOC_MES_ANO = (By.ID, "txtMesAno")
-    LOC_DATA_HOJE = (By.XPATH, "/html/body/div[3]/div[2]/table/tbody/tr/td/span[1]")
+    LOC_DATA_HOJE = (By.XPATH, "/html/body/div[3]/div[2]/table/tfoot/tr[1]/th")
     LOC_UNIDADE_INI = (By.ID, "txtUnidadeLeituraIni")
     LOC_UNIDADE_FIM = (By.ID, "txtUnidadeLeituraFim")
     LOC_BTN_GERAR = (By.ID, "btnGerarExcel")
