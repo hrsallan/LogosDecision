@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Menu Principal</title>
+    <!-- Estilos modernos -->
     <link rel="stylesheet" href="../css/v2_modern.css">
+    <!-- Dependências externas -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
     <style>
-        /* Animações suaves */
+        /* Animações e Efeitos Visuais */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -47,6 +49,7 @@
             box-shadow: 0 12px 24px rgba(88, 166, 255, 0.15);
         }
 
+        /* Efeito de brilho ao passar o mouse */
         .feature-card::before {
             content: '';
             position: absolute;
@@ -63,7 +66,7 @@
             opacity: 1;
         }
 
-        /* Status badge animado */
+        /* Badge de Status Animado */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -85,7 +88,7 @@
             animation: pulse 2s ease-in-out infinite;
         }
 
-        /* Avatar do desenvolvedor */
+        /* Avatar do Desenvolvedor */
         .dev-avatar {
             width: 80px;
             height: 80px;
@@ -100,7 +103,7 @@
             box-shadow: 0 8px 20px rgba(88, 166, 255, 0.4);
         }
 
-        /* Badge de tecnologia */
+        /* Badge de Tecnologias */
         .tech-badge {
             display: inline-flex;
             align-items: center;
@@ -114,34 +117,7 @@
             border: 1px solid rgba(88, 166, 255, 0.2);
         }
 
-        /* Quick action buttons */
-        .quick-action {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            background: rgba(88, 166, 255, 0.05);
-            border: 1px solid rgba(88, 166, 255, 0.1);
-            color: inherit;
-            text-decoration: none;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .quick-action:hover {
-            background: rgba(88, 166, 255, 0.1);
-            border-color: rgba(88, 166, 255, 0.3);
-            transform: translateX(4px);
-        }
-
-        .quick-action i {
-            width: 20px;
-            height: 20px;
-            color: var(--v2-primary);
-        }
-
-        /* Hero section */
+        /* Seção Hero (Boas-vindas) */
         .hero-section {
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(88, 166, 255, 0.02) 100%);
             border: 1px solid rgba(88, 166, 255, 0.2);
@@ -152,6 +128,7 @@
             overflow: hidden;
         }
 
+        /* Animação de fundo do Hero */
         .hero-section::before {
             content: '';
             position: absolute;
@@ -173,7 +150,7 @@
             z-index: 1;
         }
 
-        /* Language selector elegante */
+        /* Seletor de Idioma */
         .lang-selector {
             display: flex;
             gap: 8px;
@@ -204,7 +181,7 @@
             color: white;
         }
 
-        /* Social links */
+        /* Links Sociais */
         .social-link {
             display: inline-flex;
             align-items: center;
@@ -227,7 +204,7 @@
 </head>
 <body>
     <div class="v2-container">
-        <!-- SIDEBAR -->
+        <!-- BARRA LATERAL (SIDEBAR) -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
                 <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
@@ -277,15 +254,16 @@
             </nav>
         </aside>
 
-        <!-- CONTENT -->
+        <!-- CONTEÚDO DA PÁGINA -->
         <div class="v2-content">
-            <!-- HEADER -->
+            <!-- CABEÇALHO -->
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Menu Principal</h1>
                     <p class="v2-header-subtitle">Central de Monitoramento e Controle</p>
                 </div>
                 <div class="v2-header-right">
+                    <!-- Seletor de Idioma -->
                     <div class="lang-selector">
                         <button class="lang-btn active" data-lang="pt-BR">🇧🇷 PT</button>
                         <button class="lang-btn" data-lang="en-US">🇺🇸 EN</button>
@@ -298,9 +276,9 @@
                 </div>
             </header>
 
-            <!-- MAIN CONTENT -->
+            <!-- ÁREA PRINCIPAL -->
             <main class="v2-main">
-                <!-- Hero Section -->
+                <!-- Seção Hero (Boas-vindas) -->
                 <div class="hero-section animate-fade-in">
                     <div class="hero-content">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
@@ -331,8 +309,9 @@
                     </div>
                 </div>
 
+                <!-- Grid de Módulos e Info -->
                 <div class="v2-grid" style="grid-template-columns: 1fr 360px; gap: 20px;">
-                    <!-- Módulos principais -->
+                    <!-- Coluna da Esquerda: Módulos -->
                     <div>
                         <h3 style="margin: 0 0 16px 0; font-size: 1.3rem;" data-i18n="modules.title">Módulos Principais</h3>
                         
@@ -418,7 +397,7 @@
                         </div>
                     </div>
 
-                    <!-- Sidebar do desenvolvedor -->
+                    <!-- Coluna da Direita: Perfil do Desenvolvedor -->
                     <aside class="animate-fade-in animate-delay-3">
                         <div class="v2-card" style="text-align: center;">
                             <img src="https://github.com/hrsallan.png" alt="Allan Silva" class="dev-avatar" style="margin: 0 auto 16px;">
@@ -447,13 +426,11 @@
                                     <span class="tech-badge">Python</span>
                                     <span class="tech-badge">SQLite3</span>
                                     <span class="tech-badge">Flask</span>
-                                    <span class="tech-badge">SQLite3</span>
                                     <span class="tech-badge">JavaScript</span>
                                     <span class="tech-badge">HTML/CSS</span>
                                     <span class="tech-badge">API REST</span>
                                 </div>
                             </div>
-
 
                             <a href="https://github.com/hrsallan/VigilaCore" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--v2-primary); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
                                 <i data-lucide="github" style="width: 18px; height: 18px;"></i>
@@ -464,7 +441,7 @@
                 </div>
             </main>
 
-            <!-- FOOTER -->
+            <!-- RODAPÉ -->
             <footer class="v2-footer">
                 <span>VigilaCore | <span data-i18n="footer.subtitle">Desenvolvimento Operacional Estratégico</span></span>
                 <span data-i18n="footer.status">Sistema em desenvolvimento</span>
@@ -472,10 +449,11 @@
         </div>
     </div>
 
+    <!-- Scripts de Funcionalidade -->
     <script>
         lucide.createIcons();
 
-        // Função para decodificar JWT
+        // Decodificador JWT simples
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
@@ -490,41 +468,42 @@
             }
         }
 
-        // Exibir nome do usuário (nome do banco se existir; senão username)
-async function displayUsername() {
-    const el = document.getElementById('username-display');
-    if (!el) return;
+        /**
+         * Exibe o nome do usuário na tela de boas-vindas.
+         * Prioriza o nome real (do banco) sobre o username (do token).
+         */
+        async function displayUsername() {
+            const el = document.getElementById('username-display');
+            if (!el) return;
 
-    const token = localStorage.getItem('vigilacore_token');
-    let decoded = null;
-    if (token) {
-        decoded = parseJwt(token);
-    }
+            const token = localStorage.getItem('vigilacore_token');
+            let decoded = null;
+            if (token) {
+                decoded = parseJwt(token);
+            }
 
-    // Preferência: buscar do backend (traz 'nome' e 'username')
-    try {
-        const res = await authFetch('/api/user/me', { method: 'GET' });
-        if (res.ok) {
-            const me = await res.json().catch(() => ({}));
-            const nome = (me && me.nome != null) ? String(me.nome).trim() : '';
-            const username = (me && me.username) ? String(me.username) : ((decoded && decoded.username) ? String(decoded.username) : '');
-            const display = (nome && nome.toLowerCase() !== 'none') ? nome : (username || 'Usuário');
-            el.textContent = display;
-            return;
+            try {
+                const res = await authFetch('/api/user/me', { method: 'GET' });
+                if (res.ok) {
+                    const me = await res.json().catch(() => ({}));
+                    const nome = (me && me.nome != null) ? String(me.nome).trim() : '';
+                    const username = (me && me.username) ? String(me.username) : ((decoded && decoded.username) ? String(decoded.username) : '');
+                    const display = (nome && nome.toLowerCase() !== 'none') ? nome : (username || 'Usuário');
+                    el.textContent = display;
+                    return;
+                }
+            } catch (e) {
+                // Se falhar a API, tenta usar o token
+            }
+
+            if (decoded && decoded.username) {
+                el.textContent = decoded.username;
+            }
         }
-    } catch (e) {
-        // Fallback abaixo
-    }
 
-    // Fallback: usar username do token
-    if (decoded && decoded.username) {
-        el.textContent = decoded.username;
-    }
-}
-// Chamar ao carregar a página
         displayUsername();
 
-        // Relógio e data
+        // Relógio
         function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -535,7 +514,7 @@ async function displayUsername() {
         updateClock();
         setInterval(updateClock, 1000);
 
-        // Sistema de tradução
+        // Sistema de Internacionalização (i18n)
         const translations = {
             'pt-BR': {
                 'hero.welcome': 'Seja Bem-Vindo',
@@ -597,7 +576,7 @@ async function displayUsername() {
             }
         };
 
-        // Função para aplicar tradução
+        // Aplica tradução baseada no idioma selecionado
         function applyTranslation(lang) {
             const texts = translations[lang];
             document.querySelectorAll('[data-i18n]').forEach(element => {
@@ -607,29 +586,22 @@ async function displayUsername() {
                 }
             });
             
-            // Atualiza o atributo lang do HTML
             document.documentElement.lang = lang === 'pt-BR' ? 'pt-BR' : 'en';
-            
-            // Salva preferência no localStorage
             localStorage.setItem('preferredLanguage', lang);
         }
 
-        // Seletor de idioma
+        // Listener para botões de idioma
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                // Remove active de todos os botões
                 document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-                
-                // Adiciona active no botão clicado
                 this.classList.add('active');
                 
-                // Aplica a tradução
                 const lang = this.getAttribute('data-lang');
                 applyTranslation(lang);
             });
         });
 
-        // Verifica se há idioma salvo e aplica
+        // Carrega idioma salvo
         const savedLang = localStorage.getItem('preferredLanguage');
         if (savedLang) {
             document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -642,7 +614,7 @@ async function displayUsername() {
             applyTranslation(savedLang);
         }
 
-        // Efeito de hover nos cards
+        // Efeito visual de hover nos cards
         document.querySelectorAll('.feature-card').forEach(card => {
             card.addEventListener('mouseenter', function() {
                 this.style.borderColor = 'rgba(88, 166, 255, 0.4)';

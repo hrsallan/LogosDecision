@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Login</title>
+    <!-- Ícones -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        /* ==================== ESTILOS DA PÁGINA DE LOGIN ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -28,6 +30,7 @@
             padding: 20px;
         }
 
+        /* Container do Cartão de Login */
         .v3-login-container {
             width: 100%;
             max-width: 420px;
@@ -56,6 +59,7 @@
             margin-bottom: 32px;
         }
 
+        /* Logo Animado */
         .v3-logo-wrapper {
             display: inline-flex;
             align-items: center;
@@ -99,6 +103,7 @@
             letter-spacing: 0.3px;
         }
 
+        /* Estilos do Formulário */
         .v3-login-form {
             display: flex;
             flex-direction: column;
@@ -164,6 +169,7 @@
             box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.08), inset 0 0 0 1px rgba(0, 209, 255, 0.1);
         }
 
+        /* Botão de Alternar Senha (Olho) */
         .v3-password-toggle {
             position: absolute;
             right: 12px;
@@ -187,6 +193,7 @@
             transform: scale(1.1);
         }
 
+        /* Botão de Login */
         .v3-login-btn {
             background: rgba(0, 209, 255, 0.12);
             color: #00d1ff;
@@ -246,7 +253,7 @@
             text-decoration: underline;
         }
 
-        /* Responsivo */
+        /* Responsividade */
         @media (max-width: 480px) {
             .v3-login-container {
                 max-width: 100%;
@@ -266,6 +273,7 @@
 <body>
     <div class="v3-login-wrapper">
         <div class="v3-login-container">
+            <!-- Cabeçalho com Logo -->
             <div class="v3-login-header">
                 <div class="v3-logo-wrapper">
                     <i data-lucide="shield-check" style="width: 28px; height: 28px; color: #00d1ff;"></i>
@@ -274,6 +282,7 @@
                 <p>Sistema de monitoramento em tempo real.</p>
             </div>
 
+            <!-- Formulário de Login -->
             <form id="login-form" class="v3-login-form">
                 <div class="v3-input-group">
                     <label for="username">Usuário</label>
@@ -309,18 +318,21 @@
                 <button type="submit" class="v3-login-btn">Entrar</button>
             </form>
 
+            <!-- Rodapé -->
             <div class="v3-login-footer">
-                <span>Sistema em desenvolvivento | <a href="#">Contato</a></span>
+                <span>Sistema em desenvolvimento | <a href="#">Contato</a></span>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="../js/utils.js"></script>
 
-
     <script>
-lucide.createIcons();
+        // Inicializa ícones
+        lucide.createIcons();
 
+        // Lógica de Alternância de Visibilidade da Senha
         const togglePassword = document.getElementById('togglePassword');
         const password = document.getElementById('password');
 
@@ -329,6 +341,7 @@ lucide.createIcons();
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
             password.setAttribute('type', type);
             
+            // Alterna ícone
             const icon = togglePassword.querySelector('[data-lucide]');
             if (type === 'text') {
                 icon.setAttribute('data-lucide', 'eye-off');
@@ -338,17 +351,20 @@ lucide.createIcons();
             lucide.createIcons();
         });
 
+        // Lógica de Envio do Formulário (Autenticação)
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const btn = e.target.querySelector('.v3-login-btn');
             
+            // Estado de carregamento
             btn.disabled = true;
             const originalText = btn.textContent;
             btn.textContent = 'Autenticando...';
 
             try {
+                // Chama a API de login via helper authFetch
                 const response = await authFetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -357,6 +373,7 @@ lucide.createIcons();
                 const data = await response.json();
 
                 if (data.success && data.token) {
+                    // Armazena token JWT e redireciona
                     localStorage.setItem('vigilacore_token', data.token);
                     window.location.href = 'menu_principal.html';
                 } else {

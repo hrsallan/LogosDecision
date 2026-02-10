@@ -1,9 +1,9 @@
 <!-- 
-    Componente de Status e Controle do Scheduler
-    Cole este código na página de Administração (administracao.html)
+    WIDGET DE CONTROLE DO SCHEDULER (AUTOMAÇÃO)
+    Deve ser incluído na página de Administração.
 -->
 
-<!-- CSS do Scheduler Widget -->
+<!-- Estilos do Widget -->
 <style>
 .scheduler-widget {
     background: rgba(22, 27, 34, 0.4);
@@ -174,6 +174,7 @@
     cursor: not-allowed;
 }
 
+/* Animação de Pulso (Status Ativo) */
 .scheduler-pulse {
     width: 8px;
     height: 8px;
@@ -188,7 +189,7 @@
 }
 </style>
 
-<!-- HTML do Scheduler Widget -->
+<!-- Estrutura HTML do Widget -->
 <div class="scheduler-widget" id="schedulerWidget">
     <div class="scheduler-header">
         <div class="scheduler-title">
@@ -201,6 +202,7 @@
         </div>
     </div>
 
+    <!-- Informações de Configuração -->
     <div class="scheduler-info-grid">
         <div class="scheduler-info-item">
             <div class="scheduler-info-label">Horário</div>
@@ -220,11 +222,13 @@
         </div>
     </div>
 
+    <!-- Lista de Tarefas Agendadas -->
     <div class="scheduler-jobs" id="schedulerJobs" style="display: none;">
         <div class="scheduler-jobs-title">Próximas Execuções</div>
         <div id="schedulerJobsList"></div>
     </div>
 
+    <!-- Controles Manuais -->
     <div class="scheduler-controls">
         <button class="scheduler-btn scheduler-btn-start" id="btnStartScheduler" disabled>
             <i data-lucide="play" style="width: 16px; height: 16px;"></i>
@@ -241,14 +245,14 @@
     </div>
 </div>
 
-<!-- JavaScript do Scheduler Widget -->
+<!-- Lógica JavaScript -->
 <script src="../js/utils.js"></script>
 
 <script>
 (function() {
     const API_BASE = '/api';
     
-    // Elementos DOM
+    // Referências aos elementos DOM
     const statusBadge = document.getElementById('schedulerStatus');
     const scheduleEl = document.getElementById('schedulerSchedule');
     const intervalEl = document.getElementById('schedulerInterval');
@@ -260,12 +264,12 @@
     const btnStop = document.getElementById('btnStopScheduler');
     const btnRefresh = document.getElementById('btnRefreshScheduler');
     
-    // Buscar token
+    // Recupera token de autenticação
     function getToken() {
         return localStorage.getItem('vigilacore_token');
     }
     
-    // Formatar data/hora
+    // Formata data ISO para string amigável
     function formatDateTime(isoString) {
         if (!isoString) return '--';
         const date = new Date(isoString);
@@ -277,7 +281,7 @@
         });
     }
     
-    // Atualizar status do scheduler
+    // Consulta o status atual do scheduler na API
     async function updateSchedulerStatus() {
         try {
             const token = getToken();
@@ -306,10 +310,9 @@
         }
     }
     
-    // Renderizar status
+    // Renderiza o status na interface
     function renderSchedulerStatus(data) {
-        // Status badge
-        const pulse = statusBadge.querySelector('.scheduler-pulse');
+        // Badge de Status Global
         if (data.running && data.enabled) {
             statusBadge.className = 'scheduler-status-badge running';
             statusBadge.innerHTML = `
@@ -324,13 +327,13 @@
             statusBadge.innerHTML = '<span>Parado</span>';
         }
         
-        // Info grid
+        // Grid de Informações
         scheduleEl.textContent = data.schedule || '--';
         intervalEl.textContent = data.interval_minutes ? `${data.interval_minutes} min` : '--';
         releituraEl.textContent = data.auto_releitura ? '✓ Ativo' : '✗ Inativo';
         porteiraEl.textContent = data.auto_porteira ? '✓ Ativo' : '✗ Inativo';
         
-        // Jobs list
+        // Lista de Tarefas (Jobs)
         if (data.jobs && data.jobs.length > 0) {
             jobsContainer.style.display = 'block';
             jobsList.innerHTML = data.jobs.map(job => `
@@ -343,17 +346,17 @@
             jobsContainer.style.display = 'none';
         }
         
-        // Botões
+        // Estado dos Botões
         btnStart.disabled = data.running || !data.enabled;
         btnStop.disabled = !data.running || !data.enabled;
         
-        // Atualizar ícones Lucide
+        // Refresh de ícones
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
     }
     
-    // Controlar scheduler
+    // Envia comando de iniciar/parar para a API
     async function toggleScheduler(action) {
         try {
             const token = getToken();
@@ -386,15 +389,15 @@
         }
     }
     
-    // Event listeners
+    // Listeners de Eventos
     btnStart.addEventListener('click', () => toggleScheduler('start'));
     btnStop.addEventListener('click', () => toggleScheduler('stop'));
     btnRefresh.addEventListener('click', updateSchedulerStatus);
     
-    // Carregar status inicial
+    // Carga Inicial
     updateSchedulerStatus();
     
-    // Auto-refresh a cada 30 segundos
+    // Polling automático a cada 30 segundos
     setInterval(updateSchedulerStatus, 30000);
     
 })();

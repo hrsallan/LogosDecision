@@ -4,20 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Porteira</title>
+    <!-- Estilos modernos v2 -->
     <link rel="stylesheet" href="../css/v2_modern.css">
+    <!-- Dependências externas: Ícones Lucide e Chart.js -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Scripts utilitários -->
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
     
     <style>
-        /* ==================== PORTEIRA PAGE ENHANCEMENTS ==================== */
+        /* ==================== MELHORIAS ESPECÍFICAS DA PÁGINA PORTEIRA ==================== */
         
         .page-porteira .v2-main {
             padding: 24px;
         }
 
-        /* Enhanced Metrics Grid */
+        /* Grid de métricas aprimorado */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -25,6 +28,7 @@
             margin-bottom: 24px;
         }
 
+        /* Cards de métricas */
         .metric-card {
             background: var(--v2-surface);
             border: 1px solid var(--v2-border);
@@ -35,6 +39,7 @@
             transition: all 0.3s ease;
         }
 
+        /* Efeito visual nos cards */
         .metric-card::before {
             content: '';
             position: absolute;
@@ -52,6 +57,7 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         }
 
+        /* Variações de cor para alertas e perigo */
         .metric-card.warning::before {
             background: radial-gradient(circle, rgba(210, 153, 34, 0.12) 0%, transparent 70%);
         }
@@ -125,7 +131,7 @@
             color: var(--v2-danger);
         }
 
-        /* Cycle Indicator - Minimalista ao lado do Relógio */
+        /* Indicador de Ciclo Minimalista */
         .cycle-indicator {
             display: flex;
             flex-direction: row;
@@ -159,7 +165,7 @@
             letter-spacing: 0.3px;
         }
 
-        /* Chart Cards */
+        /* Cards de Gráfico */
         .chart-card {
             background: var(--v2-surface);
             border: 1px solid var(--v2-border);
@@ -212,7 +218,7 @@
             height: 500px;
         }
 
-        /* Table Card */
+        /* Card de Tabela */
         .table-card {
             background: var(--v2-surface);
             border: 1px solid var(--v2-border);
@@ -221,7 +227,7 @@
             margin-bottom: 20px;
         }
 
-        /* Abertura de Porteira Table Styles */
+        /* Estilos da Tabela de Abertura de Porteira */
         .abertura-porteira-card {
             background: var(--v2-surface);
             border: 1px solid var(--v2-border);
@@ -336,21 +342,18 @@
             font-weight: 700;
         }
 
-        /* Cores para OSB/CNV na Abertura de Porteira */
+        /* Cores condicionais para células da tabela */
         .abertura-table tbody td.abertura-qty {
             font-weight: 800;
         }
-        /* Dentro do prazo: amarelo */
         .abertura-table tbody td.abertura-qty.qty-ok {
-            color: rgba(255, 193, 7, 0.95);
+            color: rgba(255, 193, 7, 0.95); /* Amarelo */
         }
-        /* Atrasado: vermelho */
         .abertura-table tbody td.abertura-qty.qty-late {
-            color: rgba(248, 81, 73, 0.95);
+            color: rgba(248, 81, 73, 0.95); /* Vermelho */
         }
-        /* Zero: verde */
         .abertura-table tbody td.abertura-qty.qty-zero {
-            color: rgba(63, 185, 80, 0.95);
+            color: rgba(63, 185, 80, 0.95); /* Verde */
         }
 
 
@@ -407,7 +410,7 @@
             font-size: 0.7rem;
         }
 
-        /* Empty State para Abertura de Porteira */
+        /* Estado vazio para Abertura de Porteira */
         .abertura-empty-state {
             padding: 60px 20px;
             text-align: center;
@@ -439,7 +442,7 @@
             line-height: 1.5;
         }
 
-        /* Responsividade */
+        /* Responsividade para telas menores */
         @media (max-width: 1200px) {
             .abertura-porteira-container {
                 grid-template-columns: 1fr;
@@ -452,6 +455,7 @@
             }
         }
 
+        /* Estilos do cabeçalho da tabela */
         .table-header {
             padding: 20px 24px;
             background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
@@ -522,6 +526,7 @@
             overflow: auto;
         }
 
+        /* Tabela de Dados */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -583,7 +588,7 @@
             font-size: 0.95rem;
         }
 
-        /* Action Buttons in Header */
+        /* Botões de Ação no Header */
         .header-actions-group {
             display: flex;
             align-items: center;
@@ -640,7 +645,7 @@
             border-color: rgba(248, 81, 73, 0.5);
         }
 
-        /* Region Filter Dropdown (igual ao Releitura) */
+        /* Filtro de Região Dropdown */
         .region-filter-container {
             display: inline-block;
         }
@@ -675,7 +680,7 @@
             padding: 10px;
         }
 
-        /* Responsive */
+        /* Ajustes responsivos adicionais */
         @media (max-width: 768px) {
             .metrics-grid {
                 grid-template-columns: 1fr;
@@ -712,7 +717,7 @@
             }
         }
     
-/* Toast Notifications */
+/* Toast Notifications (Notificações Flutuantes) */
 @keyframes slideIn {
     from { transform: translateX(400px); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
@@ -758,8 +763,7 @@
     border: 1px solid rgba(139, 148, 158, 0.3);
 }
 
-    
-/* Top filters bar (moved from table header to superior area) */
+/* Barra superior de filtros */
 .top-filters-bar{
     margin: 18px 0 6px;
     padding: 14px 16px;
@@ -777,7 +781,7 @@
 </head>
 <body class="page-porteira">
     <div class="v2-container">
-        <!-- SIDEBAR -->
+        <!-- BARRA LATERAL (SIDEBAR) -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
                 <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
@@ -828,16 +832,16 @@
             </nav>
         </aside>
 
-        <!-- CONTENT -->
+        <!-- CONTEÚDO PRINCIPAL -->
         <div class="v2-content">
-            <!-- HEADER -->
+            <!-- CABEÇALHO (HEADER) -->
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Monitoramento Porteira</h1>
                     <p class="v2-header-subtitle">Análise de Leituras e Releituras | CEMIG SGL</p>
                 </div>
                 <div class="v2-header-right">
-<div class="header-actions-group" style="gap: 12px;">
+                    <div class="header-actions-group" style="gap: 12px;">
                         <div class="region-filter-container">
                             <select id="regiao-filter" class="region-select">
                                 <option value="">Geral (todas)</option>
@@ -846,15 +850,15 @@
                                 <option value="Frutal">Frutal</option>
                             </select>
                         </div>
-    <button type="button" class="action-btn primary" id="btn-sync-porteira" title="Sincronizar com Portal CEMIG">
-        <i data-lucide="refresh-ccw"></i>
-        <span>Sincronizar</span>
-    </button>
-<button type="button" class="action-btn danger" id="btn-reset-porteira" title="Zerar banco de dados">
-        <i data-lucide="trash-2"></i>
-        <span>Zerar Banco</span>
-    </button>
-</div>
+                        <button type="button" class="action-btn primary" id="btn-sync-porteira" title="Sincronizar com Portal CEMIG">
+                            <i data-lucide="refresh-ccw"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                        <button type="button" class="action-btn danger" id="btn-reset-porteira" title="Zerar banco de dados">
+                            <i data-lucide="trash-2"></i>
+                            <span>Zerar Banco</span>
+                        </button>
+                    </div>
 
                     <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
                     
@@ -872,14 +876,11 @@
                         </div>
                     </div>
                 </div>
-
-
             </header>
 
-
-            <!-- MAIN CONTENT -->
+            <!-- CONTEÚDO PRINCIPAL -->
             <main class="v2-main">
-                <!-- METRICS -->
+                <!-- MÉTRICAS -->
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-header">
@@ -930,10 +931,9 @@
                         </div>
                         <div class="metric-value" id="v2-perc-impedimento">0.0%</div>
                     </div>
-
                 </div>
 
-                <!-- MAIN CHART -->
+                <!-- GRÁFICO PRINCIPAL -->
                 <div class="chart-card">
                     <div class="chart-header">
                         <div>
@@ -949,7 +949,7 @@
                     </div>
                 </div>
 
-                <!-- NAO EXECUTADAS CHART -->
+                <!-- GRÁFICO NÃO EXECUTADAS -->
                 <div class="chart-card">
                     <div class="chart-header">
                         <div>
@@ -965,7 +965,7 @@
                     </div>
                 </div>
 
-                <!-- TABLE -->
+                <!-- TABELA -->
                 <div class="table-card">
                     <div class="table-header">
                         <div class="table-title">
@@ -980,25 +980,23 @@
 
                             <input type="text" id="search-input" class="filter-input" placeholder="Buscar UL, Contrato, Localidade, Região...">
                         </div>
-
                     </div>
                     <div class="table-scroll">
                         <table class="data-table">
                             <thead>
-    <tr>
-        <th>Região</th>
-        <th>Localidade</th>
-        <th>Contrato</th>
-        <th>UL</th>
-        <th>Tipo UL</th>
-        <th>Razão</th>
-        <th>Total Leituras</th>
-        <th>Não Executadas</th>
-        <th>% Não Exec.</th>
-        <th>Impedimentos</th>
-    </tr>
-</thead>
-
+                                <tr>
+                                    <th>Região</th>
+                                    <th>Localidade</th>
+                                    <th>Contrato</th>
+                                    <th>UL</th>
+                                    <th>Tipo UL</th>
+                                    <th>Razão</th>
+                                    <th>Total Leituras</th>
+                                    <th>Não Executadas</th>
+                                    <th>% Não Exec.</th>
+                                    <th>Impedimentos</th>
+                                </tr>
+                            </thead>
                             <tbody id="v2-table-body">
                                 <tr>
                                     <td colspan="10">
@@ -1013,7 +1011,7 @@
                     </div>
                 </div>
 
-                <!-- ABERTURA DE PORTEIRA TABLE -->
+                <!-- TABELA ABERTURA DE PORTEIRA -->
                 <div class="abertura-porteira-card">
                     <div class="abertura-porteira-header">
                         <div class="abertura-porteira-title">
@@ -1037,150 +1035,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="abertura-previous-tbody">
-                                    <tr>
-                                        <td>RZ 01</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 02</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 03</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 04</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 05</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 06</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 07</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 08</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 09</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 10</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 11</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 12</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 13</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 14</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 15</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 16</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 17</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 18</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
+                                    <!-- Conteúdo preenchido via JS -->
                                 </tbody>
                                 <tfoot>
                                     <tr>
@@ -1210,150 +1065,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="abertura-current-tbody">
-                                    <tr>
-                                        <td>RZ 01</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 02</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 03</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 04</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 05</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 06</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 07</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 08</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 09</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 10</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 11</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 12</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 13</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 14</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 15</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 16</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 17</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
-                                    <tr>
-                                        <td>RZ 18</td>
-                                        <td>--/--</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td>0</td>
-                                        <td class="atraso-value">0</td>
-                                    </tr>
+                                    <!-- Conteúdo preenchido via JS -->
                                 </tbody>
                                 <tfoot>
                                     <tr>
@@ -1386,7 +1098,7 @@
                 </div>
             </main>
 
-            <!-- FOOTER -->
+            <!-- RODAPÉ -->
             <footer class="v2-footer">
                 <span>VigilaCore | Desenvolvimento Operacional Estratégico</span>
                 <span>Sistema em desenvolvimento</span>
@@ -1394,10 +1106,12 @@
         </div>
     </div>
 
+    <!-- Scripts de Lógica -->
     <script>
+        // Inicializa ícones Lucide
         lucide.createIcons();
 
-        // Global variables
+        // Variáveis globais para gráficos e dados
         let porteiraChart = null;
         let naoExecutadasChart = null;
         let allTableData = [];
@@ -1407,9 +1121,7 @@
         let universeNeedsRefresh = true;
         let universeRows = [];
 
-        // Cycle rules (Porteira)
-        // A coluna "Razao" no relatório fica em 01..18 (2 primeiros dígitos da UL)
-        // e cada ciclo (97/98/99) agrupa essas razões.
+        // Definição das razões rurais por ciclo
         const CYCLE_RAZOES = {
             "97": [1, 4, 7, 10, 13, 16],
             "98": [2, 5, 8, 11, 14, 17],
@@ -1417,7 +1129,8 @@
         };
 
         /**
-         * Busca informações do ciclo atual do backend
+         * Busca informações do ciclo atual do backend.
+         * Atualiza a variável global `selectedCycle`.
          */
         async function fetchCurrentCycleInfo() {
             try {
@@ -1428,28 +1141,25 @@
                     const cycleInfo = data.data;
                     selectedCycle = cycleInfo.ciclo;
                     
-                    // Atualiza o display do ciclo atual (formato minimalista)
                     const displayEl = document.getElementById('current-cycle-display');
                     if (displayEl) {
                         displayEl.textContent = `Ciclo ${cycleInfo.ciclo} • ${cycleInfo.mes}`;
                     }
                     
-                    console.log(`🔄 Ciclo automático obtido do servidor: Ciclo ${cycleInfo.ciclo} (${cycleInfo.mes})`);
+                    console.log(`🔄 Ciclo automático obtido: Ciclo ${cycleInfo.ciclo} (${cycleInfo.mes})`);
                     return cycleInfo;
                 } else {
-                    console.warn('Falha ao obter ciclo atual do servidor');
-                    // Fallback para cálculo local
+                    console.warn('Falha ao obter ciclo do servidor, usando fallback.');
                     return getAutoCycleFallback();
                 }
             } catch (error) {
-                console.error('Erro ao buscar ciclo atual:', error);
-                // Fallback para cálculo local
+                console.error('Erro ao buscar ciclo:', error);
                 return getAutoCycleFallback();
             }
         }
 
         /**
-         * Calcula o ciclo atual localmente como fallback
+         * Fallback local para cálculo do ciclo caso a API falhe.
          */
         function getAutoCycleFallback() {
             const now = new Date();
@@ -1472,7 +1182,7 @@
                 displayEl.textContent = `Ciclo ${selectedCycle} • ${monthNames[month]}`;
             }
             
-            console.log(`🔄 Ciclo automático calculado localmente: Ciclo ${selectedCycle} (${monthNames[month]})`);
+            console.log(`🔄 Ciclo fallback: Ciclo ${selectedCycle} (${monthNames[month]})`);
             
             return {
                 ciclo: selectedCycle,
@@ -1482,7 +1192,7 @@
             };
         }
 
-        // Clock
+        // Relógio
         setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -1491,14 +1201,9 @@
             document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
         }, 1000);
 
-        // Helper functions
+        // Funções auxiliares
         function getSelectedRegion() {
             return (document.getElementById('regiao-filter')?.value || '').toString().trim();
-        }
-
-        function getAllowedRuralRazoens(cycle) {
-            const c = (cycle || "").toString().trim();
-            return (CYCLE_RAZOES[c] || []).slice();
         }
 
         function buildUrl(path, includeCycle = true, includeRegion = true) {
@@ -1528,70 +1233,59 @@
             }
         }
 
-        function setCycle(cycle) {
-            selectedCycle = (cycle || "").toString().trim();
+        /**
+         * Exibe notificações toast flutuantes.
+         */
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const colors = {
+                success: { bg: '#238636', icon: 'check-circle' },
+                error: { bg: '#f85149', icon: 'x-circle' },
+                warning: { bg: '#d29922', icon: 'alert-triangle' },
+                info: { bg: '#58a6ff', icon: 'info' }
+            };
 
-            const razaoSel = document.getElementById('razao-filter');
-            if (razaoSel) razaoSel.value = "";
-            const search = document.getElementById('search-input');
-            if (search) search.value = "";
+            const config = colors[type] || colors.info;
 
-            refreshAll(true);
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="${config.icon}" style="width: 20px; height: 20px;"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${config.bg};
+                color: white;
+                padding: 14px 20px;
+                border-radius: 10px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+                z-index: 10000;
+                font-size: 14px;
+                font-weight: 600;
+                min-width: 300px;
+                animation: slideIn 0.3s ease;
+            `;
+
+            document.body.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
-
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    const colors = {
-        success: { bg: '#238636', icon: 'check-circle' },
-        error: { bg: '#f85149', icon: 'x-circle' },
-        warning: { bg: '#d29922', icon: 'alert-triangle' },
-        info: { bg: '#58a6ff', icon: 'info' }
-    };
-
-    const config = colors[type] || colors.info;
-
-    toast.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <i data-lucide="${config.icon}" style="width: 20px; height: 20px;"></i>
-            <span>${message}</span>
-        </div>
-    `;
-
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${config.bg};
-        color: white;
-        padding: 14px 20px;
-        border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        z-index: 10000;
-        font-size: 14px;
-        font-weight: 600;
-        min-width: 300px;
-        animation: slideIn 0.3s ease;
-    `;
-
-    document.body.appendChild(toast);
-    lucide.createIcons();
-
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-}
-
-        // Chart rendering
+        // Renderização dos Gráficos
         async function renderChart() {
             try {
-
                 const res = await authFetch(buildUrl("/api/porteira/chart"));
                 const payload = await res.json();
 
                 const ctx = document.getElementById("porteiraChart");
-
                 if (porteiraChart) porteiraChart.destroy();
 
                 porteiraChart = new Chart(ctx, {
@@ -1666,7 +1360,6 @@ function showToast(message, type = 'info') {
                 }
 
                 const ctx = document.getElementById("naoExecutadasChart");
-
                 if (naoExecutadasChart) naoExecutadasChart.destroy();
 
                 naoExecutadasChart = new Chart(ctx, {
@@ -1715,7 +1408,7 @@ function showToast(message, type = 'info') {
             }
         }
 
-        // Table functions
+        // Funções de Tabela
         async function loadTableData() {
             try {
                 const res = await authFetch(buildUrl("/api/porteira/table"));
@@ -1728,7 +1421,6 @@ function showToast(message, type = 'info') {
 
                     updateMetrics(data.totals);
                     updateRazaoFilter();
-                    // Aplica filtros atuais (Região no topo + Razão/Busca na tabela)
                     filterTable();
                     
                     updateConnectionStatus(true);
@@ -1742,8 +1434,6 @@ function showToast(message, type = 'info') {
             }
         }
 
-        
-        // Abertura de Porteira (Mês atual x Mês anterior)
         async function loadAberturaPorteira() {
             try {
                 const res = await authFetch(buildUrl("/api/porteira/abertura"));
@@ -1758,9 +1448,7 @@ function showToast(message, type = 'info') {
             }
         }
 
-        
         function _formatRazaoRZ(raw) {
-            // Aceita: "01", "R01", "RZ 01" e similares.
             const s = String(raw || '').trim();
             if (!s) return '';
             const matches = s.match(/\d+/g) || [];
@@ -1771,18 +1459,12 @@ function showToast(message, type = 'info') {
         }
 
         function _fmtNumberOrBlank(v) {
-            // null/undefined => lacuna (mês sem dados). 0 deve aparecer como "0".
             if (v === null || v === undefined) return '';
             const n = Number(v);
             return Number.isFinite(n) ? String(n) : '';
         }
 
         function _aberturaQtyClass(v, atraso, hasData) {
-            // Regras solicitadas:
-            // - Dentro do prazo: amarelo
-            // - Atrasado: vermelho
-            // - Zero: verde
-            // - Se mês SEM dados (lacuna), não aplica classe
             if (!hasData && (v === null || v === undefined)) return '';
             const n = Number((v === null || v === undefined) ? 0 : v);
             if (!Number.isFinite(n)) return '';
@@ -1814,9 +1496,6 @@ function showToast(message, type = 'info') {
                     const razao = _formatRazaoRZ(r.razao);
                     const dataStr = (r.data && String(r.data).trim()) ? r.data : '--/--';
 
-                    // Regra:
-                    // - se o mês tem dados: zeros aparecem como 0
-                    // - se o mês não tem dados (ex.: Janeiro sem histórico): lacuna (null/undefined)
                     const osbDisp = hasData ? _fmtNumberOrBlank((r.osb ?? 0)) : _fmtNumberOrBlank(r.osb);
                     const cnvDisp = hasData ? _fmtNumberOrBlank((r.cnv ?? 0)) : _fmtNumberOrBlank(r.cnv);
                     const qtdDisp = hasData ? _fmtNumberOrBlank((r.quantidade ?? 0)) : _fmtNumberOrBlank(r.quantidade);
@@ -1850,17 +1529,15 @@ function showToast(message, type = 'info') {
             if (tAtr) tAtr.textContent = _fmtNumberOrBlank(payload.totals?.atraso);
         }
 
-function updateMetrics(totals) {
+        function updateMetrics(totals) {
             const totalLeit = Number(totals.total_leituras || 0);
             const naoExec = Number(totals.leituras_nao_exec || 0);
             const impedimentos = Number(totals.impedimentos || 0);
             
-            // Atualizar valores absolutos
             document.getElementById('v2-total-leituras').innerText = totalLeit;
             document.getElementById('v2-leituras-nao-exec').innerText = naoExec;
             document.getElementById('v2-impedimentos').innerText = impedimentos;
             
-            // Calcular e atualizar porcentagens
             const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
             const percImpedimento = totalLeit > 0 ? ((impedimentos / totalLeit) * 100).toFixed(1) : '0.0';
             
@@ -1871,7 +1548,6 @@ function updateMetrics(totals) {
         function updateRazaoFilter() {
             const razoes = [...new Set(allTableData.map(row => row.Razao))].sort();
             const select = document.getElementById('razao-filter');
-
             const current = (select?.value || '').trim();
             
             select.innerHTML = '<option value="">Todas</option>';
@@ -1889,7 +1565,6 @@ function updateMetrics(totals) {
             }
         }
 
-        
         function renderTable() {
             const tbody = document.getElementById('v2-table-body');
             if (!tbody) return;
@@ -1921,7 +1596,7 @@ function updateMetrics(totals) {
 
                 return `
                 <tr>
-                    <td><span class="badge badge-primary">${row.Regiao || '-'}</span></td>
+                    <td><span class="region-badge ${String(row.Regiao).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}">${row.Regiao || '-'}</span></td>
                     <td>${row.Localidade || '-'}</td>
                     <td><strong>${row.Conjunto_Contrato || '-'}</strong></td>
                     <td>${row.UL || '-'}</td>
@@ -1936,10 +1611,6 @@ function updateMetrics(totals) {
             }).join('');
 
             lucide.createIcons();
-        }
-
-        function _normStr(v) {
-            return String(v || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
         }
 
         function filterTable() {
@@ -1968,281 +1639,134 @@ function updateMetrics(totals) {
             renderTable();
         }
 
-
-        async function loadUniverse() {
-            try {
-                const res = await authFetch(buildUrl('/api/porteira/table', false));
-                const txt = await res.text();
-
-                let data = null;
-                try {
-                    data = JSON.parse(txt);
-                } catch (_) {
-                    data = null;
-                }
-
-                if (res.ok && data && data.success) {
-                    universeRows = data.data || [];
-                    return;
-                }
-
-                if (res.ok && !data) {
-                    universeRows = [];
-                    return;
-                }
-
-                console.warn('Falha ao carregar universo de ciclos:', data || txt);
-            } catch (e) {
-                console.warn('Falha ao carregar universo de ciclos:', e);
-            }
-        }
-
         async function refreshAll(force = false) {
             if (force) {
                 cacheBust = Date.now();
-                universeNeedsRefresh = true;
-            }
-            if (universeNeedsRefresh) {
-                await loadUniverse();
-                universeNeedsRefresh = false;
             }
             await Promise.all([renderChart(), renderNaoExecutadasChart(), loadTableData(), loadAberturaPorteira()]);
         }
 
+        function getRoleFromToken() {
+            try {
+                const token = localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
+                if (!token) return '';
+                const payload = token.split('.')[1];
+                const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+                return String(json.role || '').toLowerCase();
+            } catch (e) {
+                return '';
+            }
+        }
 
-function getRoleFromToken() {
-    try {
-        const token = localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
-        if (!token) return '';
-        const payload = token.split('.')[1];
-        const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-        return String(json.role || '').toLowerCase();
-    } catch (e) {
-        return '';
-    }
-}
+        // Configuração de acesso baseado em função (RBAC)
+        const __role = getRoleFromToken();
+        const __canSelectRegion = ['gerencia','diretoria','desenvolvedor'].includes(__role);
+        const __canResetPorteira = (__role === 'desenvolvedor');
+        const __canSyncPorteira = (__role === 'desenvolvedor');
 
-// RBAC (provisório)
-const __role = getRoleFromToken();
-const __canSelectRegion = ['gerencia','diretoria','desenvolvedor'].includes(__role);
-const __canResetPorteira = (__role === 'desenvolvedor'); // somente desenvolvedor
+        // Visibilidade de controles
+        const __regiaoContainer = document.querySelector('.header-actions-group .region-filter-container');
+        if (!__canSelectRegion && __regiaoContainer) {
+            __regiaoContainer.style.display = 'none';
+        }
 
-// Região no topo: somente usuários privilegiados (gerência/diretoria/dev)
-const __regiaoContainer = document.querySelector('.header-actions-group .region-filter-container');
-if (!__canSelectRegion && __regiaoContainer) {
-    __regiaoContainer.style.display = 'none';
-}
+        const __btnSyncPorteira = document.getElementById('btn-sync-porteira');
+        if (!__canSyncPorteira && __btnSyncPorteira) {
+            __btnSyncPorteira.style.display = 'none';
+        }
 
-// Sincronizar: somente desenvolvedor
-const __canSyncPorteira = (__role === 'desenvolvedor');
-const __btnSyncPorteira = document.getElementById('btn-sync-porteira');
-if (!__canSyncPorteira && __btnSyncPorteira) {
-    __btnSyncPorteira.style.display = 'none';
-}
+        const __btnResetPorteira = document.getElementById('btn-reset-porteira');
+        if (!__canResetPorteira && __btnResetPorteira) {
+            __btnResetPorteira.style.display = 'none';
+        }
 
-// Zerar banco: somente gerência (provisório)
-const __btnResetPorteira = document.getElementById('btn-reset-porteira');
-if (!__canResetPorteira && __btnResetPorteira) {
-    __btnResetPorteira.style.display = 'none';
-}
+        // Event Listeners
+        document.getElementById('regiao-filter').addEventListener('change', () => refreshAll(true));
+        document.getElementById('razao-filter').addEventListener('change', filterTable);
+        document.getElementById('search-input').addEventListener('input', filterTable);
 
-// Event listeners
-// Região (no topo) precisa atualizar métricas + gráficos + tabela
-document.getElementById('regiao-filter').addEventListener('change', () => {
-    refreshAll(true);
-});
-document.getElementById('razao-filter').addEventListener('change', filterTable);
-document.getElementById('search-input').addEventListener('input', filterTable);
+        // Ação de Sincronizar
+        document.getElementById('btn-sync-porteira').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-sync-porteira');
+            const originalHTML = btn.innerHTML;
 
-// Botão Sincronizar Portal
-document.getElementById('btn-sync-porteira').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-sync-porteira');
-    const originalHTML = btn.innerHTML;
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader" class="spinning"></i><span>Sincronizando...</span>';
+                lucide.createIcons();
 
-    try {
-        btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader" class="spinning"></i><span>Sincronizando...</span>';
-        lucide.createIcons();
+                const res = await authFetch(buildUrl('/api/sync/porteira', false, false), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-        const res = await authFetch(buildUrl('/api/sync/porteira', false, false), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('✓ Dados sincronizados com sucesso!', 'success');
+                    await refreshAll(true);
+                } else {
+                    showToast('✗ Erro: ' + (data.error || 'Falha na sincronização'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao sincronizar:', error);
+                showToast('✗ Erro ao conectar com o servidor', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+            }
         });
 
-        const data = await res.json();
-
-        if (data.success) {
-            showToast('✓ Dados sincronizados com sucesso!', 'success');
-            await refreshAll(true);
-        } else {
-            showToast('✗ Erro: ' + (data.error || 'Falha na sincronização'), 'error');
-        }
-    } catch (error) {
-        console.error('Erro ao sincronizar:', error);
-        showToast('✗ Erro ao conectar com o servidor', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
-        lucide.createIcons();
-    }
-});
-
-// Botão Zerar Banco
-if (__canResetPorteira) {
-  document.getElementById('btn-reset-porteira').addEventListener('click', async () => {
-    const confirmMessage = `⚠️ ATENÇÃO!
-
+        // Ação de Zerar Banco
+        if (__canResetPorteira) {
+            document.getElementById('btn-reset-porteira').addEventListener('click', async () => {
+                const confirmMessage = `⚠️ ATENÇÃO!
 Esta ação irá APAGAR PERMANENTEMENTE todos os dados de porteira de TODOS os usuários.
-
-Você não poderá desfazer esta ação.
-
 Deseja realmente continuar?`;
 
-    if (!confirm(confirmMessage)) return;
+                if (!confirm(confirmMessage)) return;
+                if (!confirm('Última confirmação: Tem certeza ABSOLUTA?')) return;
 
-    const doubleConfirm = confirm('Última confirmação: Tem certeza ABSOLUTA?');
-    if (!doubleConfirm) return;
+                try {
+                    const res = await authFetch(buildUrl('/api/reset/porteira', false), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await res.json();
 
-    try {
-        const res = await authFetch(buildUrl('/api/reset/porteira', false), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            showToast('✓ Banco de porteira zerado!', 'success');
-            await refreshAll(true);
-        } else {
-            showToast('✗ ' + (data.message || data.error || 'Falha ao zerar banco'), 'error');
+                    if (data.success) {
+                        showToast('✓ Banco de porteira zerado!', 'success');
+                        await refreshAll(true);
+                    } else {
+                        showToast('✗ ' + (data.message || data.error || 'Falha ao zerar banco'), 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('✗ Erro ao conectar com o servidor', 'error');
+                }
+            });
         }
-    } catch (err) {
-        console.error(err);
-        showToast('✗ Erro ao conectar com o servidor', 'error');
-    }
-  });
-}
 
-        // Initial load
+        // Inicialização
         (async function init() {
             await fetchCurrentCycleInfo();
             await refreshAll(true);
-            updateAberturaPorteiraMonthTitles();
+            
+            // Atualiza títulos dos meses na tabela
+            const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+            const now = new Date();
+            const currM = monthNames[now.getMonth()];
+            const currY = String(now.getFullYear()).slice(-2);
+            
+            const prevD = new Date(now);
+            prevD.setMonth(prevD.getMonth() - 1);
+            const prevM = monthNames[prevD.getMonth()];
+            const prevY = String(prevD.getFullYear()).slice(-2);
+            
+            document.getElementById('current-month-title').textContent = `${currM}/${currY}`;
+            document.getElementById('previous-month-title').textContent = `${prevM}/${prevY}`;
         })();
-
-        // Função para atualizar os títulos dos meses na tabela Abertura de Porteira
-        function updateAberturaPorteiraMonthTitles() {
-            const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 
-                               'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-            
-            const currentDate = new Date();
-            const currentMonth = monthNames[currentDate.getMonth()];
-            const currentYear = String(currentDate.getFullYear()).slice(-2);
-            
-            const previousDate = new Date(currentDate);
-            previousDate.setMonth(previousDate.getMonth() - 1);
-            const previousMonth = monthNames[previousDate.getMonth()];
-            const previousYear = String(previousDate.getFullYear()).slice(-2);
-            
-            const currentMonthTitle = document.getElementById('current-month-title');
-            const previousMonthTitle = document.getElementById('previous-month-title');
-            
-            if (currentMonthTitle) {
-                currentMonthTitle.textContent = `${currentMonth}/${currentYear}`;
-            }
-            
-            if (previousMonthTitle) {
-                previousMonthTitle.textContent = `${previousMonth}/${previousYear}`;
-            }
-        }
-
-        // Função para renderizar a tabela Abertura de Porteira
-        function renderAberturaPorteira(currentMonthData = null, previousMonthData = null) {
-            const currentTbody = document.getElementById('abertura-current-tbody');
-            const previousTbody = document.getElementById('abertura-previous-tbody');
-            
-            // Renderizar mês atual
-            if (currentMonthData && currentMonthData.length > 0) {
-                renderAberturaMonth(currentTbody, currentMonthData, 'current');
-            } else {
-                renderAberturaEmptyState(currentTbody, 'current');
-            }
-            
-            // Renderizar mês anterior
-            if (previousMonthData && previousMonthData.length > 0) {
-                renderAberturaMonth(previousTbody, previousMonthData, 'previous');
-            } else {
-                renderAberturaEmptyState(previousTbody, 'previous');
-            }
-            
-            lucide.createIcons();
-        }
-
-        // Função para renderizar dados de um mês
-        function renderAberturaMonth(tbody, data, period) {
-            let totalQuantidade = 0;
-            let totalAtraso = 0;
-            
-            let html = '';
-            for (let i = 1; i <= 18; i++) {
-                const __rzKey = String(i).padStart(2, '0');
-                const razaoLabel = `RZ ${__rzKey}`;
-                // Compatível com formatos: "01", "R01", "RZ 01"
-                const row = data.find(r => _formatRazaoRZ(r.razao) === razaoLabel) || {};
-                
-                const quantidade = Number(row.quantidade || 0);
-                const atraso = Number(row.atraso || 0);
-                const data_abertura = row.data || '--/--';
-
-                // Se existem dados para o período (função usada em versões antigas), 0 deve aparecer como 0
-                const qtdDisp = String(quantidade);
-                const atrDisp = String(atraso);
-                const qtdClass = _aberturaQtyClass(quantidade, atraso, true);
-                
-                
-                totalQuantidade += quantidade;
-                totalAtraso += atraso;
-                
-                html += `
-                    <tr>
-                        <td>${razaoLabel}</td>
-                        <td>${data_abertura}</td>
-                        <td class="abertura-qty ${qtdClass}">${qtdDisp}</td>
-                        <td class="atraso-value">${atrDisp}</td>
-                    </tr>
-                `;
-            }
-            
-            tbody.innerHTML = html;
-            
-            // Atualizar totais
-            document.getElementById(`${period}-total-quantidade`).textContent = String(totalQuantidade);
-            document.getElementById(`${period}-total-atraso`).textContent = String(totalAtraso);
-        }
-
-        // Função para renderizar estado vazio
-        function renderAberturaEmptyState(tbody, period) {
-            const monthName = period === 'current' ? 'MÊS ATUAL' : 'MÊS ANTERIOR';
-            
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="4" style="padding: 0; border: none;">
-                        <div class="abertura-empty-state">
-                            <i data-lucide="alert-triangle"></i>
-                            <div class="abertura-empty-state-title">⚠️ SEM DADOS DO ${monthName}</div>
-                            <div class="abertura-empty-state-message">
-                                Não há informações de abertura de porteira disponíveis para este período.<br>
-                                Os dados serão exibidos assim que forem registrados no sistema.
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            
-            // Zerar totais
-            document.getElementById(`${period}-total-quantidade`).textContent = '0';
-            document.getElementById(`${period}-total-atraso`).textContent = '0';
-        }
     </script>
 </body>
 </html>
