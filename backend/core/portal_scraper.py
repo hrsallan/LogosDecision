@@ -26,6 +26,9 @@ def _find_project_root() -> Path:
     """
     Encontra a raiz do projeto VigilaCore de forma robusta.
     Procura pelas pastas 'frontend' e 'data' ou pelo arquivo '.env'.
+
+    Retorna:
+        Path: Caminho absoluto para a raiz do projeto.
     """
     here = Path(__file__).resolve()
     for parent in [here] + list(here.parents):
@@ -43,7 +46,10 @@ def _default_download_dir() -> Path:
 
 
 def _clear_download_dir(download_dir: Path) -> None:
-    """Limpa arquivos existentes no diretório de download para evitar confusão."""
+    """
+    Limpa arquivos existentes no diretório de download para evitar confusão
+    entre downloads anteriores e o atual.
+    """
     download_dir.mkdir(parents=True, exist_ok=True)
     for f in download_dir.iterdir():
         try:
@@ -68,15 +74,24 @@ def _latest_file(download_dir: Path) -> Path | None:
 def _wait_download_finished(download_dir: Path, timeout: int = 120) -> bool:
     """
     Aguarda o término do download verificando a inexistência de arquivos temporários (.crdownload/.tmp).
+
+    Argumentos:
+        download_dir (Path): Diretório onde o arquivo está sendo baixado.
+        timeout (int): Tempo máximo de espera em segundos.
+
+    Retorna:
+        bool: True se o download for concluído com sucesso, False caso contrário.
     """
     end = time.time() + timeout
     while time.time() < end:
         try:
+            # Verifica arquivos temporários do Chrome
             unfinished = list(download_dir.glob("*.crdownload")) + list(download_dir.glob("*.tmp"))
             if unfinished:
                 time.sleep(1)
                 continue
 
+            # Verifica se já existe um arquivo finalizado com tamanho > 0
             latest = _latest_file(download_dir)
             if latest is not None and latest.stat().st_size > 0:
                 return True
@@ -98,19 +113,23 @@ def download_releitura_excel(
     """
     Realiza o download do relatório de RELEITURAS NÃO EXECUTADAS.
 
-    Args:
-        portal_user: Usuário do portal.
+    Argumentos:
+        portal_user: Usuário do portal (SGL).
         portal_pass: Senha do portal.
         download_dir: Pasta de destino (opcional).
+        unidade_de: Filtro inicial de Unidade de Leitura.
+        unidade_ate: Filtro final de Unidade de Leitura.
+        timeout: Tempo limite de espera.
 
-    Returns:
-        Caminho do arquivo baixado.
+    Retorna:
+        str: Caminho absoluto do arquivo baixado.
 
-    Raises:
-        RuntimeError: Se houver falha no processo.
+    Lança:
+        RuntimeError: Se houver falha no processo de automação ou download.
     """
 
-    # Importações preguiçosas (Selenium/PyAutoGUI)
+    # Importações preguiçosas (Selenium/PyAutoGUI) para evitar erros no backend
+    # se essas libs não estiverem instaladas no ambiente de produção.
     try:
         import pyautogui  # type: ignore
         from selenium import webdriver  # type: ignore
@@ -127,7 +146,7 @@ def download_releitura_excel(
             f"Detalhe: {e}"
         )
     
-    # Carregar .env
+    # Carregar variáveis de ambiente
     project_root = _find_project_root()
     env_path = project_root / ".env"
     if env_path.exists():
@@ -146,12 +165,12 @@ def download_releitura_excel(
     unidade_de = unidade_de or UNIDADE_PADRAO_DE
     unidade_ate = unidade_ate or UNIDADE_PADRAO_ATE
 
-    # Localizadores (XPaths e IDs)
+    # Localizadores (XPaths e IDs) para automação do Selenium
     LOC_USER = (By.ID, "UserName")
     LOC_PASS = (By.ID, "Password")
     LOC_BTN_LOGIN = (By.XPATH, "//button[text()='Login']")
     LOC_MENU_RELATORIOS = (By.XPATH, "//ul[@id='side-menu']//li//span[text()='RELATÓRIOS']")
-    # Tenta href primeiro, depois texto
+    # Tenta href primeiro, depois texto para maior robustez
     LOC_RELEITURA_BY_HREF = (By.XPATH, "//a[contains(@href,'/SGLEmpreiteira/Relatorios/RlReleituraNaoExecutada')]")
     LOC_RELEITURA_BY_TEXT = (By.XPATH, "//a[contains(.,'Releit') or contains(.,'RELEIT')]")
     LOC_MES_ANO = (By.ID, "txtMesAno")
@@ -159,7 +178,10 @@ def download_releitura_excel(
     LOC_BTN_GERAR = (By.ID, "btnGerarExcel")
 
     def handle_certificate():
-        """Tenta fechar automaticamente o popup de certificado do Windows."""
+        """
+        Tenta fechar automaticamente o popup de seleção de certificado do Windows/Chrome.
+        Usa PyAutoGUI para simular 'Enter'.
+        """
         time.sleep(5)
         try:
             pyautogui.press("enter")
@@ -168,7 +190,7 @@ def download_releitura_excel(
         except Exception:
             pass
 
-    # Opções do Chrome
+    # Configuração do Chrome Driver
     chrome_options = Options()
     if os.getenv("PORTAL_DETACH", "0") == "1":
         chrome_options.add_experimental_option("detach", True)
@@ -185,6 +207,7 @@ def download_releitura_excel(
     }
     chrome_options.add_experimental_option("prefs", prefs)
 
+    # Thread separada para lidar com certificado digital (se necessário)
     if os.getenv("PORTAL_HANDLE_CERT", "1") == "1":
         threading.Thread(target=handle_certificate, daemon=True).start()
 

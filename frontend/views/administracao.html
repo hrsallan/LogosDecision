@@ -13,7 +13,9 @@
 </head>
 <body>
     <div class="v2-container">
-        <!-- BARRA LATERAL -->
+        <!-- ============================== -->
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <!-- ============================== -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
                 <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
@@ -63,7 +65,9 @@
             </nav>
         </aside>
 
+        <!-- ============================== -->
         <!-- CONTEÚDO PRINCIPAL -->
+        <!-- ============================== -->
         <div class="v2-content">
             <!-- CABEÇALHO -->
             <header class="v2-header">
@@ -82,9 +86,9 @@
 
             <!-- CONTEÚDO -->
             <main class="v2-main">
-                <!-- WIDGET DO SCHEDULER -->
+                <!-- WIDGET DO SCHEDULER (CARREGAMENTO DINÂMICO) -->
                 <div id="scheduler-container">
-                    <!-- O widget será carregado aqui -->
+                    <!-- O widget será carregado aqui se o usuário tiver permissão -->
                 </div>
 
                 <!-- PLACEHOLDER DE DESENVOLVIMENTO -->
@@ -104,6 +108,7 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
         lucide.createIcons();
 
@@ -124,7 +129,7 @@
                     const html = await response.text();
                     document.getElementById('scheduler-container').innerHTML = html;
 
-                    // Re-executar scripts dentro do HTML inserido
+                    // Re-executar scripts dentro do HTML inserido (necessário para scripts embutidos via fetch)
                     const scripts = document.getElementById('scheduler-container').querySelectorAll("script");
                     scripts.forEach(oldScript => {
                         const newScript = document.createElement("script");

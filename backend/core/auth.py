@@ -18,11 +18,11 @@ def hash_password(password: str) -> str:
     """
     Cria um hash seguro da senha usando o algoritmo bcrypt.
     
-    Args:
-        password: Senha em texto plano (string).
+    Argumentos:
+        password (str): Senha em texto plano.
         
-    Returns:
-        String contendo o hash seguro da senha.
+    Retorna:
+        str: Hash seguro da senha.
     """
     # Converte a senha para bytes (necessário para o bcrypt)
     password_bytes = password.encode('utf-8')
@@ -39,12 +39,12 @@ def verify_password(password: str, hashed_password: str) -> bool:
     """
     Verifica se uma senha em texto plano corresponde ao hash armazenado.
     
-    Args:
-        password: Senha em texto plano fornecida pelo usuário.
-        hashed_password: Hash armazenado no banco de dados.
+    Argumentos:
+        password (str): Senha em texto plano fornecida pelo usuário.
+        hashed_password (str): Hash armazenado no banco de dados.
         
-    Returns:
-        True se a senha estiver correta, False caso contrário.
+    Retorna:
+        bool: True se a senha estiver correta, False caso contrário.
     """
     try:
         password_bytes = password.encode('utf-8')
@@ -61,13 +61,13 @@ def authenticate_user(username: str, password: str) -> Optional[Dict]:
     Autentica um usuário verificando suas credenciais no banco de dados.
     Suporta migração automática de senhas legadas (texto plano) para bcrypt.
     
-    Args:
-        username: Nome de usuário.
-        password: Senha em texto plano.
+    Argumentos:
+        username (str): Nome de usuário.
+        password (str): Senha em texto plano.
         
-    Returns:
-        Dicionário com dados do usuário (id, username, role) se autenticado,
-        ou None caso a autenticação falhe.
+    Retorna:
+        dict | None: Dicionário com dados do usuário (id, username, role) se autenticado,
+                     ou None caso a autenticação falhe.
     """
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
@@ -118,13 +118,13 @@ def register_user(username: str, password: str, role: str = 'analistas') -> bool
     """
     Registra um novo usuário no sistema.
     
-    Args:
-        username: Nome de usuário desejado.
-        password: Senha em texto plano.
-        role: Papel/Cargo do usuário (ex: 'analistas', 'gerencia', 'diretoria').
+    Argumentos:
+        username (str): Nome de usuário desejado.
+        password (str): Senha em texto plano.
+        role (str): Papel/Cargo do usuário (ex: 'analistas', 'gerencia', 'diretoria').
         
-    Returns:
-        True se o registro for bem-sucedido, False se o usuário já existir.
+    Retorna:
+        bool: True se o registro for bem-sucedido, False se o usuário já existir.
     """
     try:
         # Gera o hash seguro da senha
@@ -154,12 +154,12 @@ def update_user_password(username: str, new_password: str) -> bool:
     """
     Atualiza a senha de um usuário existente.
     
-    Args:
-        username: Nome de usuário.
-        new_password: Nova senha em texto plano.
+    Argumentos:
+        username (str): Nome de usuário.
+        new_password (str): Nova senha em texto plano.
         
-    Returns:
-        True se atualizado com sucesso, False caso contrário.
+    Retorna:
+        bool: True se atualizado com sucesso, False caso contrário.
     """
     try:
         hashed_password = hash_password(new_password)

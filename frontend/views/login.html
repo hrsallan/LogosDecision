@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigilaCore | Login</title>
-    <!-- Ícones -->
+    <!-- Biblioteca de ícones Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* ==================== ESTILOS DA PÁGINA DE LOGIN ==================== */
+        /* ==========================================================================
+           ESTILOS DA PÁGINA DE LOGIN (TEMA ESCURO V3)
+           ========================================================================== */
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
+            /* Fundo gradiente moderno e escuro */
             background: linear-gradient(135deg, #0a0c10 0%, #161b22 100%);
             display: flex;
             align-items: center;
@@ -21,6 +25,7 @@
             overflow: hidden;
         }
 
+        /* Wrapper principal para centralização */
         .v3-login-wrapper {
             width: 100%;
             height: 100%;
@@ -30,7 +35,7 @@
             padding: 20px;
         }
 
-        /* Container do Cartão de Login */
+        /* Cartão de Login (Card Glassmorphism) */
         .v3-login-container {
             width: 100%;
             max-width: 420px;
@@ -44,22 +49,17 @@
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Cabeçalho do Cartão (Logo e Título) */
         .v3-login-header {
             text-align: center;
             margin-bottom: 32px;
         }
 
-        /* Logo Animado */
+        /* Container do Logo com efeito de brilho */
         .v3-logo-wrapper {
             display: inline-flex;
             align-items: center;
@@ -80,16 +80,12 @@
             transform: translateY(-2px);
         }
 
-        .v3-logo-wrapper img {
-            width: 28px;
-            height: 28px;
-        }
-
         .v3-login-header h1 {
             font-size: 1.75rem;
             font-weight: 800;
             margin-bottom: 4px;
             letter-spacing: -0.5px;
+            /* Texto com gradiente */
             background: linear-gradient(135deg, #c9d1d9 0%, #00d1ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -103,7 +99,7 @@
             letter-spacing: 0.3px;
         }
 
-        /* Estilos do Formulário */
+        /* Formulário */
         .v3-login-form {
             display: flex;
             flex-direction: column;
@@ -137,13 +133,14 @@
             align-items: center;
         }
 
+        /* Campos de Entrada (Input) */
         .v3-input-field {
             width: 100%;
             background: rgba(22, 27, 34, 0.5);
             border: 1.5px solid #30363d;
             color: #c9d1d9;
             padding: 12px 14px;
-            padding-right: 40px;
+            padding-right: 40px; /* Espaço para o ícone de olho */
             border-radius: 10px;
             font-size: 0.95rem;
             font-family: 'Inter', -apple-system, sans-serif;
@@ -193,7 +190,7 @@
             transform: scale(1.1);
         }
 
-        /* Botão de Login */
+        /* Botão Principal de Ação */
         .v3-login-btn {
             background: rgba(0, 209, 255, 0.12);
             color: #00d1ff;
@@ -233,6 +230,7 @@
             background: rgba(0, 209, 255, 0.15);
         }
 
+        /* Rodapé do Card */
         .v3-login-footer {
             text-align: center;
             font-size: 0.75rem;
@@ -253,7 +251,7 @@
             text-decoration: underline;
         }
 
-        /* Responsividade */
+        /* Responsividade para dispositivos móveis */
         @media (max-width: 480px) {
             .v3-login-container {
                 max-width: 100%;
@@ -273,7 +271,9 @@
 <body>
     <div class="v3-login-wrapper">
         <div class="v3-login-container">
-            <!-- Cabeçalho com Logo -->
+            <!-- ============================== -->
+            <!-- CABEÇALHO DO LOGIN -->
+            <!-- ============================== -->
             <div class="v3-login-header">
                 <div class="v3-logo-wrapper">
                     <i data-lucide="shield-check" style="width: 28px; height: 28px; color: #00d1ff;"></i>
@@ -282,8 +282,11 @@
                 <p>Sistema de monitoramento em tempo real.</p>
             </div>
 
-            <!-- Formulário de Login -->
+            <!-- ============================== -->
+            <!-- FORMULÁRIO DE AUTENTICAÇÃO -->
+            <!-- ============================== -->
             <form id="login-form" class="v3-login-form">
+                <!-- Campo: Usuário -->
                 <div class="v3-input-group">
                     <label for="username">Usuário</label>
                     <div class="v3-input-wrapper">
@@ -298,6 +301,7 @@
                     </div>
                 </div>
 
+                <!-- Campo: Senha -->
                 <div class="v3-input-group">
                     <label for="password">Senha</label>
                     <div class="v3-input-wrapper">
@@ -309,6 +313,7 @@
                             autocomplete="current-password"
                             required
                         >
+                        <!-- Botão para alternar visibilidade da senha -->
                         <button type="button" id="togglePassword" class="v3-password-toggle" aria-label="Mostrar/ocultar senha">
                             <i data-lucide="eye"></i>
                         </button>
@@ -325,23 +330,26 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Utilitários Globais (Fetch, etc) -->
     <script src="../js/utils.js"></script>
 
     <script>
-        // Inicializa ícones
+        // Inicializa ícones Lucide
         lucide.createIcons();
 
+        // ----------------------------------------------------
         // Lógica de Alternância de Visibilidade da Senha
+        // ----------------------------------------------------
         const togglePassword = document.getElementById('togglePassword');
         const password = document.getElementById('password');
 
         togglePassword.addEventListener('click', function (e) {
             e.preventDefault();
+            // Alterna o tipo do input entre 'password' e 'text'
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
             password.setAttribute('type', type);
             
-            // Alterna ícone
+            // Alterna o ícone (olho aberto/fechado)
             const icon = togglePassword.querySelector('[data-lucide]');
             if (type === 'text') {
                 icon.setAttribute('data-lucide', 'eye-off');
@@ -351,20 +359,22 @@
             lucide.createIcons();
         });
 
-        // Lógica de Envio do Formulário (Autenticação)
+        // ----------------------------------------------------
+        // Lógica de Envio do Formulário (Login)
+        // ----------------------------------------------------
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const btn = e.target.querySelector('.v3-login-btn');
             
-            // Estado de carregamento
+            // Feedback visual de carregamento
             btn.disabled = true;
             const originalText = btn.textContent;
             btn.textContent = 'Autenticando...';
 
             try {
-                // Chama a API de login via helper authFetch
+                // Requisição à API de login
                 const response = await authFetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -373,16 +383,17 @@
                 const data = await response.json();
 
                 if (data.success && data.token) {
-                    // Armazena token JWT e redireciona
+                    // Login bem-sucedido: Salva token e redireciona
                     localStorage.setItem('vigilacore_token', data.token);
                     window.location.href = 'menu_principal.html';
                 } else {
-                    alert(data.message || 'Erro ao fazer login');
+                    alert(data.message || 'Erro ao fazer login. Verifique suas credenciais.');
                 }
             } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro de conexão com o servidor');
+                console.error('Erro de login:', error);
+                alert('Erro de conexão com o servidor. Tente novamente mais tarde.');
             } finally {
+                // Restaura o botão
                 btn.disabled = false;
                 btn.textContent = originalText;
             }

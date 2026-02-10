@@ -45,7 +45,7 @@ class AutoScheduler:
         self.portal_manager_username = "GRTRI"
         self.is_running = False
         
-        # Lock para evitar concorrência de jobs (uma sincronização por vez)
+        # Bloqueio (Lock) para evitar concorrência de jobs (uma sincronização por vez)
         self._run_lock = threading.Lock()
 
         # Carregar configurações iniciais

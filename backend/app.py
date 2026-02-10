@@ -1,3 +1,17 @@
+"""
+Módulo Principal da Aplicação VigilaCore (Backend)
+
+Este arquivo inicializa a aplicação Flask, configura as rotas da API e gerencia
+o ciclo de vida da aplicação. Atua como o ponto de entrada principal para o servidor backend.
+
+Funcionalidades principais:
+- Configuração do servidor Flask e CORS.
+- Definição de rotas para autenticação (login/registro).
+- Endpoints para upload e processamento de arquivos (Releitura/Porteira).
+- Endpoints para visualização de dashboards e métricas.
+- Gerenciamento de sincronização automática via Scheduler.
+"""
+
 import os
 from pathlib import Path
 try:
@@ -5,7 +19,7 @@ try:
     # Carrega variáveis do arquivo .env na raiz do projeto (VigilaCore/.env)
     load_dotenv(Path(__file__).resolve().parents[1] / '.env')
 except Exception:
-    # Se python-dotenv não estiver instalado, o app continua rodando
+    # Se python-dotenv não estiver instalado, o app continua rodando (assumindo vars de ambiente do sistema)
     pass
 import os
 import sqlite3
@@ -34,17 +48,20 @@ from core.database import (
 from core.releitura_routing_v2 import route_releituras
 from core.scheduler import init_scheduler, get_scheduler
 
+# Chave secreta para assinatura de tokens JWT (padrão seguro em produção via .env)
 SECRET_KEY = os.environ.get("JWT_SECRET", "segredo-super-seguro")
 
+# Configuração de caminhos do projeto
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
 DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 DB_PATH = Path(__file__).resolve().parent / 'data' / 'vigilacore.db'
 
 app = Flask(__name__)
-# CORS: o frontend costuma rodar em outra porta (ex.: Live Server 5500)
-# e faz requisições com header Authorization (JWT). Se o CORS não permitir
-# o header Authorization no preflight, o navegador falha com "TypeError: Failed to fetch".
+
+# Configuração de CORS (Cross-Origin Resource Sharing)
+# Permite que o frontend (geralmente em porta diferente no desenvolvimento) acesse a API.
+# Exibe headers específicos necessários para autenticação JWT.
 CORS(
     app,
     resources={r"/api/*": {"origins": "*"}},
@@ -55,23 +72,33 @@ CORS(
 
 
 # -------------------------------------------------------
-# CORS preflight: o navegador envia OPTIONS antes de POST com Authorization.
-# Se retornarmos 401/403 no OPTIONS, o browser acusa 'Failed to fetch'.
-# Então respondemos 204 rapidamente e deixamos o Flask-CORS anexar headers.
+# Tratamento de Preflight CORS
 # -------------------------------------------------------
 @app.before_request
 def _handle_preflight_options():
+    """
+    Intercepta requisições OPTIONS antes do processamento principal.
+    Necessário para navegadores aceitarem requisições complexas (com Authorization).
+    Retorna 204 (No Content) para aprovar o preflight rapidamente.
+    """
     if request.method == 'OPTIONS':
         return ('', 204)
 
 # -------------------------------------------------------
-# AJUDA: Funções utilitárias (autenticação JWT)
+# Utilitários de Autenticação (JWT)
 # -------------------------------------------------------
 def get_user_id_from_token():
+    """
+    Extrai o ID do usuário do token JWT presente no cabeçalho Authorization.
+
+    Retorna:
+        int: ID do usuário se o token for válido.
+        None: Se o token estiver ausente ou inválido.
+    """
     auth = request.headers.get("Authorization", "")
     if not auth.lower().startswith("bearer "):
         return None
-    token = auth[7:] # Remove "Bearer "
+    token = auth[7:] # Remove o prefixo "Bearer "
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return int(payload["user_id"])
@@ -80,7 +107,13 @@ def get_user_id_from_token():
 
 
 def get_current_user_from_request():
-    """Retorna o usuário atual (id, username, role) a partir do token JWT."""
+    """
+    Recupera o objeto completo do usuário atual a partir do token da requisição.
+
+    Retorna:
+        dict: Dados do usuário (id, username, role, etc.).
+        None: Se não autenticado.
+    """
     uid = get_user_id_from_token()
     if not uid:
         return None
@@ -88,7 +121,12 @@ def get_current_user_from_request():
 
 
 def norm_role(v: str | None) -> str:
-    """Normaliza roles (lower, remove acentos e espaços)."""
+    """
+    Normaliza a string de cargo/função (role).
+    Remove acentos, espaços e converte para minúsculas.
+
+    Exemplo: 'Gerência' -> 'gerencia'
+    """
     s = (v or '').strip().lower()
     if not s:
         return ''
@@ -97,7 +135,10 @@ def norm_role(v: str | None) -> str:
     return s
 
 def list_all_user_ids() -> list[int]:
-    """Lista todos os IDs de usuários cadastrados."""
+    """
+    Lista todos os IDs de usuários cadastrados no banco de dados.
+    Utilizado para distribuir dados globais (como Porteira) para todos.
+    """
     try:
         conn = sqlite3.connect(str(DB_PATH))
         cur = conn.cursor()
@@ -109,9 +150,20 @@ def list_all_user_ids() -> list[int]:
         print(f"⚠️  Erro ao listar usuários: {e}")
         return []
 
-
+# -------------------------------------------------------
+# Rotas de Autenticação
+# -------------------------------------------------------
 @app.route('/api/register', methods=['POST'])
 def register():
+    """
+    Endpoint para registro de novos usuários.
+
+    Regras de negócio:
+    - Qualquer um pode criar contas com permissões básicas ('analistas').
+    - Contas privilegiadas ('gerencia', 'diretoria', 'desenvolvedor') exigem
+      autenticação prévia de um usuário com privilégios similares, exceto
+      no bootstrap (primeiro usuário do sistema).
+    """
     data = request.json or {}
     username = (data.get('username') or '').strip()
     password = data.get('password') or ''
@@ -123,24 +175,20 @@ def register():
         s = (v or '').strip().lower()
         if not s:
             return ''
-        # remove acentos (ex.: gerência -> gerencia)
         s = ''.join(
             c for c in unicodedata.normalize('NFKD', s)
             if not unicodedata.combining(c)
         )
-        # tolerar espaços
         s = s.replace(' ', '')
         return s
 
     role_raw = _normalize_role(data.get('role'))
 
-    # Registro público: apenas roles equivalentes a "usuário comum".
-    # Roles privilegiadas só podem ser criadas por alguém autenticado (diretoria/desenvolvedor).
     public_roles = {'analistas', 'supervisor'}
     privileged_roles = {'diretoria', 'gerencia', 'desenvolvedor'}
     all_roles = public_roles | privileged_roles
 
-    # Bootstrap: permitir criar o PRIMEIRO usuário privilegiado sem token
+    # Verifica se é o primeiro usuário privilegiado (bootstrap)
     def bootstrap_privileged_allowed():
         import sqlite3
         from core.database import DB_PATH
@@ -151,51 +199,47 @@ def register():
         conn.close()
         return n == 0
 
-    # role padrão
     if not role_raw:
         role = 'analistas'
     elif role_raw not in all_roles:
         return jsonify({
             'success': False,
-            'msg': 'role inválido',
+            'msg': 'Função (role) inválida',
             'allowed': sorted(list(all_roles)),
         }), 400
     elif role_raw in public_roles:
         role = role_raw
     else:
-        # Tentativa de criar um usuário privilegiado via /api/register
+        # Lógica de proteção para criação de usuários privilegiados
         current_user = get_current_user_from_request()
         if not current_user:
             if bootstrap_privileged_allowed():
-                # Bootstrap: permite criar o primeiro usuário privilegiado sem autenticação
                 role = role_raw
             else:
                 return jsonify({
                 'success': False,
-                'msg': 'role privilegiado requer autenticação (Bearer token)',
+                'msg': 'Criação de usuário privilegiado requer autenticação.',
                 'allowed_public': sorted(list(public_roles)),
                 'requested': role_raw,
                 }), 403
         else:
-            # Usuário autenticado: verificar permissão para criar usuários privilegiados
             creator_role = (current_user.get('role') or '').strip().lower()
             if creator_role in ('diretoria', 'desenvolvedor'):
                 role = role_raw
             else:
                 return jsonify({
                     'success': False,
-                    'msg': 'Acesso negado para criar usuários com role privilegiado',
+                    'msg': 'Acesso negado para criar usuários com privilégios elevados.',
                     'allowed_public': sorted(list(public_roles)),
                     'requested': role_raw,
                 }), 403
 
     if not username or not password:
-        return jsonify({'success': False, 'msg': 'username e password são obrigatórios'}), 400
+        return jsonify({'success': False, 'msg': 'Usuário e senha são obrigatórios.'}), 400
 
     try:
         ok = register_user(username, password, role=role, nome=nome, base=base, matricula=matricula)
     except Exception as e:
-        # Erro operacional (ex.: DB locked, schema antigo, etc.)
         return jsonify({
             'success': False,
             'msg': 'Falha ao registrar usuário no banco de dados',
@@ -204,10 +248,13 @@ def register():
 
     if ok:
         return jsonify({'success': True})
-    return jsonify({'success': False, 'msg': 'Usuário já existe'}), 409
+    return jsonify({'success': False, 'msg': 'Usuário já existe.'}), 409
 
 @app.route('/api/login', methods=['POST'])
 def login():
+    """
+    Autentica o usuário e retorna um token JWT válido por 24 horas.
+    """
     data = request.json
     username = data.get('username')
     password = data.get('password')
@@ -226,10 +273,16 @@ def login():
 
 
 # -------------------------------------------------------
-# Rotas protegidas: Credenciais do Portal (por usuário)
+# Rotas: Credenciais do Portal (SGL)
 # -------------------------------------------------------
 @app.route('/api/user/portal-credentials', methods=['GET'])
 def portal_credentials_status():
+    """
+    Verifica se o usuário possui credenciais do portal SGL configuradas.
+
+    Regra especial: Usuários da diretoria/desenvolvimento "herdam" a configuração
+    do Gerente se a própria não estiver configurada, para facilitar o uso.
+    """
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -237,12 +290,8 @@ def portal_credentials_status():
     user_id = int(user.get('id'))
     role = norm_role(user.get('role'))
 
-    # Por padrão, retorna o status do próprio usuário.
     status = get_portal_credentials_status(user_id)
 
-    # Regra do projeto: a credencial do portal é requisitada/salva apenas pela gerência.
-    # Para roles privilegiadas (diretoria/desenvolvedor), considera "configurado" se a
-    # gerência possuir credenciais válidas.
     if (not status.get('configured')) and role in ("diretoria", "desenvolvedor"):
         manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
         manager_id = get_user_id_by_username(manager_username)
@@ -256,6 +305,7 @@ def portal_credentials_status():
 
 @app.route('/api/user/portal-credentials', methods=['PUT'])
 def portal_credentials_set():
+    """Define as credenciais do portal SGL para o usuário atual."""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -270,6 +320,7 @@ def portal_credentials_set():
 
 @app.route('/api/user/portal-credentials', methods=['DELETE'])
 def portal_credentials_clear():
+    """Remove as credenciais do portal SGL do usuário atual."""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -281,31 +332,35 @@ def portal_credentials_clear():
 
 
 # -------------------------------------------------------
-# Rotas protegidas: Perfil do usuário (me)
+# Rotas: Perfil do Usuário
 # -------------------------------------------------------
 @app.get('/api/user/me')
 def user_me():
+    """Retorna os dados do usuário autenticado."""
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
     return jsonify(user)
 
 
-
 # -------------------------------------------------------
-# Rotas protegidas: Sempre exigem autenticação
-# -------------------------------------------------------
-# RELEITURAS
+# Rotas: Status e Monitoramento (Releitura)
 # -------------------------------------------------------
 
-# Healthcheck simples (usado pelo indicador ONLINE/OFFLINE no frontend)
 @app.get('/api/ping')
 def api_ping():
+    """Healthcheck simples para verificar se o backend está online."""
     return jsonify({'ok': True})
 
-# Rotas para Releitura e Porteira
 @app.route('/api/status/releitura', methods=['GET'])
 def status_releitura():
+    """
+    Retorna métricas, dados de gráficos e detalhes das releituras.
+
+    Lógica diferenciada por perfil:
+    - Analistas: Veem apenas sua própria base.
+    - Gerência/Diretoria: Veem dados agregados por região (Araxá, Uberaba, Frutal).
+    """
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -316,7 +371,7 @@ def status_releitura():
     date_str = request.args.get('date')
     region = (request.args.get('region') or 'all').strip()
 
-    # Usuário comum: visão normal
+    # Visão do Analista (Individual)
     if role not in ('gerencia', 'diretoria', 'desenvolvedor'):
         labels, values = get_releitura_chart_data(user_id, date_str)
         metrics = get_releitura_metrics(user_id, date_str)
@@ -327,9 +382,6 @@ def status_releitura():
         except Exception:
             unrouted_count = 0
 
-        # Segurança: analistas/supervisor só enxergam a sua própria base/matrícula.
-        # Para evitar vazamento e também evitar "cards zerados" no frontend,
-        # devolvemos um resumo de região contendo SOMENTE a base do usuário.
         base_name = (user.get('base') or '').strip() or 'Minha Base'
         regions_summary = {
             base_name: {
@@ -350,7 +402,7 @@ def status_releitura():
             "unrouted_count": unrouted_count
         })
 
-    # Gerência/Diretoria: agregação por targets + gerente (unrouted)
+    # Visão Gerencial (Agregada)
     targets = get_releitura_region_targets()
     print(f"[DEBUG Releitura] Targets configurados: {targets}")
     
@@ -366,7 +418,7 @@ def status_releitura():
     print(f"[DEBUG Releitura] Manager: {manager_username} -> ID: {manager_id}")
 
     def agg_chart(fn):
-        # fn(user_id, date_str) -> (labels, values)
+        # Função auxiliar para agregar gráficos de múltiplos usuários
         combined = {}
         for rname, uid in region_user_ids.items():
             if not uid: 
@@ -376,12 +428,10 @@ def status_releitura():
             labs, vals = fn(uid, date_str)
             for l,v in zip(labs, vals):
                 combined[l]=combined.get(l,0)+v
-        # NOTE: Manager NÃO é incluído aqui para evitar contagem duplicada
-        # Manager possui registros UNROUTED que não devem ser somados com as regiões
         labels_sorted = sorted(combined.keys())
         return labels_sorted, [combined[k] for k in labels_sorted]
 
-    # Metrics: sum across selected user_ids + manager
+    # Agregar métricas
     import sqlite3
     from core.database import DB_PATH
     conn = sqlite3.connect(str(DB_PATH))
@@ -392,8 +442,6 @@ def status_releitura():
         selected_ids=[uid for uid in region_user_ids.values() if uid]
     else:
         selected_ids=[region_user_ids.get(region)] if region_user_ids.get(region) else []
-    # NOTE: manager_id NÃO é incluído aqui para evitar contagem duplicada
-    # Manager só contabiliza registros UNROUTED (consulta separada nas linhas 424-428)
 
     if not selected_ids:
         metrics={"total":0,"pendentes":0,"realizadas":0,"atrasadas":0}
@@ -402,12 +450,9 @@ def status_releitura():
         details=[]
     else:
         ph=",".join(["?"]*len(selected_ids))
-        # total/pendentes/realizadas/atrasadas (atrasadas: vencimento < hoje e status PENDENTE)
         today=datetime.now().strftime("%d/%m/%Y")
         
-        # Aplicar filtro de data se fornecido
         if date_str:
-            # Com filtro de data
             cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND DATE(upload_time)=DATE(?)", tuple(selected_ids)+(date_str,))
             total=cur.fetchone()[0]
             cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND DATE(upload_time)=DATE(?)", tuple(selected_ids)+(date_str,))
@@ -418,10 +463,8 @@ def status_releitura():
             atr=cur.fetchone()[0]
             metrics={"total":total,"pendentes":pend,"realizadas":real,"atrasadas":atr}
 
-            # details (limit) com filtro de data
             cur.execute(f"SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND DATE(upload_time)=DATE(?) ORDER BY upload_time DESC LIMIT 500", tuple(selected_ids)+(date_str,))
         else:
-            # Sem filtro de data (comportamento original)
             cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph})", tuple(selected_ids))
             total=cur.fetchone()[0]
             cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE'", tuple(selected_ids))
@@ -432,7 +475,6 @@ def status_releitura():
             atr=cur.fetchone()[0]
             metrics={"total":total,"pendentes":pend,"realizadas":real,"atrasadas":atr}
 
-            # details (limit) sem filtro de data
             cur.execute(f"SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' ORDER BY upload_time DESC LIMIT 500", tuple(selected_ids))
         
         rows=cur.fetchall()
@@ -459,7 +501,7 @@ def status_releitura():
 
     conn.close()
 
-    # Summary por região (cards)
+    # Resumo por Região (Cards)
     regions_summary={}
     for rname, uid in region_user_ids.items():
         if not uid:
@@ -470,38 +512,28 @@ def status_releitura():
         print(f"[DEBUG Releitura] Calculando métricas para {rname} (uid={uid})")
         cur2 = sqlite3.connect(str(DB_PATH)).cursor()
         
-        # Aplicar filtro de data se fornecido
         if date_str:
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND DATE(upload_time)=DATE(?)", (uid, date_str))
             t=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Total: {t}")
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND DATE(upload_time)=DATE(?)", (uid, date_str))
             p=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Pendentes: {p}")
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='CONCLUÍDA' AND DATE(upload_time)=DATE(?)", (uid, date_str))
             rd=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Realizadas: {rd}")
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND vencimento <> '' AND vencimento < ? AND DATE(upload_time)=DATE(?)", (uid, today, date_str))
             a=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Atrasadas: {a}")
         else:
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=?", (uid,))
             t=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Total: {t}")
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE'", (uid,))
             p=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Pendentes: {p}")
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='CONCLUÍDA'", (uid,))
             rd=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Realizadas: {rd}")
             cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND vencimento <> '' AND vencimento < ?", (uid, today))
             a=cur2.fetchone()[0]
-            print(f"[DEBUG Releitura]   {rname} Atrasadas: {a}")
         
         cur2.connection.close()
         regions_summary[rname]={"configured":True,"total":t,"pendentes":p,"realizadas":rd,"atrasadas":a}
 
-    # unrouted count for manager
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     if date_str:
@@ -527,6 +559,7 @@ def status_releitura():
 
 @app.route('/api/status/porteira', methods=['GET'])
 def status_porteira():
+    """Retorna o status geral do módulo Porteira."""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -534,7 +567,6 @@ def status_porteira():
     date_str = request.args.get('date')
     labels, values = get_porteira_chart_data(user_id, date_str)
     metrics = get_porteira_metrics(user_id)
-    # No details para porteira
     return jsonify({
         "status": "online",
         "chart": {"labels": labels, "values": values},
@@ -544,11 +576,11 @@ def status_porteira():
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
+    """Zera o banco de dados global de Releitura (Apenas Desenvolvedor)."""
     user = get_current_user_from_request()
     if not user:
         return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
 
-    # Somente desenvolvedor pode zerar o banco (global)
     if norm_role(user.get('role')) != 'desenvolvedor':
         return jsonify({"success": False, "error": "Acesso negado"}), 403
 
@@ -557,19 +589,29 @@ def reset():
 
 @app.route('/api/reset/porteira', methods=['POST'])
 def reset_porteira():
+    """Zera o banco de dados global de Porteira (Apenas Desenvolvedor)."""
     user = get_current_user_from_request()
     if not user:
         return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
 
-    # Somente desenvolvedor pode zerar o banco (global)
     if norm_role(user.get('role')) != 'desenvolvedor':
         return jsonify({"success": False, "error": "Acesso negado"}), 403
 
     reset_porteira_global()
     return jsonify({"success": True, "message": "Banco de porteira zerado (GLOBAL)."})
 
+
+# -------------------------------------------------------
+# Rotas: Upload de Arquivos
+# -------------------------------------------------------
 @app.route('/api/upload', methods=['POST'])
 def upload_releitura():
+    """
+    Processa o upload de um arquivo Excel de Releitura.
+    - Salva temporariamente.
+    - Calcula hash para evitar duplicidade.
+    - Executa o roteamento (V2) para distribuir entre regiões.
+    """
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -578,11 +620,10 @@ def upload_releitura():
     if not file:
         return jsonify({"success": False, "error": "Arquivo não enviado"}), 400
 
-    # Salve o arquivo temporário, calcule hash e processe como no seu código
     temp_path = os.path.join(DATA_DIR, 'temp_' + file.filename)
     os.makedirs(DATA_DIR, exist_ok=True)
     file.save(temp_path)
-    # Aqui você implementaria get_file_hash, deep_scan_excel etc
+
     file_hash = get_file_hash(temp_path)
     details = deep_scan_excel(temp_path) or []
     if not details:
@@ -609,6 +650,11 @@ def upload_releitura():
 
 @app.route('/api/upload/porteira', methods=['POST'])
 def upload_porteira():
+    """
+    Processa o upload de um arquivo Excel de Porteira.
+    - O arquivo é processado e distribuído para TODOS os usuários, pois
+      a visão é filtrada posteriormente por região/matrícula no acesso aos dados.
+    """
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -629,7 +675,6 @@ def upload_porteira():
     if is_file_duplicate(file_hash, 'porteira', user_id):
         return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
 
-    # Porteira usa a tabela resultados_leitura
     for _uid in list_all_user_ids():
         save_porteira_table_data(details, _uid, file_hash=file_hash)
     save_file_history('porteira', len(details), file_hash, user_id)
@@ -646,11 +691,15 @@ def upload_porteira():
     })
 
 
-
-
+# -------------------------------------------------------
+# Rotas: Sincronização Automática (Portal Scraper)
+# -------------------------------------------------------
 @app.route('/api/sync/releitura', methods=['POST'])
 def sync_releitura():
-    # Somente roles privilegiadas podem acionar o sync manual (teste)
+    """
+    Dispara manualmente a sincronização de Releitura (download do portal).
+    Restrito a desenvolvedores para testes.
+    """
     user = get_current_user_from_request()
     if not user:
         return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
@@ -660,7 +709,6 @@ def sync_releitura():
         return jsonify({"success": False, "error": "Acesso negado"}), 403
 
     try:
-        # Sempre usar o login do gerente (conforme solicitado)
         manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
         manager_id = get_user_id_by_username(manager_username) or int(user['id'])
 
@@ -683,18 +731,14 @@ def sync_releitura():
     if not details:
         return jsonify({"success": False, "error": "Falha ao processar o Excel baixado (releitura) ou arquivo vazio."}), 400
 
-    # Roteamento V2
     try:
-        # details_v2 terá ul_regional e localidade
         details_v2 = route_releituras(details)
-        # Re-encapsula no objeto que a lógica abaixo espera (compatibilidade)
         from dataclasses import dataclass
         @dataclass
         class LegacyRouted:
             routed: dict
             unrouted: list
         
-        # Filtra por região para o loop original
         routed_map = {"Araxá": [], "Uberaba": [], "Frutal": []}
         unrouted_list = []
         for it in details_v2:
@@ -705,7 +749,7 @@ def sync_releitura():
                 unrouted_list.append(it)
         
         routed = LegacyRouted(routed=routed_map, unrouted=unrouted_list)
-        targets = get_releitura_region_targets()  # {Araxá: MAT_..., ...}
+        targets = get_releitura_region_targets()
 
         summary = {
             "Araxá": {"saved": 0, "user_id": None, "matricula": targets.get("Araxá"), "status": "OK"},
@@ -714,7 +758,6 @@ def sync_releitura():
             "unrouted_saved": 0
         }
 
-        # Salva os roteados por região (se não houver matrícula configurada, cai no gerente como UNROUTED)
         for region, items in routed.routed.items():
             matricula = targets.get(region)
             uid = get_user_id_by_matricula(matricula) if matricula else None
@@ -724,14 +767,12 @@ def sync_releitura():
                 continue
 
             if uid:
-                # Evita duplicar exatamente o mesmo arquivo para o mesmo usuário
                 if is_file_duplicate(file_hash, 'releitura', uid):
                     summary[region]["status"] = "DUPLICADO"
                     continue
                 save_releitura_data(items, file_hash, uid)
                 summary[region]["saved"] = len(items)
             else:
-                # sem matrícula configurada: registra como não roteado no gerente (para auditoria)
                 for it in items:
                     it["route_status"] = "UNROUTED"
                     it["route_reason"] = "REGIAO_SEM_MATRICULA"
@@ -743,13 +784,11 @@ def sync_releitura():
                 else:
                     summary[region]["status"] = "DUPLICADO"
 
-        # Salva os não roteados (UL inválida/desconhecida) no gerente
         if routed.unrouted:
             if not is_file_duplicate(file_hash, 'releitura', manager_id):
                 save_releitura_data(routed.unrouted, file_hash, manager_id)
                 summary["unrouted_saved"] = len(routed.unrouted)
             else:
-                # já foi processado por gerente
                 summary["unrouted_saved"] = 0
 
         return jsonify({
@@ -764,6 +803,10 @@ def sync_releitura():
 
 @app.route('/api/sync/porteira', methods=['POST'])
 def sync_porteira():
+    """
+    Dispara manualmente a sincronização de Porteira (download do portal).
+    Restrito a desenvolvedores.
+    """
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -774,7 +817,6 @@ def sync_porteira():
     user_id = int(user['id'])
 
     try:
-        # Regra do projeto: credenciais do portal ficam na GERÊNCIA.
         manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
         manager_id = get_user_id_by_username(manager_username) or None
         creds = get_portal_credentials(manager_id) if manager_id else None
@@ -795,12 +837,9 @@ def sync_porteira():
     if details is None:
         return jsonify({"success": False, "error": "Falha ao processar o Excel baixado (porteira)."}), 400
 
-    # Se o dev rodar o sync, não queremos duplicar para quem já processou.
     if is_file_duplicate(file_hash, 'porteira', user_id):
         return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
 
-    # Porteira usa a tabela resultados_leitura. Distribui para todos para que cada
-    # usuário veja apenas o que é permitido (sigilo aplicado em save_porteira_table_data).
     for _uid in list_all_user_ids():
         if not is_file_duplicate(file_hash, 'porteira', _uid):
             save_porteira_table_data(details, _uid, file_hash=file_hash)
@@ -818,8 +857,12 @@ def sync_porteira():
     })
 
 
+# -------------------------------------------------------
+# Rotas: Análise de Dados (Porteira)
+# -------------------------------------------------------
 @app.route('/api/porteira/chart', methods=['GET'])
 def porteira_chart():
+    """Retorna dados para os gráficos de porteira, com filtros de ciclo e região."""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -831,7 +874,7 @@ def porteira_chart():
 
 @app.route('/api/porteira/current-cycle', methods=['GET'])
 def porteira_current_cycle():
-    """Retorna informações do ciclo atual baseado no mês."""
+    """Retorna informações sobre o ciclo de leitura atual (baseado no mês)."""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -845,6 +888,7 @@ def porteira_current_cycle():
 
 @app.route('/api/porteira/table', methods=['GET'])
 def porteira_table():
+    """Retorna a tabela detalhada da Porteira com totais."""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -861,11 +905,12 @@ def porteira_table():
     })
 
 
-
-
 @app.route('/api/porteira/abertura', methods=['GET'])
 def porteira_abertura():
-    """Retorna dados para a tabela 'Abertura de Porteira' (Mês Atual vs Mês Anterior)."""
+    """
+    Retorna dados para a tabela 'Abertura de Porteira' (Comparativo Mensal).
+    Compara o desempenho do mês atual com o mês anterior.
+    """
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -886,14 +931,12 @@ def porteira_abertura():
         return f"{PT_MONTHS.get(int(m), 'Mês')} {int(y)}"
 
     def build_month_payload(y: int, m: int, is_current_month: bool = False):
-        # Se não existir histórico para o mês atual, calcula direto do snapshot atual
         quantities = get_porteira_abertura_monthly_quantities(
             int(user_id), int(y), int(m),
             ciclo=ciclo, regiao=regiao,
             fallback_latest=bool(is_current_month)
         )
 
-        # Primeiro calcula os valores e decide se o mês tem dados.
         temp_rows = []
         total_osb = 0
         total_cnv = 0
@@ -911,16 +954,10 @@ def porteira_abertura():
             cnv = int(round(float(raw.get("cnv", 0) or 0)))
             qtd = int(round(float(raw.get("quantidade", 0) or 0)))
 
-            # Atraso só conta quando há pendência (quantidade total > 0)
-            # Atraso (binário):
-            # - Se houver pendência (qtd > 0), marca 1 quando a data de referência já passou.
-            # - Para evitar falso '0' quando a data não for encontrada no calendário,
-            #   assumimos atraso = 1 se qtd > 0 e não há data (due is None).
             if qtd > 0: 
                 if due:
                     atraso = 1 if (today > due) else 0
                 else:
-                     # Sem data de referência no calendário: mantém como atrasado para não mascarar pendências.
                     atraso = 1
             else:
                 atraso = 0
@@ -938,13 +975,9 @@ def porteira_abertura():
             rows.append({
                 'razao': f'RZ {r:02d}',
                 'data': data_str,
-                # Regra:
-                # - se o mês tem dados: zeros aparecem como 0
-                # - se o mês não tem dados (sem histórico): lacuna (null)
                 'osb': (int(osb) if has_data else None),
                 'cnv': (int(cnv) if has_data else None),
                 'quantidade': (int(qtd) if has_data else None),
-                # Se quantidade = 0 => atraso = 0 (e deve aparecer 0 quando o mês tem dados)
                 'atraso': (int(atraso) if has_data else None),
             })
 
@@ -973,6 +1006,7 @@ def porteira_abertura():
 
 @app.route('/api/porteira/nao-executadas-chart', methods=['GET'])
 def porteira_nao_executadas_chart():
+    """Retorna dados para o gráfico de 'Não Executadas'."""
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -989,7 +1023,7 @@ def porteira_nao_executadas_chart():
 
 @app.route('/api/porteira/stats-by-region', methods=['GET'])
 def porteira_stats_by_region():
-    """Retorna estatísticas agregadas por região (Araxa, Uberaba, Frutal)."""
+    """Retorna estatísticas agregadas por região."""
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -1034,15 +1068,14 @@ def porteira_listar_regioes():
 
 @app.route('/api/porteira/localidades/<regiao>', methods=['GET'])
 def porteira_localidades_por_regiao(regiao):
-    """Lista todas as localidades de uma região específica."""
+    """
+    Lista localidades de uma região, respeitando o ciclo ativo.
+    Importante para que os filtros do frontend sejam consistentes.
+    """
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
 
-    # IMPORTANTE:
-    # O dropdown de UL/Localidade precisa respeitar o filtro de ciclo (97/98/99)
-    # exatamente como a tabela e os gráficos. Caso contrário, aparecem ULs "fora do ciclo"
-    # no seletor, gerando inconsistência visual e de análise.
     ciclo = (request.args.get('ciclo') or '').strip() or None
 
     try:
@@ -1050,9 +1083,7 @@ def porteira_localidades_por_regiao(regiao):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        # Reaproveita a mesma regra de ciclo aplicada em core.database._porteira_cycle_where
-        # (urbano 01..88 sempre + rurais por ciclo).
-        from core.database import _porteira_cycle_where  # lazy import para evitar circular
+        from core.database import _porteira_cycle_where
 
         where_parts = ["user_id = ?", "Regiao = ?"]
         params = [user['id'], regiao]
@@ -1080,11 +1111,11 @@ def porteira_localidades_por_regiao(regiao):
         return jsonify({'success': False, 'error': 'Erro ao buscar localidades'}), 500
 
 # -------------------------------------------------------
-# Endpoint do Scheduler
+# Rotas: Scheduler (Controle)
 # -------------------------------------------------------
 @app.route('/api/scheduler/status', methods=['GET'])
 def scheduler_status():
-    """Retorna status do scheduler automático"""
+    """Retorna o status atual do serviço de agendamento (Scheduler)."""
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -1095,18 +1126,20 @@ def scheduler_status():
 
 @app.route('/api/scheduler/toggle', methods=['POST'])
 def scheduler_toggle():
-    """Liga/desliga o scheduler (apenas diretoria/gerência)"""
+    """
+    Liga/desliga o scheduler.
+    Restrito a usuários administradores (Diretoria/Gerência).
+    """
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Usuário não autenticado"}), 401
     
-    # Verificar se é diretoria/gerência
     user = get_user_by_id(user_id)
     if not user or user.get('role') not in ('diretoria', 'gerencia'):
         return jsonify({"error": "Apenas administradores podem controlar o scheduler"}), 403
     
     data = request.json
-    action = data.get('action')  # 'start' ou 'stop'
+    action = data.get('action')
     
     scheduler = get_scheduler()
     
@@ -1120,11 +1153,12 @@ def scheduler_toggle():
         return jsonify({"error": "Ação inválida. Use 'start' ou 'stop'"}), 400
 
 # -------------------------------------------------------
-# Inicialização automática do banco se necessário
+# Inicialização do App
 # -------------------------------------------------------
 with app.app_context():
+    # Inicializa/Atualiza o schema do banco de dados
     init_db()
-    # Inicializar scheduler automático
+    # Tenta iniciar o scheduler se estiver habilitado no .env
     try:
         init_scheduler()
     except Exception as e:
@@ -1132,24 +1166,23 @@ with app.app_context():
 
 
 # -------------------------------
-# Releitura: targets por região
+# Releitura: Configuração de Targets
 # -------------------------------
 @app.route('/api/releitura/region-targets', methods=['GET', 'POST'])
 def releitura_region_targets():
+    """
+    Gerencia o mapeamento de responsáveis por região (Quem vê o que na Releitura).
+    """
     user = get_current_user_from_request()
     if not user:
         return jsonify({'success': False, 'error': 'Usuário não autenticado'}), 401
     role = norm_role(user.get('role'))
-    # Configuração global de alvos por região (mapeia região -> matrícula/base).
-    # É uma configuração administrativa usada para roteamento/visibilidade de métricas.
-    # Diretoria e Gerência precisam conseguir atualizar, e Desenvolvedor mantém acesso
-    # para suporte/testes.
+
     if role not in ('diretoria', 'gerencia', 'desenvolvedor'):
         return jsonify({'success': False, 'error': 'Acesso negado'}), 403
 
     if request.method == 'GET':
         mapping = get_releitura_region_targets()
-        # resolve user_ids
         out = {}
         for region, matricula in mapping.items():
             uid = get_user_id_by_matricula(matricula) if matricula else None
@@ -1157,7 +1190,6 @@ def releitura_region_targets():
         return jsonify({'success': True, 'targets': out})
 
     data = request.json or {}
-    # accept either {region: matricula} or {"regions": {...}}
     mapping = data.get('regions') if isinstance(data.get('regions'), dict) else data
     cleaned = {}
     for region, matricula in (mapping or {}).items():
@@ -1170,16 +1202,20 @@ def releitura_region_targets():
 
 
 # -------------------------------
-# Releitura: não roteados (gerência)
+# Releitura: Itens não roteados
 # -------------------------------
 
-# Alias de compatibilidade (frontend antigo)
 @app.route('/api/region-targets', methods=['GET', 'POST'])
 def releitura_region_targets_alias():
+    """Alias para compatibilidade com versões anteriores do frontend."""
     return releitura_region_targets()
 
 @app.route('/api/releitura/unrouted', methods=['GET'])
 def api_releitura_unrouted():
+    """
+    Retorna itens que não puderam ser roteados para uma região específica
+    (ficam sob responsabilidade da gerência).
+    """
     user = get_current_user_from_request()
     if not user:
         return jsonify({'success': False, 'error': 'Usuário não autenticado'}), 401
@@ -1191,19 +1227,20 @@ def api_releitura_unrouted():
 
 
 # -------------------------------
-# Releitura: reset (somente releitura)
+# Releitura: Reset Específico
 # -------------------------------
 @app.route('/api/releitura/reset', methods=['POST'])
 def api_releitura_reset():
+    """Reset apenas para o módulo de Releitura."""
     user = get_current_user_from_request()
     if not user:
         return jsonify({'success': False, 'error': 'Usuário não autenticado'}), 401
     role = norm_role(user.get('role'))
-    # Somente DESENVOLVEDOR pode zerar o banco
     if role != 'desenvolvedor':
         return jsonify({'success': False, 'error': 'Acesso negado'}), 403
     reset_releitura_global()
     return jsonify({'success': True, 'message': 'Releitura zerada com sucesso'})
 
 if __name__ == '__main__':
+    # Em produção, utilize gunicorn ou similar.
     app.run(host='0.0.0.0', port=5000)

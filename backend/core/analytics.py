@@ -5,6 +5,12 @@ Este módulo é responsável por ler, validar e extrair dados dos relatórios Ex
 fornecidos pelo portal SGL da CEMIG. Ele lida com conversão de formatos (XLS -> XLSX),
 identificação do tipo de relatório (Releitura ou Porteira) e extração estruturada
 das informações para inserção no banco de dados.
+
+Principais Funções:
+- Identificação automática do tipo de arquivo.
+- Conversão de arquivos legados (.xls).
+- Extração de dados com validação de colunas.
+- Aplicação de regras de negócio (Ciclos, Razões).
 """
 
 import os
@@ -19,38 +25,46 @@ from typing import Optional, Dict, List, Tuple
 def get_file_hash(file_path):
     """
     Calcula o hash SHA-256 de um arquivo.
-    Útil para detectar duplicatas antes de processar.
+    Útil para detectar duplicatas antes de processar, evitando reprocessamento desnecessário.
+
+    Args:
+        file_path: Caminho completo do arquivo.
+
+    Retorna:
+        str: Hash SHA-256 em formato hexadecimal.
     """
     sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as f:
+        # Ler o arquivo em blocos de 4KB para eficiência de memória
         for byte_block in iter(lambda: f.read(4096), b""):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
 def _to_xlsx_if_needed(path_str: str) -> str:
     """
-    Converte arquivos .xls antigos para .xlsx se necessário.
-    Tenta usar a biblioteca 'xlrd' primeiro, e como fallback usa o LibreOffice (soffice)
-    via linha de comando, se disponível no sistema.
+    Converte arquivos .xls antigos (Excel 97-2003) para o formato moderno .xlsx se necessário.
+    Tenta usar a biblioteca 'xlrd' primeiro, e como fallback robusto usa o LibreOffice (soffice)
+    via linha de comando, se disponível no sistema operacional.
 
     Args:
         path_str: Caminho do arquivo original.
 
     Returns:
-        Caminho do arquivo .xlsx (convertido ou original).
+        str: Caminho do arquivo .xlsx (seja o convertido ou o original se já for compatível).
     """
     p = Path(path_str)
     if p.suffix.lower() != ".xls":
         return path_str
 
-    # Tentar ler via xlrd primeiro
+    # Tentar ler via xlrd primeiro (biblioteca Python para .xls antigos)
     try:
         import xlrd  # type: ignore
         return path_str
     except Exception:
         pass
 
-    # Fallback: converter via soffice (LibreOffice)
+    # Fallback: converter via soffice (LibreOffice Headless)
+    # Isso é útil em servidores Linux onde o xlrd pode ter problemas ou limitações
     out_dir = Path(tempfile.mkdtemp(prefix="vigila_xls2xlsx_"))
     try:
         subprocess.run(
@@ -63,6 +77,7 @@ def _to_xlsx_if_needed(path_str: str) -> str:
         if converted.exists():
             return str(converted)
     except Exception:
+        # Se falhar, retorna o caminho original e deixa o pandas tentar lidar
         return path_str
 
     return path_str
@@ -70,9 +85,10 @@ def _to_xlsx_if_needed(path_str: str) -> str:
 
 def validate_report_type(file_path: str) -> Tuple[str, str]:
     """
-    Identifica o tipo de relatório baseado em palavras-chave no conteúdo binário do arquivo.
+    Identifica o tipo de relatório (Releitura vs Porteira) analisando o conteúdo binário
+    em busca de palavras-chave específicas (marcadores).
     
-    Returns:
+    Retorna:
         Tuple[tipo, mensagem]
         tipo: "RELEITURAS", "PORTEIRA", ou "UNKNOWN"
     """
@@ -96,6 +112,7 @@ def validate_report_type(file_path: str) -> Tuple[str, str]:
             b'Vencimento'
         ]
         
+        # Conta quantos marcadores de cada tipo foram encontrados
         porteira_score = sum(1 for marker in porteira_markers if marker in content)
         releituras_score = sum(1 for marker in releituras_markers if marker in content)
         
@@ -119,7 +136,7 @@ def deep_scan_excel(file_path):
     use deep_scan_porteira_excel().
     """
     try:
-        # Validar tipo de relatório
+        # Validar tipo de relatório para evitar processamento incorreto
         report_type, msg = validate_report_type(file_path)
         print(f"🔍 {msg}")
         
@@ -133,11 +150,12 @@ def deep_scan_excel(file_path):
         normalized_path = _to_xlsx_if_needed(file_path)
         engine = "openpyxl" if str(normalized_path).lower().endswith(".xlsx") else None
         
+        # Lê sem cabeçalho para processamento posicional
         df_raw = pd.read_excel(normalized_path, header=None, engine=engine)
         data_matrix = df_raw.values
         details = []
         
-        # Regex para validação básica
+        # Regex para validação básica dos campos
         re_ul = re.compile(r'^\d{8}$')
         re_inst = re.compile(r'^\d{10}$')
         re_data = re.compile(r'\d{2}/\d{2}/\d{4}')
@@ -155,14 +173,15 @@ def deep_scan_excel(file_path):
         while i < len(data_matrix):
             row = data_matrix[i]
             
-            # Mapeamento posicional das colunas (baseado no layout padrão CEMIG)
+            # Mapeamento posicional das colunas (baseado no layout padrão CEMIG SGL)
+            # Col 0: UL, Col 4: Instalação, Col 9: Reg, Col 10: Endereço, Col 26: Vencimento
             ul_val = str(row[0]).strip() if pd.notna(row[0]) else None
             inst_val = str(row[4]).strip() if pd.notna(row[4]) and len(row) > 4 else None
             endereco_val = str(row[10]).strip() if pd.notna(row[10]) and len(row) > 10 else None
             data_val = str(row[26]).strip() if pd.notna(row[26]) and len(row) > 26 else None
             reg_val = str(row[9]).strip() if pd.notna(row[9]) and len(row) > 9 else "03"
             
-            # Pular linhas de cabeçalho
+            # Pular linhas de cabeçalho detectadas
             if reg_val.lower() == 'reg.':
                 stats['cabecalhos'] += 1
                 i += 1
@@ -192,7 +211,7 @@ def deep_scan_excel(file_path):
             
             i += 1
         
-        # Log estatísticas
+        # Log estatísticas para debug
         print(f"\n📊 Estatísticas de Processamento (RELEITURAS):")
         for key, value in stats.items():
             print(f"   • {key}: {value}")
@@ -211,7 +230,7 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
     Carrega o arquivo auxiliar de referência de localidades (Excel).
     Mapeia códigos de UL Regional (dígitos centrais) para nomes de Localidade e Supervisão.
     
-    Returns:
+    Retorna:
         Dict[ul_regional, {'localidade': str, 'supervisao': str, 'regiao': str}]
     """
     localidade_map = {}
@@ -223,12 +242,12 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
     try:
         df_ref = pd.read_excel(ref_path)
         
-        # Normalizar nomes das colunas
+        # Normalizar nomes das colunas (trim)
         df_ref.columns = [str(col).strip() for col in df_ref.columns]
         
         print(f"📋 Colunas disponíveis no arquivo de referência: {list(df_ref.columns)}")
         
-        # Mapeamento dinâmico de colunas
+        # Mapeamento dinâmico de colunas (case-insensitive)
         col_mapping = {}
         for col in df_ref.columns:
             col_lower = col.lower()
@@ -350,7 +369,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             row = df_raw.iloc[i]
             first_cell = row.iloc[COL_UL]
 
-            # Detectar agrupamento "Conjunto de Contrato"
+            # Detectar agrupamento "Conjunto de Contrato" (Linha separadora)
             if isinstance(first_cell, str) and "Conjunto de Contrato:" in first_cell:
                 conjunto_novo = first_cell.split(":")[-1].strip()
                 current_conjunto_contrato = conjunto_novo
@@ -374,7 +393,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             # ==================== PROCESSAR UL E LOCALIDADE ====================
             localidade_ul = ul_clean[-2:]  # 2 últimos dígitos
             
-            # Filtro de Ciclo (se ativo)
+            # Filtro de Ciclo (se ativo e a localidade não pertencer ao ciclo, ignora)
             if ciclo and ciclo in CICLO_LOCALIDADES:
                 try:
                     localidade_ul_num = int(localidade_ul)
@@ -384,7 +403,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
                 except ValueError:
                     continue
 
-            # Extrair UL Regional (dígitos 3 a 6) para mapeamento
+            # Extrair UL Regional (dígitos 3 a 6) para mapeamento no arquivo de referência
             ul_regional = ul_clean[2:6]
             stats['ul_regionais_encontradas'].add(ul_regional)
 
@@ -394,7 +413,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
                 if len(row) > COL_TIPO_UL and pd.notna(row.iloc[COL_TIPO_UL]):
                     tipo_ul_val = str(row.iloc[COL_TIPO_UL]).strip()
                 if not tipo_ul_val:
-                    # Tenta encontrar OSB/CNV em outras colunas próximas
+                    # Tenta encontrar OSB/CNV em outras colunas próximas (fallback)
                     for j in range(min(12, len(row))):
                         v = row.iloc[j]
                         if pd.isna(v): continue
@@ -409,7 +428,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             except Exception:
                 tipo_ul_val = tipo_ul_val or ""
 
-            # Buscar no mapa de referência
+            # Buscar no mapa de referência carregado
             regiao_info = localidade_map.get(ul_regional)
             
             if not regiao_info:
@@ -486,7 +505,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
 
         # ==================== AGREGAÇÃO DOS DADOS ====================
         df = pd.DataFrame(data_rows)
-        # Agrupar por chaves principais para somar valores duplicados (se houver)
+        # Agrupar por chaves principais para somar valores duplicados (se houver linhas repetidas na planilha)
         df_grouped = df.groupby(
             ["Conjunto_Contrato", "UL", "UL_Regional", "Tipo_UL", "Razao", "Localidade_UL", 
              "Nome_Localidade", "Regiao", "Supervisao"], 
@@ -504,7 +523,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             (df_grouped["Leituras_Nao_Executadas"] / df_grouped["Total_Leituras"]) * 100
         ).replace([pd.NA, float("inf")], 0).fillna(0).round(2)
 
-        # Converter para lista de dicionários
+        # Converter para lista de dicionários para retorno
         details = []
         for _, r in df_grouped.iterrows():
             details.append({

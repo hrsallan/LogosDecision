@@ -4,6 +4,13 @@ Módulo de Banco de Dados e Persistência
 Este módulo centraliza todas as interações com o banco de dados SQLite (vigilacore.db).
 Gerencia a criação de tabelas, inserção de dados, consultas de métricas e
 relatórios para os módulos de Releitura e Porteira.
+
+Responsabilidades:
+- Inicialização e migração de schema (init_db).
+- Gerenciamento de Usuários e Autenticação.
+- Persistência de dados de Releitura e Porteira.
+- Geração de métricas para dashboards.
+- Consultas históricas e snapshots.
 """
 
 import sqlite3
@@ -16,19 +23,19 @@ from dotenv import load_dotenv
 import time
 import unicodedata
 
-# Carregar variáveis de ambiente
+# Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
 # Caminho absoluto para o banco de dados
 DB_PATH = Path(__file__).parent.parent / 'data' / 'vigilacore.db'
 
 # --- Configurações de Ciclos (Porteira) ---
-# Regras operacionais:
+# Regras operacionais para filtragem de ciclos da CEMIG:
 #   • Razões urbanas (01..88) são incluídas em TODOS os ciclos.
 #   • Razões rurais (89..99) são distribuídas conforme o ciclo trimestral:
-#       - Ciclo 97: + 90, 91, 96, 97
-#       - Ciclo 98: + 92, 93, 96, 98
-#       - Ciclo 99: + 89, 94, 96, 99
+#       - Ciclo 97: Inclui rurais 90, 91, 96, 97
+#       - Ciclo 98: Inclui rurais 92, 93, 96, 98
+#       - Ciclo 99: Inclui rurais 89, 94, 96, 99
 #   • A Razão 96 é fixa e entra sempre.
 PORTEIRA_URBANO_ALWAYS = list(range(1, 89))
 PORTEIRA_RURAL_ALWAYS = [96]
@@ -38,7 +45,7 @@ PORTEIRA_CYCLE_EXTRAS = {
     "99": [89, 94],
 }
 
-# Mapeamento Mês -> Ciclo
+# Mapeamento Mês -> Ciclo (Referência: Calendário CEMIG)
 MONTH_TO_CYCLE = {
     1: "97",   # Janeiro
     2: "98",   # Fevereiro
@@ -67,7 +74,7 @@ def get_current_cycle_info():
     """
     Retorna informações sobre o ciclo de leitura atual baseado no mês vigente.
     
-    Returns:
+    Retorna:
         dict: {"ciclo": "97", "mes": "Janeiro", "mes_numero": 1, "ano": 2024}
     """
     from datetime import datetime
@@ -85,7 +92,8 @@ def get_current_cycle_info():
 
 
 # --- Dados de Referência Fallback (Porteira) ---
-# Usados caso o Excel de referência não seja encontrado.
+# Usados caso o Excel de referência não seja encontrado no sistema de arquivos.
+# Mapeia UL -> Localidade -> Região
 LOCALIDADES_REFERENCIA_DATA = [
     ('3427', 'SANTA ROSA', 'Araxa', 'Araxa'),
     ('5101', 'ARAXÁ', 'Araxa', 'Araxa'),

@@ -2,225 +2,202 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-31.0%25-3776AB?style=flat-square&logo=python&logoColor=white)
-![HTML](https://img.shields.io/badge/HTML-53.1%25-E34F26?style=flat-square&logo=html5&logoColor=white)
-![CSS](https://img.shields.io/badge/CSS-14.6%25-1572B6?style=flat-square&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-1.3%25-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-2.0%2B-000000?style=flat-square&logo=flask&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML-5-E34F26?style=flat-square&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS-3-1572B6?style=flat-square&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 
-**Plataforma de monitoramento e análise para gestão de leituras**
+**Plataforma de Monitoramento e Análise para Gestão de Leituras**
 
 </div>
 
 ---
 
-## 🆕 Últimas Atualizações (Fevereiro 2026)
+## 📋 Sobre o Projeto
 
-### Versão 2.1 - Correções de Bugs e Melhorias
+O **VigilaCore** é uma aplicação web full-stack robusta desenvolvida para monitorar, analisar e gerenciar dados de leitura de utilidades (especificamente para operações da CEMIG). O sistema automatiza o processo de coleta de dados do portal SGL, processa relatórios complexos em Excel e fornece dashboards em tempo real para tomada de decisão.
 
-**✅ Problemas Corrigidos:**
+O objetivo principal é eliminar o trabalho manual repetitivo, detectar inconsistências (como leituras não executadas) e fornecer uma visão clara do desempenho operacional através de métricas e gráficos interativos.
 
-1. **Aba Releitura - Calendário não funcionava**
-   - ✅ RESOLVIDO: O seletor de data agora passa corretamente o parâmetro `date` para a API
-   - As métricas e gráficos agora atualizam ao trocar de dia
-   - Histórico de dados funciona perfeitamente
-
-2. **Aba Porteira - Análise de dados incorreta**
-   - ✅ RESOLVIDO: Mapeamento correto de UL regional (dígitos 3-6)
-   - Valores de leituras não executadas agora são precisos
-   - Releituras não executadas calculadas corretamente
-
-3. **Aba Porteira - Métricas de releitura removidas**
-   - ✅ IMPLEMENTADO: Interface limpa focada em leituras
-   - Removidas: Total Releituras, Releituras Não Exec.
-   - Adicionadas: % Não Executada, Impedimentos, % Impedimento
-
-4. **Filtro por Cidade**
-   - ✅ FUNCIONAL: Atualização em tempo real ao selecionar região
-   - Métricas, gráficos e tabela se atualizam instantaneamente
-   - Funciona para: Araxá, Uberaba, Frutal, ou Geral (todas)
-
-5. **Sistema de Ciclos Mensal**
-   - ✅ IMPLEMENTADO: Ciclo 98 configurado corretamente
-   - Localidades: 01-88 + 92, 93, 96, 98
-   - Filtro automático baseado nos 2 últimos dígitos da UL
-   - Suporte para Ciclos 97, 98 e 99
-
-**🎯 Novos Recursos:**
-- **% Não Executada**: Porcentagem de leituras não executadas em relação ao total
-- **Impedimentos**: Nova coluna mostrando impedimentos (atualmente preparada para dados futuros)
-- **% Impedimento**: Porcentagem de impedimentos em relação ao total
-- Tabela da Porteira reorganizada e simplificada
-
-**🔧 Melhorias Técnicas:**
-- Schema de banco de dados atualizado com coluna `Impedimentos`
-- Parâmetro `date` corretamente implementado na API `/api/status/releitura`
-- Validação aprimorada de UL regional no processamento de Excel
-- Melhores logs de debug para facilitar diagnóstico
-- Correção de bugs de sintaxe no `analytics.py`
-
----
-
-## 📋 Visão Geral
-
-O VigilaCore é uma aplicação web full-stack desenvolvida especificamente para monitorar e analisar dados de leitura de utilidades da **CEMIG (Companhia Energética de Minas Gerais)** através do portal **SGL (Sistema de Gestão de Leitura)**.
-
-O sistema automatiza o processo tedioso de baixar, processar e analisar manualmente relatórios de leitura, fornecendo dashboards em tempo real, métricas e visualizações para dois fluxos de trabalho operacionais críticos:
-
-- **Releitura**: Rastreia e gerencia operações de releitura de medidores
-- **Porteira**: Monitora operações de leitura programadas e status de execução
-
-### Valor para o Negócio
-
-- **Elimina trabalho manual**: Downloads automatizados do portal CEMIG SGL
-- **Visibilidade em tempo real**: Dashboards ao vivo mostrando status atual
-- **Rastreamento histórico**: Trilha de auditoria completa de todas as operações
-- **Detecção de duplicatas**: Algoritmos inteligentes para identificar leituras duplicadas
-- **Métricas de desempenho**: KPIs e análises para medir eficiência operacional
-- **Gestão por ciclos**: Organização de leituras por ciclos mensais
-- **Análise regional**: Filtragem e análise por regiões geográficas
+### Principais Benefícios
+- **Automação:** Download e processamento automático de relatórios.
+- **Eficiência:** Redução drástica do tempo de análise de dados.
+- **Confiabilidade:** Eliminação de erros humanos na manipulação de planilhas.
+- **Visibilidade:** Dashboards em tempo real acessíveis a toda a equipe.
 
 ---
 
 ## ✨ Funcionalidades
 
-### Funcionalidade Principal
+### 🔄 Módulo de Releitura
+- **Monitoramento de Pendências:** Acompanhamento em tempo real de releituras não executadas.
+- **Roteamento Inteligente:** Distribuição automática de ordens de serviço por região (Araxá, Uberaba, Frutal).
+- **Análise de Vencimentos:** Visualização de prazos e priorização de ordens.
 
-- 📊 **Dashboards em Tempo Real**
-  - Métricas ao vivo para leituras pendentes, concluídas e atrasadas
-  - Gráficos interativos mostrando tendências e distribuição
-  - Separação específica por região e comparações
-  - Indicadores baseados em porcentagem para taxas de execução
+### 🚪 Módulo de Porteira
+- **Controle de Ciclos:** Suporte completo aos ciclos de leitura 97, 98 e 99.
+- **Análise Regional:** Filtros por região e localidade.
+- **Métricas de Execução:** Comparativo entre leituras totais e não executadas.
+- **Detecção de Impedimentos:** Identificação automática de motivos de não leitura.
 
-- 🔄 **Sincronização Automatizada de Dados**
-  - Downloads programados do portal CEMIG SGL
-  - Detecção inteligente de duplicatas
-  - Processamento e categorização automática de dados
-  - Suporte para ciclos mensais de leitura
+### 📊 Relatórios e Análises
+- **Dashboards Interativos:** Gráficos de barras, pizza e evolução temporal.
+- **Histórico Mensal:** Acompanhamento da evolução de pendências mês a mês.
+- **Exportação de Dados:** Capacidade de gerar relatórios consolidados.
 
-- 📈 **Análise Avançada**
-  - Análise de tendências históricas
-  - Rastreamento de KPIs de desempenho
-  - Filtragem por intervalo de datas personalizado
-  - Relatórios baseados em região e ciclo
-  - Rastreamento e análise de impedimentos
+### 🔐 Segurança e Administração
+- **Autenticação JWT:** Sistema seguro de login com tokens.
+- **Controle de Acesso (RBAC):** Níveis de permissão (Analista, Gerência, Diretoria, Desenvolvedor).
+- **Criptografia:** Senhas e credenciais sensíveis armazenadas com criptografia forte.
 
-- 🔐 **Controle de Acesso Baseado em Função**
-  - Permissões de usuário em vários níveis
-  - Isolamento de dados específico por região
-  - Autenticação segura com tokens JWT
-  - Armazenamento criptografado de senhas
+---
 
-- 📅 **Gestão de Ciclos de Leitura**
-  - Suporte para sistema trimestral de ciclos da CEMIG (Ciclos 97, 98, 99)
-  - Detecção e filtragem automática de ciclo
-  - Métricas e comparações baseadas em ciclo
+## 🛠️ Tecnologias Utilizadas
+
+### Backend
+- **Linguagem:** Python 3.9+
+- **Framework Web:** Flask
+- **Banco de Dados:** SQLite3
+- **Processamento de Dados:** Pandas, OpenPyXL
+- **Automação:** Selenium (para scraping do portal), APScheduler (agendamento de tarefas)
+- **Segurança:** BCrypt, PyJWT, Cryptography
+
+### Frontend
+- **Estrutura:** HTML5 Semântico
+- **Estilização:** CSS3 Moderno (Variáveis CSS, Flexbox, Grid)
+- **Lógica:** JavaScript (ES6+)
+- **Visualização:** Chart.js
+- **Ícones:** Lucide Icons
 
 ---
 
 ## 🚀 Começando
 
 ### Pré-requisitos
-
-- Python 3.9 ou superior
-- pip (gerenciador de pacotes Python)
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
+- Python 3.9 ou superior instalado.
+- Gerenciador de pacotes `pip`.
+- Navegador web moderno (Chrome, Firefox, Edge).
 
 ### Instalação
 
-1. **Clone o repositório**
+1. **Clone o repositório:**
    ```bash
-   git clone https://github.com/yourusername/VigilaCore.git
+   git clone https://github.com/seu-usuario/VigilaCore.git
    cd VigilaCore
    ```
 
-2. **Instale as dependências**
+2. **Crie um ambiente virtual (recomendado):**
+   ```bash
+   python -m venv venv
+   # Windows
+   venv\Scripts\activate
+   # Linux/Mac
+   source venv/bin/activate
+   ```
+
+3. **Instale as dependências:**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure as variáveis de ambiente**
-   Crie um arquivo `.env` no diretório raiz:
+4. **Configure as variáveis de ambiente:**
+   Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo:
    ```env
-   JWT_SECRET=sua-chave-secreta-aqui
-   PORTAL_USERNAME=seu-usuario-portal-cemig
-   PORTAL_PASSWORD=sua-senha-portal-cemig
-   RELEITURA_MANAGER_USERNAME=GRTRI
+   # Segurança
+   JWT_SECRET=sua_chave_secreta_super_segura
+
+   # Credenciais Padrão (Opcional - Configurado via Interface)
+   # RELEITURA_MANAGER_USERNAME=GRTRI
+
+   # Scheduler (Opcional)
+   SCHEDULER_ENABLED=1
    ```
 
-4. **Inicialize o banco de dados**
+5. **Inicialize o Banco de Dados:**
+   O banco de dados será criado automaticamente na primeira execução, mas você pode forçar a inicialização:
    ```bash
-   cd backend
-   python -c "from core.database import init_db; init_db()"
+   python -c "from backend.core.database import init_db; init_db()"
    ```
 
-5. **Inicie o servidor**
+6. **Execute a aplicação:**
    ```bash
-   python app.py
+   python backend/app.py
    ```
+   O servidor iniciará em `http://localhost:5000` (ou a porta configurada).
 
-6. **Acesse a aplicação**
-   Abra seu navegador e navegue para `http://localhost:5001`
+---
+
+## 📖 Como Usar
+
+1. **Acesso ao Sistema:**
+   - Abra o navegador e acesse `http://localhost:5000/views/login.html` (ou configure um servidor web para servir o frontend).
+   - Faça login com suas credenciais. Se for o primeiro acesso, solicite ao administrador.
+
+2. **Navegação:**
+   - Use a barra lateral para alternar entre os módulos (Releitura, Porteira, Relatórios).
+   - O **Menu Principal** oferece uma visão geral do sistema.
+
+3. **Upload de Arquivos:**
+   - Nos módulos de Releitura e Porteira, utilize a área de upload para enviar as planilhas do SGL.
+   - O sistema processará os dados e atualizará os dashboards automaticamente.
 
 ---
 
 ## 📚 Documentação da API
 
-### Endpoints de Autenticação
+O backend fornece uma API RESTful para comunicação com o frontend.
 
-#### POST /api/register
-Registra uma nova conta de usuário
+### Autenticação
+- `POST /api/login`: Autentica o usuário e retorna um token JWT.
+- `POST /api/register`: Registra novos usuários (requer permissão).
 
-#### POST /api/login
-Autentica usuário e recebe token JWT
+### Releitura
+- `GET /api/status/releitura`: Retorna métricas e dados para os gráficos.
+- `POST /api/upload`: Envia um relatório de releitura para processamento.
+- `POST /api/sync/releitura`: Aciona a sincronização automática (download do portal).
 
-### Endpoints de Sincronização de Dados
-
-#### POST /api/sync/releitura
-Aciona sincronização de dados de releitura do portal CEMIG
-
-#### POST /api/sync/porteira
-Aciona sincronização de dados de leitura de porteira
-
-### Endpoints de Status e Métricas
-
-#### GET /api/status/releitura?region=<region>&date=<date>
-Obtém status de releitura, métricas e dados históricos
-
-**Parâmetros de Query:**
-- `region` (opcional): Filtra por região (Araxá, Uberaba, Frutal, ou "all")
-- `date` (opcional): Data para dados históricos no formato YYYY-MM-DD
-
-#### GET /api/porteira/table?ciclo=<ciclo>&regiao=<regiao>
-Obtém dados da tabela de porteira com filtragem opcional
-
-**Parâmetros de Query:**
-- `ciclo` (opcional): Filtra por ciclo (97, 98, ou 99)
-- `regiao` (opcional): Filtra por região
+### Porteira
+- `GET /api/status/porteira`: Retorna métricas gerais da porteira.
+- `GET /api/porteira/table`: Retorna os dados detalhados para a tabela.
+- `POST /api/upload/porteira`: Envia um relatório de porteira.
 
 ---
 
-## 🛠️ Pilha Tecnológica
+## 📂 Estrutura do Projeto
 
-### Backend
-- **Flask**: Framework web
-- **SQLite**: Banco de dados
-- **Pandas**: Processamento de dados
-- **JWT**: Autenticação
-- **APScheduler**: Agendamento de tarefas
-- **Selenium**: Automação web
-
-### Frontend
-- **HTML5/CSS3**: Estrutura e estilização
-- **JavaScript**: Lógica do lado do cliente
-- **Chart.js**: Visualização de dados
-- **Lucide Icons**: Ícones de UI
+```
+VigilaCore/
+├── backend/
+│   ├── app.py                 # Ponto de entrada da aplicação Flask
+│   ├── data/                  # Banco de dados SQLite e arquivos temporários
+│   └── core/                  # Núcleo da lógica de negócios
+│       ├── analytics.py       # Processamento de planilhas
+│       ├── auth.py            # Lógica de autenticação
+│       ├── database.py        # Camada de acesso a dados
+│       ├── portal_scraper.py  # Automação de download
+│       └── scheduler.py       # Agendador de tarefas
+├── frontend/
+│   ├── css/                   # Folhas de estilo
+│   ├── js/                    # Scripts do lado do cliente
+│   └── views/                 # Páginas HTML
+├── requirements.txt           # Dependências do Python
+├── README.md                  # Documentação do projeto
+└── LICENSE                    # Licença de uso
+```
 
 ---
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está licenciado sob a **Licença de Uso Não Comercial VigilaCore**. Consulte o arquivo [LICENSE](LICENSE) para obter detalhes completos.
 
 ---
 
-**⭐ Se você achar este projeto útil, por favor considere dar uma estrela!**
+## 📞 Contato e Créditos
+
+**Desenvolvedor:** Allan Silva (hrsallan)
+- **GitHub:** [hrsallan](https://github.com/hrsallan)
+
+Feito com ❤️ e Python.

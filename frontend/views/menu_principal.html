@@ -11,6 +11,11 @@
     <script src="../js/sidebar_toggle.js"></script>
     <script src="../js/utils.js"></script>
     <style>
+        /*
+         * Estilos Locais Específicos da Página
+         * Define animações, cards interativos e elementos visuais do dashboard principal.
+         */
+
         /* Animações e Efeitos Visuais */
         @keyframes fadeInUp {
             from {
@@ -204,7 +209,10 @@
 </head>
 <body>
     <div class="v2-container">
+        <!-- ============================================ -->
         <!-- BARRA LATERAL (SIDEBAR) -->
+        <!-- Navegação principal do sistema -->
+        <!-- ============================================ -->
         <aside class="v2-sidebar">
             <div class="v2-logo-section">
                 <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
@@ -254,9 +262,11 @@
             </nav>
         </aside>
 
-        <!-- CONTEÚDO DA PÁGINA -->
+        <!-- ============================================ -->
+        <!-- CONTEÚDO PRINCIPAL DA PÁGINA -->
+        <!-- ============================================ -->
         <div class="v2-content">
-            <!-- CABEÇALHO -->
+            <!-- CABEÇALHO (Header) -->
             <header class="v2-header">
                 <div class="v2-header-left">
                     <h1 class="v2-header-title">Menu Principal</h1>
@@ -276,7 +286,7 @@
                 </div>
             </header>
 
-            <!-- ÁREA PRINCIPAL -->
+            <!-- ÁREA PRINCIPAL (Main) -->
             <main class="v2-main">
                 <!-- Seção Hero (Boas-vindas) -->
                 <div class="hero-section animate-fade-in">
@@ -316,6 +326,7 @@
                         <h3 style="margin: 0 0 16px 0; font-size: 1.3rem;" data-i18n="modules.title">Módulos Principais</h3>
                         
                         <div class="v2-grid animate-fade-in animate-delay-1" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+                            <!-- Card: Releituras -->
                             <a href="releitura.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
                                     <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(88, 166, 255, 0.2) 0%, rgba(88, 166, 255, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -328,6 +339,7 @@
                                 </div>
                             </a>
 
+                            <!-- Card: Porteira -->
                             <a href="porteira.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
                                     <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(251, 146, 60, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -340,6 +352,7 @@
                                 </div>
                             </a>
 
+                            <!-- Card: Relatórios -->
                             <a href="relatorios.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
                                     <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -356,6 +369,7 @@
                         <h3 style="margin: 24px 0 16px 0; font-size: 1.3rem;" data-i18n="modules.advanced">Módulos Avançados</h3>
                         
                         <div class="v2-grid animate-fade-in animate-delay-2" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+                            <!-- Card: Usuários -->
                             <a href="usuario.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
                                     <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -368,6 +382,7 @@
                                 </div>
                             </a>
 
+                            <!-- Card: Administração -->
                             <a href="administracao.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
                                     <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -380,6 +395,7 @@
                                 </div>
                             </a>
 
+                            <!-- Card: IA (Em breve) -->
                             <a href="ia.html" class="v2-card feature-card" style="text-decoration: none; color: inherit;">
                                 <div style="display: flex; gap: 16px; align-items: flex-start;">
                                     <div style="width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -441,7 +457,7 @@
                 </div>
             </main>
 
-            <!-- RODAPÉ -->
+            <!-- RODAPÉ (Footer) -->
             <footer class="v2-footer">
                 <span>VigilaCore | <span data-i18n="footer.subtitle">Desenvolvimento Operacional Estratégico</span></span>
                 <span data-i18n="footer.status">Sistema em desenvolvimento</span>

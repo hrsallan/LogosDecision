@@ -1,9 +1,17 @@
 /**
+ * Utilitários Globais do Frontend - VigilaCore
+ *
+ * Este arquivo contém funções compartilhadas para comunicação com a API (fetch),
+ * gerenciamento de estado de conexão (online/offline), tratamento de erros
+ * e controle de acesso baseado em função (RBAC) no lado do cliente.
+ */
+
+/**
  * Configuração Global da API
  *
  * Define a URL base para todas as chamadas ao backend.
- * Tenta ler do localStorage primeiro (para desenvolvimento flexível),
- * caso contrário usa o padrão localhost:5000.
+ * Tenta ler do localStorage primeiro (para permitir configuração dinâmica em desenvolvimento),
+ * caso contrário usa o padrão 'http://127.0.0.1:5000'.
  */
 window.VIGILACORE_API_BASE = (function() {
     const saved = (localStorage.getItem('vigilacore_api_base') || '').trim();
@@ -11,13 +19,14 @@ window.VIGILACORE_API_BASE = (function() {
 })();
 
 /**
- * Função Wrapper para Fetch com Autenticação (JWT)
+ * Wrapper para Fetch com Autenticação (JWT)
  *
- * Adiciona automaticamente o cabeçalho 'Authorization: Bearer <token>'
- * e resolve a URL relativa usando VIGILACORE_API_BASE.
+ * Intercepta chamadas de rede para:
+ * 1. Adicionar automaticamente o cabeçalho 'Authorization: Bearer <token>'.
+ * 2. Resolver URLs relativas usando a constante VIGILACORE_API_BASE.
  *
  * @param {string} url - Caminho relativo (ex: '/api/dados') ou URL absoluta.
- * @param {object} options - Opções padrão da API Fetch (method, body, etc.).
+ * @param {object} options - Opções padrão da API Fetch (method, body, headers, etc.).
  * @returns {Promise<Response>} - A promessa da resposta Fetch.
  */
 window.authFetch = function(url, options = {}) {
@@ -28,11 +37,12 @@ window.authFetch = function(url, options = {}) {
         options.headers['Authorization'] = 'Bearer ' + token;
     }
 
+    // Verifica se a URL é absoluta (http:// ou https://)
     const isAbsolute = /^https?:\/\//i.test(url);
     let finalUrl = url;
 
     if (!isAbsolute) {
-        // Garante que não haja barras duplas na junção
+        // Garante que não haja barras duplas na junção da URL
         const path = url.startsWith('/') ? url : ('/' + url);
         finalUrl = window.VIGILACORE_API_BASE.replace(/\/$/, '') + path;
     }
@@ -43,8 +53,11 @@ window.authFetch = function(url, options = {}) {
 /**
  * Função de Ping (Healthcheck)
  *
- * Verifica se o backend está online. Não usa cache para garantir status real.
+ * Verifica se o backend está online fazendo uma requisição leve.
+ * Configurada para não usar cache ('no-store') para garantir status em tempo real.
+ *
  * @param {string} path - Caminho do endpoint de ping (padrão: '/api/ping').
+ * @returns {Promise<Response>}
  */
 window.pingFetch = function(path = '/api/ping') {
     const base = window.VIGILACORE_API_BASE.replace(/\/$/, '');
@@ -52,14 +65,14 @@ window.pingFetch = function(path = '/api/ping') {
     return fetch(base + p, { method: 'GET', cache: 'no-store' });
 };
 
-// Contador de falhas consecutivas de ping para evitar "piscar" o status
+// Contador de falhas consecutivas de ping para evitar "piscar" o status em instabilidades breves
 window.__vc_ping_failures = 0;
 
 /**
  * Atualiza o Indicador de Status do Sistema (Online/Offline)
  *
- * Altera o texto e a classe CSS do elemento de status (pill).
- * Só marca como OFFLINE após 2 falhas consecutivas.
+ * Altera o texto e a classe CSS do elemento de status (geralmente uma "pill" no topo da página).
+ * Só marca como OFFLINE após 2 falhas consecutivas para maior tolerância.
  *
  * @param {string} pillId - ID do elemento HTML que exibe o status.
  */
@@ -90,7 +103,7 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
     }
 };
 
-// Inicialização automática do monitoramento de conexão
+// Inicialização automática do monitoramento de conexão ao carregar a página
 (function(){
     function start(){
         window.updateConnectionPill();
@@ -109,7 +122,8 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
  * Tratamento Global de Erros de Rede e Alertas
  *
  * Substitui o window.alert padrão para suprimir erros genéricos de rede ("Failed to fetch"),
- * que são comuns quando o navegador interrompe requisições ao navegar entre páginas.
+ * que são comuns quando o navegador interrompe requisições ao navegar entre páginas,
+ * evitando spam de alertas irrelevantes para o usuário.
  */
 (function () {
     const _alert = window.alert ? window.alert.bind(window) : null;
@@ -119,6 +133,7 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
         return /failed to fetch|networkerror|load failed|fetch api cannot load/i.test(s);
     }
 
+    // Exporta função utilitária para verificar se é erro de rede
     window.vcIsNetworkError = function (err) {
         const m = (err && (err.message || err.toString())) ? String(err.message || err.toString()) : '';
         return isNetworkMessage(m);
@@ -126,6 +141,8 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
 
     /**
      * Exibe um alerta de erro amigável, ignorando erros de rede irrelevantes.
+     * @param {Error|string} err - O erro capturado.
+     * @param {string} fallbackMsg - Mensagem padrão caso o erro não tenha detalhes.
      */
     window.vcShowErrorAlert = function (err, fallbackMsg) {
         const msg = (err && (err.message || err.toString())) ? String(err.message || err.toString()) : '';
@@ -136,7 +153,7 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
         if (_alert) _alert('❌ ' + (msg || fallbackMsg || 'Erro ao conectar com o servidor'));
     };
 
-    // Override do alert global
+    // Override do alert global para aplicar o filtro
     if (_alert) {
         window.alert = function (msg) {
             if (isNetworkMessage(msg)) {
@@ -149,14 +166,15 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
 })();
 
 /**
- * Controle de Acesso e UI Baseado em Função (Role-Based Access)
+ * Controle de Acesso e UI Baseado em Função (Role-Based Access Control - RBAC)
  *
- * - Oculta botões de "Zerar Banco" para quem não é desenvolvedor.
- * - Restringe acesso à "Área do Usuário" para perfis que não devem vê-la.
+ * - Oculta elementos sensíveis (como botões de "Zerar Banco") para não-desenvolvedores.
+ * - Restringe acesso à "Área do Usuário" removendo links de navegação para perfis não autorizados.
  */
 (function () {
     let __vc_me_cache = null;
 
+    // Cache simples para evitar múltiplas chamadas ao endpoint /me
     async function vcGetMe() {
         if (__vc_me_cache) return __vc_me_cache;
         const token = localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
@@ -173,6 +191,7 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
         }
     }
 
+    // Remove visualmente os links de navegação para a Área do Usuário
     function hideUserAreaNav() {
         const selectors = [
             'a[href="usuario.html"]',
@@ -184,6 +203,7 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
         });
     }
 
+    // Verifica se o usuário está atualmente na página restrita
     function isOnUserPage() {
         const p = (window.location.pathname || '').toLowerCase();
         const h = (window.location.href || '').toLowerCase();
@@ -196,18 +216,19 @@ window.updateConnectionPill = async function(pillId = 'v2-conn') {
 
         const role = String(me.role || '').toLowerCase();
 
-        // Apenas desenvolvedores veem o botão de reset global
+        // Regra: Apenas 'desenvolvedor' vê o botão de reset global
         if (role !== 'desenvolvedor') {
             document.querySelectorAll('#v2-reset-btn').forEach((el) => {
                 el.style.display = 'none';
             });
         }
 
-        // Restrição de acesso à página de usuário (se necessário pela regra de negócio)
-        // Nota: Atualmente configurado para esconder de Diretoria, Analistas e Supervisores
+        // Regra: 'diretoria', 'analistas' e 'supervisor' não devem acessar a configuração de usuário avançada
+        // (Isso pode ser ajustado conforme a regra de negócio evolua)
         if (role === 'diretoria' || role === 'analistas' || role === 'supervisor') {
             hideUserAreaNav();
 
+            // Redirecionamento de segurança caso acessem a URL diretamente
             if (isOnUserPage()) {
                 try {
                     alert('Acesso restrito: sua função não possui acesso à Área do Usuário.');
