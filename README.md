@@ -1,79 +1,77 @@
-# VigilaCore
+# LogosDecision
 
-**Sistema Integrado de Monitoramento e Gestão de Leituras - MG Setel**
+**Sistema de Inteligência e Gestão Estratégica de Leituras - MG Setel**
 
-Bem-vindo ao **VigilaCore**, uma solução robusta e de alto desempenho desenvolvida exclusivamente para a MG Setel. Este projeto representa um marco na gestão operacional de leituras de serviços públicos (água/energia), consolidando-se como uma ferramenta essencial para a tomada de decisões estratégicas e o controle de qualidade.
+O **LogosDecision** representa a evolução definitiva na gestão de operações de leitura de serviços públicos. Desenvolvido sob medida para a **MG Setel**, este sistema é uma ferramenta de "missão crítica", projetada para garantir excelência operacional, integridade de dados e suporte à tomada de decisões estratégicas em alto nível.
 
----
-
-## 🚀 Sobre o Projeto
-
-O **VigilaCore** ("Projeto da Minha Vida") foi concebido para centralizar, analisar e otimizar os processos de **Releitura** e **Porteira**. Através de uma interface web intuitiva e um backend poderoso, o sistema permite o acompanhamento em tempo real de métricas críticas, identificação de gargalos operacionais e automação de tarefas repetitivas.
-
-A plataforma integra dados de diversas fontes, aplica regras de negócio complexas (como roteamento regional e cálculo de prazos) e apresenta dashboards executivos para diferentes níveis hierárquicos (Analistas, Supervisão, Gerência e Diretoria).
+Este projeto não é apenas um software; é o **pilar tecnológico** que centraliza a inteligência do negócio, transformando dados brutos em insights acionáveis para otimizar recursos, reduzir custos e maximizar a eficiência das equipes de campo.
 
 ---
 
-## 🌟 Funcionalidades Principais
+## 🚀 Visão Geral e Propósito
 
-### 1. Gestão de Releitura
-O módulo de Releitura foca na eficiência e cumprimento de prazos das ordens de serviço.
-*   **Upload e Processamento Inteligente:** Importação de planilhas Excel com validação automática e cálculo de hash para evitar duplicidades.
-*   **Roteamento Automático (V2):** Distribuição automática das ordens para as regionais corretas (**Araxá, Uberaba, Frutal**) com base em regras predefinidas.
-*   **Dashboard Operacional:** Visualização clara de status (Pendente, Concluída, Atrasada) e métricas de desempenho individual e regional.
-*   **Controle de Metas:** Configuração de responsáveis por região diretamente pela interface administrativa.
+O **LogosDecision** foi arquitetado para solucionar desafios complexos nos processos de **Releitura** e **Porteira**, oferecendo:
 
-### 2. Gestão de Porteira
-O módulo de Porteira oferece uma visão analítica profunda sobre a qualidade e as ocorrências.
-*   **Métricas Avançadas:** Acompanhamento detalhado de OSB (Ordens de Serviço Baixadas) e CNV (Consumo Não Verificado).
-*   **Comparativo Mensal (Abertura):** Análise evolutiva "Mês Atual vs. Mês Anterior" para identificar tendências.
-*   **Snapshots de Atrasos:** Sistema de "congelamento" diário para auditoria de atrasos (18 razões críticas).
-*   **Gráficos Interativos:** Visualização de dados por ciclo, região e localidade.
+*   **Excelência Operacional:** Automação de fluxos de trabalho que eliminam erros manuais e reduzem drasticamente o tempo de processamento.
+*   **Inteligência de Dados:** Dashboards analíticos que permitem monitoramento em tempo real e previsão de tendências.
+*   **Governança e Controle:** Rastreabilidade completa das operações, garantindo compliance e auditoria eficaz.
 
-### 3. Automação e Integração
-*   **Portal Scraper:** Robôs (Selenium) para download automático de relatórios dos portais das concessionárias, garantindo que os dados estejam sempre atualizados sem intervenção manual.
-*   **Agendador de Tarefas (Scheduler):** Execução periódica de processos de sincronização e manutenção do banco de dados.
-
-### 4. Administração e Segurança
-*   **Controle de Acesso RBAC:** Perfis de usuário bem definidos (Analista, Supervisor, Gerência, Diretoria, Desenvolvedor) com permissões granulares.
-*   **Autenticação JWT:** Segurança robusta para proteção dos dados.
-*   **Logs e Auditoria:** Rastreabilidade de ações críticas no sistema.
+O sistema atende a todos os níveis da organização, desde analistas operacionais até a diretoria executiva, consolidando-se como o ativo digital mais importante da operação.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🌟 Funcionalidades Estratégicas
 
-O VigilaCore utiliza uma pilha tecnológica moderna e eficiente:
+### 1. Módulo de Releitura Inteligente
+Focado na gestão de alta performance das ordens de serviço de releitura.
+*   **Ingestão de Dados Robusta:** Processamento de planilhas complexas com verificação de integridade (Hash SHA-256) para garantir a unicidade dos dados.
+*   **Roteamento Algorítmico:** Distribuição automática e inteligente de demandas para as regionais (**Araxá, Uberaba, Frutal**) baseada em capacidade e regras de negócio.
+*   **Painel de Controle em Tempo Real:** Visualização instantânea de KPIs (Key Performance Indicators) de produtividade e status de execução.
 
-*   **Backend:** Python 3.10+
-    *   **Flask:** Framework web leve e flexível.
-    *   **Pandas & OpenPyXL:** Processamento de dados e manipulação de Excel de alta performance.
-    *   **APScheduler:** Gerenciamento de tarefas em segundo plano.
-    *   **Selenium:** Automação de navegação web (Scraping).
-    *   **SQLite:** Banco de dados relacional (leve e eficiente para a escala atual).
-    *   **PyJWT & BCrypt:** Segurança e criptografia.
-*   **Frontend:**
-    *   HTML5, CSS3, JavaScript (Vanilla).
-    *   Chart.js para visualização de dados.
-    *   Design responsivo e focado na experiência do usuário (UX).
+### 2. Módulo de Gestão de Porteira (Analytics)
+Ferramenta poderosa para análise de qualidade e detecção de anomalias.
+*   **Análise Profunda de Indicadores:** Monitoramento detalhado de OSB (Ordens de Serviço Baixadas) e CNV (Consumo Não Verificado).
+*   **Auditoria de Atrasos (Snapshots):** Sistema de congelamento de dados para análise forense de atrasos e gargalos operacionais.
+*   **Comparativos Temporais:** Análises "Mês a Mês" e evolutivas para suporte a decisões táticas.
+
+### 3. Automação (RPA) e Integração
+*   **Web Scraping Avançado:** Agentes autônomos (Selenium) que interagem com portais de concessionárias para extração segura e contínua de relatórios.
+*   **Scheduler Corporativo:** Orquestração de tarefas em background para garantir que os dados estejam sempre atualizados sem intervenção humana.
+
+### 4. Segurança e Administração
+*   **Controle de Acesso RBAC:** Gestão granular de permissões baseada em funções (Analista, Supervisor, Gerente, Diretor).
+*   **Segurança de Nível Enterprise:** Criptografia de senhas (Bcrypt) e autenticação via Tokens JWT.
 
 ---
 
-## 📦 Instalação e Configuração
+## 🛠️ Arquitetura Técnica
+
+O **LogosDecision** é construído sobre uma stack tecnológica moderna, priorizando estabilidade, escalabilidade e manutenibilidade:
+
+*   **Backend:** Python 3.10+ (Flask Framework)
+    *   **Core:** Pandas, OpenPyXL (Processamento de Dados Massivos).
+    *   **Automação:** Selenium WebDriver, APScheduler.
+    *   **Segurança:** PyJWT, Cryptography, BCrypt.
+*   **Frontend:** HTML5, CSS3, JavaScript (Vanilla ES6+), Chart.js.
+*   **Banco de Dados:** SQLite (Otimizado para alta performance local).
+
+---
+
+## 📦 Instalação e Execução
 
 ### Pré-requisitos
 *   Python 3.10 ou superior.
-*   Navegador Google Chrome (para o Selenium/Scraper).
+*   Google Chrome (versão compatível com WebDriver).
 
-### Passo a Passo
+### Procedimento de Instalação
 
 1.  **Clone o Repositório**
     ```bash
-    git clone https://github.com/seu-usuario/vigilacore.git
-    cd vigilacore
+    git clone https://github.com/mgsetel/logos-decision.git
+    cd logos-decision
     ```
 
-2.  **Crie um Ambiente Virtual**
+2.  **Configuração do Ambiente Virtual**
     ```bash
     python -m venv venv
     # Windows
@@ -82,60 +80,58 @@ O VigilaCore utiliza uma pilha tecnológica moderna e eficiente:
     source venv/bin/activate
     ```
 
-3.  **Instale as Dependências**
+3.  **Instalação de Dependências**
     ```bash
     pip install -r requirements.txt
     ```
 
-4.  **Configuração de Ambiente (.env)**
-    Crie um arquivo `.env` na raiz do projeto com as configurações necessárias (exemplo):
-    ```env
-    JWT_SECRET=sua_chave_secreta_super_segura
-    RELEITURA_MANAGER_USERNAME=GRTRI
-    ```
+4.  **Configuração de Variáveis de Ambiente (.env)**
+    Crie um arquivo `.env` na raiz conforme o modelo de configuração segura da empresa.
 
-5.  **Execute o Servidor**
+5.  **Inicialização do Sistema**
     ```bash
     python backend/app.py
     ```
-    O servidor iniciará em `http://0.0.0.0:5000`.
+    O sistema estará acessível em `http://127.0.0.1:5000`.
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Estrutura de Diretórios
 
 ```
-vigilacore/
-├── backend/            # Código-fonte do servidor Python
-│   ├── app.py          # Ponto de entrada da aplicação
-│   ├── core/           # Lógica de negócios (Scrapers, Analytics, DB)
-│   └── data/           # Armazenamento de dados (SQLite, Arquivos Temp)
-├── frontend/           # Interface do usuário
-│   ├── views/          # Páginas HTML
+logos-decision/
+├── backend/            # Núcleo da aplicação (API e Lógica de Negócio)
+│   ├── app.py          # Entry point da aplicação
+│   ├── core/           # Módulos de processamento e regras de negócio
+│   └── data/           # Camada de persistência
+├── frontend/           # Interface do Usuário (UI/UX)
+│   ├── views/          # Templates HTML
 │   ├── css/            # Estilos
-│   └── js/             # Lógica do Frontend
-├── requirements.txt    # Dependências do Python
-├── LICENSE             # Licença de Uso
-└── README.md           # Documentação do Projeto
+│   └── js/             # Lógica de apresentação
+├── requirements.txt    # Manifesto de dependências
+├── LICENSE             # Termos de uso exclusivo
+└── README.md           # Documentação oficial
 ```
 
 ---
 
-## ⚠️ Licença e Direitos Autorais
+## ⚠️ Propriedade Intelectual e Licença
 
 **USO EXCLUSIVO DA MG SETEL.**
 
-Este software é propriedade intelectual da **MG Setel**. O uso, cópia, modificação, distribuição ou comercialização não autorizada deste código é estritamente proibida.
+Todo o código-fonte, algoritmos, designs e documentação contidos neste repositório são propriedade intelectual exclusiva da **MG Setel**.
 
-Consulte o arquivo `LICENSE` para os termos completos.
+É **estritamente proibida** a cópia, modificação, distribuição, engenharia reversa ou qualquer forma de uso não autorizado, sob pena de medidas legais cabíveis.
 
----
-
-## 📞 Contato
-
-Desenvolvido com excelência técnica e compromisso para a **MG Setel**.
-
-Para suporte técnico ou dúvidas sobre o sistema, entre em contato com a equipe de TI ou o desenvolvedor responsável.
+Consulte o arquivo `LICENSE` para os termos legais completos.
 
 ---
-*VigilaCore © 2026 MG Setel - Todos os direitos reservados.*
+
+## 📞 Suporte e Manutenção
+
+Desenvolvido com rigor técnico e paixão pela excelência.
+
+Para suporte técnico, report de bugs ou solicitações de melhoria, entre em contato diretamente com a equipe de Desenvolvimento de Sistemas da MG Setel.
+
+---
+*LogosDecision © 2026 MG Setel - Excelência em Gestão.*
