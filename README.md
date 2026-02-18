@@ -1,14 +1,14 @@
-# VigilaCore
+# Logos Decision
 
 **Sistema Integrado de Monitoramento e Gestão de Leituras - MG Setel**
 
-Bem-vindo ao **VigilaCore**, uma solução robusta e de alto desempenho desenvolvida exclusivamente para a MG Setel. Este projeto representa um marco na gestão operacional de leituras de serviços públicos (água/energia), consolidando-se como uma ferramenta essencial para a tomada de decisões estratégicas e o controle de qualidade.
+Bem-vindo ao **Logos Decision**, uma solução robusta e de alto desempenho desenvolvida exclusivamente para a MG Setel. Este projeto representa um marco na gestão operacional de leituras de serviços públicos (água/energia), consolidando-se como uma ferramenta essencial para a tomada de decisões estratégicas e o controle de qualidade.
 
 ---
 
 ## 🚀 Sobre o Projeto
 
-O **VigilaCore** ("Projeto da Minha Vida") foi concebido para centralizar, analisar e otimizar os processos de **Releitura** e **Porteira**. Através de uma interface web intuitiva e um backend poderoso, o sistema permite o acompanhamento em tempo real de métricas críticas, identificação de gargalos operacionais e automação de tarefas repetitivas.
+O **Logos Decision** ("Projeto da Minha Vida") foi concebido para centralizar, analisar e otimizar os processos de **Releitura** e **Porteira**. Através de uma interface web intuitiva e um backend poderoso, o sistema permite o acompanhamento em tempo real de métricas críticas, identificação de gargalos operacionais e automação de tarefas repetitivas.
 
 A plataforma integra dados de diversas fontes, aplica regras de negócio complexas (como roteamento regional e cálculo de prazos) e apresenta dashboards executivos para diferentes níveis hierárquicos (Analistas, Supervisão, Gerência e Diretoria).
 
@@ -43,7 +43,7 @@ O módulo de Porteira oferece uma visão analítica profunda sobre a qualidade e
 
 ## 🛠️ Tecnologias Utilizadas
 
-O VigilaCore utiliza uma pilha tecnológica moderna e eficiente:
+O Logos Decision utiliza uma pilha tecnológica moderna e eficiente:
 
 *   **Backend:** Python 3.10+
     *   **Flask:** Framework web leve e flexível.
@@ -69,8 +69,8 @@ O VigilaCore utiliza uma pilha tecnológica moderna e eficiente:
 
 1.  **Clone o Repositório**
     ```bash
-    git clone https://github.com/seu-usuario/vigilacore.git
-    cd vigilacore
+    git clone https://github.com/seu-usuario/logos-decision.git
+    cd logos-decision
     ```
 
 2.  **Crie um Ambiente Virtual**
@@ -105,7 +105,7 @@ O VigilaCore utiliza uma pilha tecnológica moderna e eficiente:
 ## 📂 Estrutura do Projeto
 
 ```
-vigilacore/
+logos-decision/
 ├── backend/            # Código-fonte do servidor Python
 │   ├── app.py          # Ponto de entrada da aplicação
 │   ├── core/           # Lógica de negócios (Scrapers, Analytics, DB)
@@ -138,4 +138,4 @@ Desenvolvido com excelência técnica e compromisso para a **MG Setel**.
 Para suporte técnico ou dúvidas sobre o sistema, entre em contato com a equipe de TI ou o desenvolvedor responsável.
 
 ---
-*VigilaCore © 2026 MG Setel - Todos os direitos reservados.*
+*Logos Decision © 2026 MG Setel - Todos os direitos reservados.*
