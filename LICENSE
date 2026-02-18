@@ -1,300 +1,33 @@
-Licença de Uso Não Comercial LOGOS DECISION
-Versão 1.0, Fevereiro de 2026
+VigilaCore - Licença de Uso Exclusivo MG Setel
 
-Direitos Autorais (c) 2026 Allan Silva (hrsallan)
+Copyright (c) 2026 MG Setel. Todos os direitos reservados.
 
-================================================================================
-PREÂMBULO
-================================================================================
+AVISO LEGAL IMPORTANTE
 
-Esta licença rege o uso, cópia, modificação e distribuição do software
-LOGOS DECISION e arquivos de documentação associados (coletivamente, o
-"Software"). Esta licença foi projetada para permitir o uso gratuito do Software
-para fins não comerciais, restringindo a exploração comercial e garantindo
-que trabalhos derivados permaneçam abertos e gratuitos.
+O software "VigilaCore" (doravante denominado "Software") é propriedade exclusiva da MG Setel. O uso, cópia, distribuição, modificação ou engenharia reversa deste Software, no todo ou em parte, sem a autorização prévia e expressa por escrito da MG Setel, é estritamente proibido.
 
-================================================================================
-1. DEFINIÇÕES
-================================================================================
+Este Software é confidencial e contém segredos comerciais e informações proprietárias da MG Setel. O acesso ao código-fonte e à documentação técnica é restrito exclusivamente a funcionários e contratados autorizados pela MG Setel, para fins de operação e manutenção interna.
 
-1.1. "Software" significa a aplicação LOGOS DECISION, incluindo todo o código-fonte,
-     código-objeto, documentação, arquivos de configuração, scripts e materiais
-     relacionados, seja na forma original ou modificada.
+TERMOS E CONDIÇÕES:
 
-1.2. "Uso Comercial" significa qualquer uso do Software que seja principalmente
-     destinado ou direcionado à vantagem comercial ou compensação monetária. Isso
-     inclui, mas não se limita a:
-     (a) Venda ou licenciamento do Software ou derivados
-     (b) Uso do Software para fornecer serviços pagos (SaaS, consultoria, etc.)
-     (c) Uso do Software dentro das operações geradoras de receita de uma
-         organização com fins lucrativos
-     (d) Integração do Software em produtos ou serviços comerciais
-     (e) Uso do Software para processar dados para clientes pagantes
+1. CONCESSÃO DE LICENÇA LIMITADA
+   A MG Setel concede aos usuários autorizados uma licença limitada, não exclusiva, intransferível e revogável para usar o Software exclusivamente para as operações internas da empresa.
 
-1.3. "Trabalho Derivado" significa qualquer trabalho que seja baseado ou derivado
-     do Software, incluindo modificações, aprimoramentos, traduções ou
-     adaptações.
+2. RESTRIÇÕES DE USO
+   Você NÃO pode:
+   (a) Vender, alugar, licenciar, sublicenciar ou comercializar o Software.
+   (b) Copiar, modificar, criar obras derivadas ou adaptar o Software.
+   (c) Realizar engenharia reversa, descompilar ou desmontar o Software.
+   (d) Remover ou alterar quaisquer avisos de direitos autorais ou propriedade.
+   (e) Utilizar o Software para qualquer finalidade ilegal ou não autorizada.
 
-1.4. "Você" (ou "Seu") significa um indivíduo ou entidade legal exercendo direitos
-     sob esta Licença.
+3. CONFIDENCIALIDADE
+   Você concorda em manter o Software e todas as informações relacionadas em estrito sigilo e não divulgar tais informações a terceiros sem o consentimento prévio por escrito da MG Setel.
 
-1.5. "Distribuir" significa fornecer uma cópia do Software a qualquer terceiro,
-     seja por mídia física, download ou qualquer outro meio.
+4. ISENÇÃO DE GARANTIAS
+   O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA", SEM QUALQUER TIPO DE GARANTIA, EXPRESSA OU IMPLÍCITA. A MG Setel NÃO GARANTE QUE O SOFTWARE ESTARÁ LIVRE DE ERROS OU QUE FUNCIONARÁ ININTERRUPTAMENTE.
 
-1.6. "Colaborador" significa qualquer pessoa ou entidade que cria ou contribui
-     para a criação de modificações no Software.
+5. LEI APLICÁVEL
+   Esta licença será regida e interpretada de acordo com as leis da República Federativa do Brasil e do Estado de Minas Gerais.
 
-================================================================================
-2. CONCESSÃO DE LICENÇA
-================================================================================
-
-Sujeito aos termos e condições desta Licença, o detentor dos direitos autorais
-concede a Você uma licença mundial, livre de royalties e não exclusiva para:
-
-2.1. USAR o Software para fins não comerciais, incluindo fins pessoais,
-     educacionais, acadêmicos, de pesquisa e beneficentes.
-
-2.2. COPIAR o Software para fins de backup, arquivamento ou distribuição,
-     desde que tal distribuição esteja em conformidade com esta Licença.
-
-2.3. MODIFICAR o Software e criar Trabalhos Derivados, desde que tais
-     Trabalhos Derivados também estejam sujeitos a esta Licença.
-
-2.4. DISTRIBUIR cópias do Software original ou Trabalhos Derivados, desde que:
-     (a) Você inclua uma cópia completa desta Licença com cada distribuição
-     (b) Você forneça atribuição clara ao autor original
-     (c) Você não imponha restrições adicionais além das contidas nesta
-         Licença
-
-================================================================================
-3. RESTRIÇÕES
-================================================================================
-
-3.1. PROIBIÇÃO DE USO COMERCIAL
-     Você NÃO pode usar o Software para Uso Comercial conforme definido na Seção 1.2.
-     Qualquer uso comercial requer uma licença comercial separada do
-     detentor dos direitos autorais.
-
-3.2. PROIBIÇÃO DE SUBLICENCIAMENTO
-     Você não pode sublicenciar, vender, alugar ou arrendar o Software ou qualquer
-     Trabalho Derivado a terceiros.
-
-3.3. PROIBIÇÃO DE USO DE MARCA REGISTRADA
-     Esta Licença não concede permissão para usar nomes comerciais, marcas
-     registradas, marcas de serviço ou nomes de produtos do detentor dos direitos
-     autorais, exceto conforme necessário para uso razoável e costumeiro na
-     descrição da origem do Software e reprodução do aviso de direitos autorais.
-
-3.4. REQUISITO DE ATRIBUIÇÃO
-     Você deve manter, no Software e em Trabalhos Derivados, todos os avisos de
-     direitos autorais, patentes, marcas registradas e atribuição do Software original.
-     Você não pode remover ou alterar tais avisos.
-
-3.5. SEM REIVINDICAÇÕES DE PATENTES
-     Você não pode iniciar litígios alegando que o Software infringe qualquer
-     patente. Se Você iniciar tal litígio, Sua licença sob esta Licença
-     termina automaticamente.
-
-================================================================================
-4. REQUISITO DE COMPARTILHAMENTO PELA MESMA LICENÇA (SHARE-ALIKE)
-================================================================================
-
-4.1. Se Você criar um Trabalho Derivado, Você deve:
-     (a) Licenciar todo o Trabalho Derivado sob esta mesma Licença
-     (b) Disponibilizar o código-fonte do Trabalho Derivado quando distribuído
-     (c) Documentar claramente todas as modificações feitas no Software original
-     (d) Incluir avisos proeminentes informando que Você alterou o Software
-
-4.2. Este requisito de compartilhamento pela mesma licença garante que melhorias e
-     modificações no Software permaneçam livres e disponíveis para a comunidade.
-
-================================================================================
-5. LICENCIAMENTO COMERCIAL
-================================================================================
-
-5.1. Organizações ou indivíduos que desejam usar o Software para Uso Comercial
-     devem obter uma licença comercial separada do detentor dos direitos autorais.
-
-5.2. Para consultas sobre licenciamento comercial, entre em contato com:
-     Allan Silva (hrsallan)
-     GitHub: https://github.com/hrsallan
-     Email: Disponível através do perfil do GitHub
-
-5.3. Licenças comerciais podem ser concedidas caso a caso, a critério exclusivo
-     do detentor dos direitos autorais.
-
-================================================================================
-6. PROPRIEDADE INTELECTUAL
-================================================================================
-
-6.1. O detentor dos direitos autorais retém todos os direitos, títulos e interesses
-     sobre o Software original, incluindo todos os direitos de propriedade intelectual.
-
-6.2. Os Colaboradores concedem ao detentor dos direitos autorais uma licença
-     perpétua, mundial, não exclusiva, livre de royalties e irrevogável para usar,
-     reproduzir, modificar, exibir, executar, sublicenciar e distribuir suas
-     contribuições como parte do Software.
-
-6.3. Nenhum direito ou licença é concedido, exceto conforme expressamente estabelecido
-     nesta Licença.
-
-================================================================================
-7. ISENÇÃO DE GARANTIAS
-================================================================================
-
-7.1. O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA", SEM GARANTIA DE QUALQUER TIPO,
-     EXPRESSA OU IMPLÍCITA, INCLUINDO MAS NÃO SE LIMITANDO ÀS GARANTIAS DE:
-     - COMERCIALIZAÇÃO
-     - ADEQUAÇÃO A UM DETERMINADO FIM
-     - NÃO VIOLAÇÃO
-     - QUALIDADE
-     - PRECISÃO
-     - CONFIABILIDADE
-
-7.2. O detentor dos direitos autorais não garante que:
-     (a) O Software atenderá aos Seus requisitos
-     (b) A operação do Software será ininterrupta ou livre de erros
-     (c) Defeitos no Software serão corrigidos
-     (d) O Software está livre de vírus ou outros componentes prejudiciais
-
-7.3. Você assume todos os riscos associados ao uso do Software, incluindo
-     mas não se limitando a perda de dados, falhas no sistema ou interrupção dos negócios.
-
-7.4. Algumas jurisdições não permitem a exclusão de garantias implícitas. Nessas
-     jurisdições, as exclusões acima podem não se aplicar a Você.
-
-================================================================================
-8. LIMITAÇÃO DE RESPONSABILIDADE
-================================================================================
-
-8.1. NA EXTENSÃO MÁXIMA PERMITIDA PELA LEI APLICÁVEL, EM NENHUMA HIPÓTESE O
-     DETENTOR DOS DIREITOS AUTORAIS OU COLABORADORES SERÃO RESPONSÁVEIS POR QUAISQUER
-     DANOS DIRETOS, INDIRETOS, INCIDENTAIS, ESPECIAIS, EXEMPLARES OU CONSEQUENCIAIS,
-     INCLUINDO MAS NÃO SE LIMITANDO A:
-     (a) Perda de lucros, receita ou oportunidades de negócios
-     (b) Perda de dados ou corrupção de dados
-     (c) Custo de aquisição de bens ou serviços substitutos
-     (d) Interrupção de negócios ou inatividade do sistema
-     (e) Quaisquer outros danos ou perdas comerciais
-
-8.2. Esta limitação aplica-se independentemente da teoria legal de responsabilidade
-     (contrato, ato ilícito, negligência, responsabilidade estrita ou outra), mesmo
-     que o detentor dos direitos autorais tenha sido avisado da possibilidade de tais danos.
-
-8.3. Algumas jurisdições não permitem a limitação ou exclusão de responsabilidade
-     por danos incidentais ou consequenciais. Nessas jurisdições, as
-     limitações acima podem não se aplicar a Você.
-
-8.4. Em nenhuma hipótese a responsabilidade total do detentor dos direitos autorais
-     excederá o valor de R$ 100,00 (cem Reais brasileiros).
-
-================================================================================
-9. INDENIZAÇÃO
-================================================================================
-
-9.1. Você concorda em indenizar, defender e isentar o detentor dos direitos autorais
-     e todos os Colaboradores de e contra todas e quaisquer reivindicações, responsabilidades,
-     danos, perdas, custos e despesas (incluindo honorários advocatícios razoáveis)
-     decorrentes ou relacionados a:
-     (a) Seu uso ou distribuição do Software
-     (b) Sua violação desta Licença
-     (c) Qualquer Trabalho Derivado que Você criar
-     (d) Qualquer reivindicação de que Seu uso do Software infringe quaisquer direitos de
-         propriedade intelectual de terceiros
-
-================================================================================
-10. PRAZO E RESCISÃO
-================================================================================
-
-10.1. Esta Licença é efetiva até ser rescindida.
-
-10.2. Seus direitos sob esta Licença terminarão automaticamente sem
-      aviso prévio se Você deixar de cumprir qualquer termo desta Licença.
-
-10.3. Após a rescisão, Você deve:
-      (a) Cessar imediatamente todo o uso do Software
-      (b) Destruir todas as cópias do Software em Sua posse ou controle
-      (c) Cessar a distribuição do Software ou Trabalhos Derivados
-
-10.4. As Seções 6 (Propriedade Intelectual), 7 (Isenção de Garantias),
-      8 (Limitação de Responsabilidade), 9 (Indenização) e 11 (Disposições Gerais)
-      sobreviverão a qualquer rescisão desta Licença.
-
-10.5. A rescisão não afeta licenças devidamente concedidas a terceiros
-      por Você antes da rescisão, desde que permaneçam em conformidade com esta
-      Licença.
-
-================================================================================
-11. DISPOSIÇÕES GERAIS
-================================================================================
-
-11.1. LEI APLICÁVEL
-      Esta Licença será regida e interpretada de acordo com as
-      leis do Brasil, especificamente as leis do Estado de Minas Gerais,
-      sem considerar seus conflitos de disposições legais.
-
-11.2. JURISDIÇÃO
-      Qualquer ação legal ou processo decorrente desta Licença será
-      ajuizado exclusivamente nos tribunais localizados em Minas Gerais, Brasil, e
-      as partes consentem com a jurisdição pessoal de tais tribunais.
-
-11.3. SEPARABILIDADE
-      Se qualquer disposição desta Licença for considerada inexequível ou inválida,
-      tal disposição será modificada na extensão mínima necessária para torná-la
-      exequível ou válida, e as disposições restantes permanecerão em
-      pleno vigor e efeito.
-
-11.4. SEM RENÚNCIA
-      A falha do detentor dos direitos autorais em fazer cumprir qualquer disposição desta
-      Licença não constituirá uma renúncia à aplicação futura dessa ou
-      de qualquer outra disposição.
-
-11.5. ACORDO INTEGRAL
-      Esta Licença constitui o acordo integral entre as partes
-      referente ao Software e substitui todos os entendimentos, acordos
-      ou representações anteriores ou contemporâneos.
-
-11.6. CESSÃO
-      Você não pode ceder ou transferir Seus direitos ou obrigações sob esta
-      Licença sem o consentimento prévio por escrito do detentor dos direitos autorais. Qualquer
-      tentativa de cessão sem tal consentimento será nula.
-
-11.7. TERCEIROS BENEFICIÁRIOS
-      Os Colaboradores são terceiros beneficiários intencionais desta Licença com
-      respeito às proteções e limitações aqui estabelecidas.
-
-11.8. INTERPRETAÇÃO
-      Os títulos das seções usados nesta Licença são apenas para conveniência e
-      não afetarão a interpretação de qualquer disposição.
-
-11.9. IDIOMA
-      Esta Licença está escrita em Português. Em caso de qualquer discrepância entre
-      a versão em Português e qualquer tradução, a versão em Português
-      prevalecerá.
-
-11.10. MODIFICAÇÕES NESTA LICENÇA
-       O detentor dos direitos autorais pode publicar versões revisadas desta Licença. Cada
-       versão receberá um número de versão distinto. Uma vez que o Software seja
-       licenciado sob uma versão específica, Você pode continuar a usá-lo sob essa
-       versão ou optar por usá-lo sob qualquer versão subsequente publicada pelo
-       detentor dos direitos autorais.
-
-================================================================================
-12. ACEITAÇÃO
-================================================================================
-
-Ao usar, copiar, modificar ou distribuir o Software, Você indica Sua
-aceitação desta Licença e de todos os seus termos e condições.
-
-Se Você não concordar com os termos desta Licença, Você não tem permissão para usar,
-copiar, modificar ou distribuir o Software.
-
-================================================================================
-FIM DA LICENÇA
-================================================================================
-
-Para dúvidas sobre esta Licença, entre em contato com:
-Allan Silva (hrsallan)
-GitHub: https://github.com/hrsallan/logos-decision
-
-Última atualização: Fevereiro de 2026
+QUALQUER VIOLAÇÃO DESTES TERMOS PODE RESULTAR EM AÇÕES CÍVEIS E CRIMINAIS, ALÉM DA RESCISÃO IMEDIATA DO ACESSO AO SOFTWARE.
