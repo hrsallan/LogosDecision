@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>LOGOS DECISION | Releituras</title>
+    <!-- Estilos modernos v2 -->
+    <link rel="stylesheet" href="../css/v2_modern.css?v=1.0.2">
+    <!-- Dependências externas: Ícones Lucide e Chart.js -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Scripts utilitários -->
+    <script src="../js/sidebar_toggle.js?v=1.0.2"></script>
+    <script src="../js/utils.js?v=1.0.2"></script>
+    
+    <style>
+        /* ==================== MELHORIAS ESPECÍFICAS DA PÁGINA DE RELEITURA ==================== */
+        
+        .page-releitura .v2-main {
+            padding: 24px;
+        }
+
+        /* Grupo de ações do cabeçalho */
+        .header-actions-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Botões de ação */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .action-btn i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.8) 100%);
+            color: #0a0c10;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0, 209, 255, 0.25);
+        }
+
+        .action-btn.primary:hover {
+            box-shadow: 0 6px 16px rgba(0, 209, 255, 0.35);
+        }
+
+        .action-btn.danger {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border-color: rgba(248, 81, 73, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(248, 81, 73, 0.15);
+            border-color: rgba(248, 81, 73, 0.5);
+        }
+
+        /* Filtro de Região */
+        .region-filter-container {
+            display: inline-block;
+        }
+
+        .region-select {
+            min-width: 200px;
+            padding: 10px 16px;
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+            color: var(--v2-text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .region-select:hover {
+            border-color: rgba(0, 209, 255, 0.5);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .region-select:focus {
+            border-color: var(--v2-primary);
+            box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+        }
+
+        .region-select option {
+            background: var(--v2-bg);
+            color: var(--v2-text);
+            padding: 10px;
+        }
+
+        /* Grid de métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1400px) {
+            .metrics-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Efeito de brilho no card */
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Cores temáticas para os cards */
+        .metric-card.primary::before {
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.warning::before {
+            background: radial-gradient(circle, rgba(210, 153, 34, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.success::before {
+            background: radial-gradient(circle, rgba(35, 134, 54, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.danger::before {
+            background: radial-gradient(circle, rgba(248, 81, 73, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .metric-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(0, 209, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .metric-icon i {
+            width: 18px;
+            height: 18px;
+            color: var(--v2-primary);
+        }
+
+        .metric-card.warning .metric-icon {
+            background: rgba(210, 153, 34, 0.1);
+        }
+
+        .metric-card.warning .metric-icon i {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.success .metric-icon {
+            background: rgba(35, 134, 54, 0.1);
+        }
+
+        .metric-card.success .metric-icon i {
+            color: var(--v2-success);
+        }
+
+        .metric-card.danger .metric-icon {
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .metric-card.danger .metric-icon i {
+            color: var(--v2-danger);
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            line-height: 1.2;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--v2-text);
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+            margin-top: 4px;
+        }
+
+        .metric-card.warning .metric-value {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.success .metric-value {
+            color: var(--v2-success);
+        }
+
+        .metric-card.danger .metric-value {
+            color: var(--v2-danger);
+        }
+
+        /* Cards de Detalhe Regional */
+        .region-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .region-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .region-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .region-detail-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .region-detail-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .region-detail-header {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .region-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .region-metric {
+            text-align: center;
+        }
+
+        .region-metric-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            margin-bottom: 4px;
+        }
+
+        .region-metric-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--v2-text);
+        }
+
+        /* Estilos dos Cards de Gráfico */
+        .chart-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .chart-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-title i {
+            width: 24px;
+            height: 24px;
+            color: var(--v2-primary);
+        }
+
+        .chart-title h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            margin-top: 4px;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 400px;
+            padding: 16px 0;
+        }
+
+        .chart-canvas.large {
+            height: 500px;
+        }
+
+        /* Estilos da Tabela */
+        .table-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--v2-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-title i {
+            width: 22px;
+            height: 22px;
+            color: var(--v2-primary);
+        }
+
+        .table-title h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .table-scroll {
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--v2-surface-light);
+        }
+
+        .data-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            border-bottom: 2px solid var(--v2-border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(0, 209, 255, 0.05);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+         .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .status-tag.pendente {
+            background: rgba(255, 215, 0, 0.18);
+            color: rgba(255, 215, 0, 0.95);
+            border: 1px solid rgba(255, 215, 0, 0.28);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.0);
+        }
+
+        .status-tag.atrasado {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--v2-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        
+        .status-tag.realizada {
+            background: rgba(63, 185, 80, 0.14);
+            color: rgba(63, 185, 80, 0.95);
+            border: 1px solid rgba(63, 185, 80, 0.28);
+        }
+
+        .status-tag.neutral {
+            background: rgba(147, 160, 170, 0.12);
+            color: rgba(230, 237, 243, 0.85);
+            border: 1px solid rgba(147, 160, 170, 0.22);
+        }
+.status-tag i {
+            width: 12px;
+            height: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--v2-text-dim);
+        }
+
+        .empty-state i {
+            width: 64px;
+            height: 64px;
+            color: var(--v2-text-dim);
+            opacity: 0.3;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        /* Ajustes responsivos */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-canvas {
+                height: 300px;
+            }
+
+            .chart-canvas.large {
+                height: 350px;
+            }
+
+            .header-actions-group {
+                width: 100%;
+            }
+
+            .action-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+
+        /* ==================== CALENDÁRIO DATE PICKER ==================== */
+        .date-picker-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .date-picker-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .date-picker-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 209, 255, 0.3);
+        }
+
+        .date-picker-btn i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .calendar-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 320px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none;
+        }
+
+        .calendar-dropdown.active {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .calendar-month {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--v2-text);
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-nav-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--v2-border);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            background: rgba(0, 209, 255, 0.1);
+            border-color: rgba(0, 209, 255, 0.3);
+        }
+
+        .calendar-nav-btn i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+        }
+
+        .calendar-day:hover {
+            background: rgba(0, 209, 255, 0.1);
+            border-color: rgba(0, 209, 255, 0.3);
+        }
+
+        .calendar-day.other-month {
+            color: var(--v2-text-dim);
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            background: rgba(210, 153, 34, 0.15);
+            border-color: rgba(210, 153, 34, 0.5);
+            color: var(--v2-warning);
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.8) 100%);
+            color: #0a0c10;
+            border-color: transparent;
+            font-weight: 900;
+        }
+
+        .calendar-footer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--v2-border);
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-footer-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .calendar-footer-btn.clear {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .calendar-footer-btn.clear:hover {
+            background: rgba(248, 81, 73, 0.15);
+        }
+
+        .calendar-footer-btn.today {
+            background: rgba(0, 209, 255, 0.1);
+            color: var(--v2-primary);
+            border: 1px solid rgba(0, 209, 255, 0.3);
+        }
+
+        .calendar-footer-btn.today:hover {
+            background: rgba(0, 209, 255, 0.15);
+        }
+    </style>
+</head>
+<body class="page-releitura">
+    <div class="v2-container">
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <aside class="v2-sidebar">
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">LOGOS</span><span class="logo-core">DECISION</span>
+                </div>
+            </div>
+
+            <nav class="v2-nav">
+                <a href="menu_principal.html" class="v2-nav-item" data-title="Menu Principal">
+                    <i data-lucide="globe"></i>
+                    <span class="v2-nav-text">Menu Principal</span>
+                </a>
+                <a href="releitura.html" class="v2-nav-item active" data-title="Releituras">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="v2-nav-text">Releituras</span>
+                </a>
+                <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
+                    <i data-lucide="door-open"></i>
+                    <span class="v2-nav-text">Porteira</span>
+                </a>
+                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
+                    <i data-lucide="circle-user-round"></i>
+                    <span class="v2-nav-text">Área do Usuário</span>
+                </a>
+                <div class="v2-nav-divider"></div>
+                <div class="v2-nav-section-label">Em breve</div>
+
+                <a href="relatorios.html" class="v2-nav-item" data-title="Relatórios">
+                    <i data-lucide="file-text"></i>
+                    <span class="v2-nav-text">Relatórios</span>
+                </a>
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
+                    <i data-lucide="brain"></i>
+                    <span class="v2-nav-text">Análise IA</span>
+                </a>
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
+                    <i data-lucide="settings"></i>
+                    <span class="v2-nav-text">Administração</span>
+                </a>
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
+                    <i data-lucide="power"></i>
+                    <span class="v2-nav-text">Sair</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <div class="v2-content">
+            <!-- CABEÇALHO (HEADER) -->
+            <header class="v2-header">
+                <div class="v2-header-left">
+                    <h1 class="v2-header-title">Monitoramento Releituras</h1>
+                    <p class="v2-header-subtitle">Análise das Releituras Não Executadas | CEMIG SGL</p>
+                </div>
+                <div class="v2-header-right">
+                    <div class="header-actions-group" style="gap: 12px;">
+                        <!-- Seletor de Data (Calendário) -->
+                        <div class="date-picker-container">
+                            <button id="date-picker-btn" type="button" class="date-picker-btn" title="Selecionar data">
+                                <i data-lucide="calendar"></i>
+                                <span id="selected-date-text">Hoje</span>
+                            </button>
+                            <div id="calendar-dropdown" class="calendar-dropdown">
+                                <div class="calendar-header">
+                                    <span class="calendar-month" id="calendar-month-year">Janeiro 2026</span>
+                                    <div class="calendar-nav">
+                                        <button class="calendar-nav-btn" id="prev-month-btn" type="button">
+                                            <i data-lucide="chevron-left"></i>
+                                        </button>
+                                        <button class="calendar-nav-btn" id="next-month-btn" type="button">
+                                            <i data-lucide="chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="calendar-weekdays">
+                                    <div class="calendar-weekday">Dom</div>
+                                    <div class="calendar-weekday">Seg</div>
+                                    <div class="calendar-weekday">Ter</div>
+                                    <div class="calendar-weekday">Qua</div>
+                                    <div class="calendar-weekday">Qui</div>
+                                    <div class="calendar-weekday">Sex</div>
+                                    <div class="calendar-weekday">Sáb</div>
+                                </div>
+                                <div class="calendar-days" id="calendar-days">
+                                    <!-- Dias gerados via JS -->
+                                </div>
+                                <div class="calendar-footer">
+                                    <button class="calendar-footer-btn clear" id="clear-date-btn" type="button">
+                                        Limpar
+                                    </button>
+                                    <button class="calendar-footer-btn today" id="today-btn" type="button">
+                                        Hoje
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filtro de Região -->
+                        <div class="region-filter-container" id="region-filter-container">
+                            <select id="region-filter" class="region-select">
+                                <option value="all">Geral (todas)</option>
+                                <option value="Araxá">Araxá</option>
+                                <option value="Uberaba">Uberaba</option>
+                                <option value="Frutal">Frutal</option>
+                            </select>
+                        </div>
+
+                        <!-- Ações de Gerenciamento -->
+                        <button id="btn-sync-teste" type="button" class="action-btn primary" style="display:none;">
+                            <i data-lucide="refresh-cw"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                        <button id="btn-reset-releitura" type="button" class="action-btn danger" style="display:none;">
+                            <i data-lucide="trash-2"></i>
+                            <span>Zerar Releitura</span>
+                        </button>
+                        <button id="btn-unrouted" type="button" class="action-btn" style="display:none;">
+                            <i data-lucide="alert-triangle"></i>
+                            <span>Não roteados: <span id="unrouted-count">0</span></span>
+                        </button>
+                    </div>
+                    
+                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
+                    
+                    <div class="v2-clock-widget">
+                        <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                        <div class="v2-date-display" id="v2-date">--/--/----</div>
+                    </div>
+                </div>
+            
+    </header>
+
+            <!-- CONTEÚDO DA PÁGINA -->
+            <main class="v2-main">
+                <!-- GRID DE MÉTRICAS -->
+                <div class="metrics-grid">
+                    <div class="metric-card primary">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="database"></i>
+                            </div>
+                            <span class="metric-label">Releituras Totais</span>
+                        </div>
+                        <div class="metric-value" id="v2-total">0</div>
+                    </div>
+                    
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <span class="metric-label">Pendências</span>
+                        </div>
+                        <div class="metric-value" id="v2-pend">0</div>
+                    </div>
+                    
+                    <div class="metric-card success">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="check-circle"></i>
+                            </div>
+                            <span class="metric-label">Realizadas</span>
+                        </div>
+                        <div class="metric-value" id="v2-realizadas">0</div>
+                    </div>
+                    
+                    <div class="metric-card danger">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                            <span class="metric-label">Atrasadas</span>
+                        </div>
+                        <div class="metric-value" id="v2-atrasadas">0</div>
+                    </div>
+                    
+                    <div class="metric-card" style="--glow-color: rgba(100, 120, 255, 0.12);">
+                        <div class="metric-header">
+                            <div class="metric-icon" style="background: rgba(100, 120, 255, 0.1);">
+                                <i data-lucide="help-circle" style="color: #6478ff;"></i>
+                            </div>
+                            <span class="metric-label">Não Roteados</span>
+                        </div>
+                        <div class="metric-value" id="v2-nao-roteados" style="color: #6478ff;">0</div>
+                    </div>
+                </div>
+
+                <!-- CARDS DE DETALHE POR REGIÃO -->
+                <div class="region-cards-grid">
+                    <div class="region-detail-card">
+                        <div class="region-detail-header">Araxá</div>
+                        <div class="region-metrics">
+                            <div class="region-metric">
+                                <div class="region-metric-label">Total</div>
+                                <div class="region-metric-value" id="araxa-total">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Pend</div>
+                                <div class="region-metric-value" id="araxa-pend">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Real</div>
+                                <div class="region-metric-value" id="araxa-real">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Atras</div>
+                                <div class="region-metric-value" id="araxa-atras">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="region-detail-card">
+                        <div class="region-detail-header">Uberaba</div>
+                        <div class="region-metrics">
+                            <div class="region-metric">
+                                <div class="region-metric-label">Total</div>
+                                <div class="region-metric-value" id="uberaba-total">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Pend</div>
+                                <div class="region-metric-value" id="uberaba-pend">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Real</div>
+                                <div class="region-metric-value" id="uberaba-real">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Atras</div>
+                                <div class="region-metric-value" id="uberaba-atras">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="region-detail-card">
+                        <div class="region-detail-header">Frutal</div>
+                        <div class="region-metrics">
+                            <div class="region-metric">
+                                <div class="region-metric-label">Total</div>
+                                <div class="region-metric-value" id="frutal-total">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Pend</div>
+                                <div class="region-metric-value" id="frutal-pend">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Real</div>
+                                <div class="region-metric-value" id="frutal-real">0</div>
+                            </div>
+                            <div class="region-metric">
+                                <div class="region-metric-label">Atras</div>
+                                <div class="region-metric-value" id="frutal-atras">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRÁFICO PRINCIPAL (PENDÊNCIAS POR HORA) -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="bar-chart-3"></i>
+                                <h3>Releituras Pendentes</h3>
+                            </div>
+                            <p class="chart-subtitle">Distribuição de pendências não executadas por hora do dia</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas large">
+                        <canvas id="v2-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- GRÁFICO DE VENCIMENTOS -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="calendar-clock"></i>
+                                <h3>Gráfico por Data de Vencimento</h3>
+                            </div>
+                            <p class="chart-subtitle">Distribuição de pendências por prazo</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="v2-due-chart"></canvas>
+                    </div>
+                </div>
+
+
+                <!-- GRÁFICO DE REGIÃO -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="map"></i>
+                                <h3>Distribuição por Região</h3>
+                            </div>
+                            <p class="chart-subtitle">Pendências (apenas pendentes) por região/roteamento</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="v2-region-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TOP LOCALIDADES -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="building-2"></i>
+                                <h3>Top Localidades</h3>
+                            </div>
+                            <p class="chart-subtitle">As 10 localidades com mais pendências</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="v2-localidade-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TABELA DETALHADA -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i data-lucide="table"></i>
+                            <h3>Detalhes das Releituras (Deep-Scan)</h3>
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>UL</th>
+                                    <th>Instalação</th>
+                                    <th>Endereço</th>
+                                    <th>Razão</th>
+                                    <th>Reg.</th>
+                                    <th>Vencimento</th>
+                                </tr>
+                            </thead>
+                            <tbody id="v2-table-body">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <i data-lucide="inbox"></i>
+                                            <p>Nenhum dado carregado</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+
+            <!-- RODAPÉ -->
+            <footer class="v2-footer">
+                <span>© 2025 LOGOS DECISION | Monitoramento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scripts de Inicialização e Lógica -->
+    <script>
+        // Inicializa ícones Lucide
+        lucide.createIcons();
+
+        // Atualização do Relógio
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+
+        // Variáveis de instância dos gráficos
+        let v2ChartInstance = null;
+        let v2DueChartInstance = null;
+        let v2RegionChartInstance = null;
+        let v2LocalidadeChartInstance = null;
+
+        // Função de inicialização do gráfico de Barras (Horas)
+        function initV2Chart(labels, values) {
+            const canvas = document.getElementById('v2-chart');
+            if (!canvas) {
+                console.warn('Canvas v2-chart não encontrado');
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+            if (v2ChartInstance) v2ChartInstance.destroy();
+            
+            v2ChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pendências por Horário',
+                        data: values,
+                        backgroundColor: 'rgba(210, 153, 34, 0.2)',
+                        borderColor: 'rgba(210, 153, 34, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                            titleColor: '#d29922',
+                            bodyColor: '#c9d1d9',
+                            borderColor: '#30363d',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                            ticks: { color: '#8b949e' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8b949e' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função de inicialização do gráfico de Linha (Vencimento)
+        function initV2DueChart(labels, values) {
+            const canvas = document.getElementById('v2-due-chart');
+            if (!canvas) {
+                console.warn('Canvas v2-due-chart não encontrado');
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+            if (v2DueChartInstance) v2DueChartInstance.destroy();
+            
+            v2DueChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pendências por Vencimento',
+                        data: values,
+                        backgroundColor: 'rgba(210, 153, 34, 0.1)',
+                        borderColor: 'rgba(210, 153, 34, 1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#d29922',
+                        pointBorderColor: '#0a0c10',
+                        pointBorderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                            titleColor: '#d29922',
+                            bodyColor: '#c9d1d9',
+                            borderColor: '#30363d',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                            ticks: { color: '#8b949e' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8b949e' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Inicialização com dados vazios
+        initV2Chart(
+            Array.from({ length: 17 }, (_, i) => String(i + 5).padStart(2, '0') + 'h'),
+            Array.from({ length: 17 }, () => 0)
+        );
+        
+        initV2DueChart(
+            ['--/--','--/--','--/--','--/--','--/--','--/--','--/--'],
+            [0,0,0,0,0,0,0]
+        );
+
+        // Seleção de data (ISO)
+        let selectedDateISO = new Date().toISOString().slice(0, 10);
+
+        // ==================== LÓGICA DO CALENDÁRIO ====================
+        let currentCalendarDate = new Date();
+        const calendarDropdown = document.getElementById('calendar-dropdown');
+        const datePickerBtn = document.getElementById('date-picker-btn');
+        const selectedDateText = document.getElementById('selected-date-text');
+        const calendarMonthYear = document.getElementById('calendar-month-year');
+        const calendarDays = document.getElementById('calendar-days');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+        const clearDateBtn = document.getElementById('clear-date-btn');
+        const todayBtn = document.getElementById('today-btn');
+
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+        // Alternar visualização do calendário
+        datePickerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            calendarDropdown.classList.toggle('active');
+            if (calendarDropdown.classList.contains('active')) {
+                renderCalendar();
+                lucide.createIcons();
+            }
+        });
+
+        // Fechar ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!calendarDropdown.contains(e.target) && e.target !== datePickerBtn) {
+                calendarDropdown.classList.remove('active');
+            }
+        });
+
+        // Navegação de meses
+        prevMonthBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar();
+            lucide.createIcons();
+        });
+
+        nextMonthBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar();
+            lucide.createIcons();
+        });
+
+        // Limpar seleção
+        clearDateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedDateISO = new Date().toISOString().slice(0, 10);
+            selectedDateText.textContent = 'Hoje';
+            currentCalendarDate = new Date();
+            renderCalendar();
+            calendarDropdown.classList.remove('active');
+            if (window.loadReleitura) {
+                window.loadReleitura();
+            } else {
+                checkV2Status();
+            }
+            lucide.createIcons();
+        });
+
+        // Selecionar hoje
+        todayBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const today = new Date();
+            selectedDateISO = today.toISOString().slice(0, 10);
+            selectedDateText.textContent = 'Hoje';
+            currentCalendarDate = new Date(today);
+            renderCalendar();
+            calendarDropdown.classList.remove('active');
+            if (window.loadReleitura) {
+                window.loadReleitura();
+            } else {
+                checkV2Status();
+            }
+            lucide.createIcons();
+        });
+
+        // Renderização do calendário
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
+            
+            // Primeiro dia do mês
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const prevLastDay = new Date(year, month, 0);
+            
+            const firstDayWeek = firstDay.getDay();
+            const lastDateOfMonth = lastDay.getDate();
+            const prevLastDate = prevLastDay.getDate();
+            
+            let daysHTML = '';
+            
+            // Dias do mês anterior
+            for (let i = firstDayWeek - 1; i >= 0; i--) {
+                const day = prevLastDate - i;
+                daysHTML += `<div class="calendar-day other-month" data-date="${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}">${day}</div>`;
+            }
+            
+            // Dias do mês atual
+            const today = new Date();
+            const todayStr = today.toISOString().slice(0, 10);
+            
+            for (let day = 1; day <= lastDateOfMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                let classes = 'calendar-day';
+                
+                if (dateStr === todayStr) {
+                    classes += ' today';
+                }
+                
+                if (dateStr === selectedDateISO) {
+                    classes += ' selected';
+                }
+                
+                daysHTML += `<div class="${classes}" data-date="${dateStr}">${day}</div>`;
+            }
+            
+            // Dias do próximo mês
+            const totalCells = firstDayWeek + lastDateOfMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            
+            for (let day = 1; day <= remainingCells; day++) {
+                const nextMonth = month + 2;
+                const nextYear = nextMonth > 12 ? year + 1 : year;
+                const adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
+                daysHTML += `<div class="calendar-day other-month" data-date="${nextYear}-${String(adjustedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}">${day}</div>`;
+            }
+            
+            calendarDays.innerHTML = daysHTML;
+            
+            // Eventos de clique nos dias
+            document.querySelectorAll('.calendar-day').forEach(dayEl => {
+                dayEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dateStr = dayEl.getAttribute('data-date');
+                    selectedDateISO = dateStr;
+                    
+                    // Atualiza texto do botão
+                    const selectedDate = new Date(dateStr + 'T00:00:00');
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (selectedDate.getTime() === today.getTime()) {
+                        selectedDateText.textContent = 'Hoje';
+                    } else {
+                        const [y, m, d] = dateStr.split('-');
+                        selectedDateText.textContent = `${d}/${m}/${y}`;
+                    }
+                    
+                    // Atualiza visualização se mudou o mês
+                    if (selectedDate.getMonth() !== currentCalendarDate.getMonth() || 
+                        selectedDate.getFullYear() !== currentCalendarDate.getFullYear()) {
+                        currentCalendarDate = new Date(selectedDate);
+                        renderCalendar();
+                    } else {
+                        document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                        dayEl.classList.add('selected');
+                    }
+                    
+                    // Fecha e recarrega
+                    calendarDropdown.classList.remove('active');
+                    if (window.loadReleitura) {
+                        window.loadReleitura();
+                    } else {
+                        checkV2Status();
+                    }
+                });
+            });
+        }
+
+        renderCalendar();
+
+        
+        function initV2RegionChart(labels, values) {
+            const canvas = document.getElementById('v2-region-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (v2RegionChartInstance) {
+                v2RegionChartInstance.destroy();
+            }
+
+            v2RegionChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.75)',
+                            'rgba(245, 158, 11, 0.75)',
+                            'rgba(139, 92, 246, 0.75)',
+                            'rgba(239, 68, 68, 0.75)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#cbd5e1', padding: 16 }
+                        },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)' }
+                    }
+                }
+            });
+        }
+
+        function initV2LocalidadeChart(labels, values) {
+            const canvas = document.getElementById('v2-localidade-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (v2LocalidadeChartInstance) {
+                v2LocalidadeChartInstance.destroy();
+            }
+
+            v2LocalidadeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pendências',
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                        borderWidth: 0,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)' }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#cbd5e1' },
+                            grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#cbd5e1' },
+                            grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função de verificação de status (desabilitada em favor do loadReleitura)
+        function checkV2Status() {
+            console.log('checkV2Status desabilitada - dados gerenciados por loadReleitura()');
+        }
+    </script>
+
+<!-- Modal de Não Roteados -->
+<div id="unrouted-modal" style="display:none; position:fixed; top:8%; left:8%; right:8%; bottom:8%; background:#0f172a; border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:16px; overflow:auto; z-index:9999;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h3 style="margin:0;">Registros não roteados</h3>
+    <button class="btn btn-secondary" onclick="closeUnrouted()">Fechar</button>
+  </div>
+  <table class="table" id="unrouted-table" style="width:100%;"></table>
+</div>
+
+<script>
+function closeUnrouted() {
+    const modal = document.getElementById('unrouted-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
+
+
+<script>
+/**
+ * Lógica Principal da Página de Releituras
+ *
+ * Gerencia o carregamento de dados via API, renderização de gráficos,
+ * atualização de métricas e tabelas, e controle de acesso baseado em função.
+ */
+(function(){
+  // Recupera token JWT do armazenamento local
+  function getToken(){
+    return localStorage.getItem('logos_decision_token') || localStorage.getItem('vigilacore_token') || localStorage.getItem('token') || '';
+  }
+
+  // Extrai role (função) do token
+  function getRoleFromToken(){
+    try{
+      const token = getToken();
+      if (!token || token.split('.').length < 2) return '';
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      return String(payload.role || payload.user?.role || '').toLowerCase();
+    }catch(e){ return ''; }
+  }
+
+  // Atualiza texto de elemento por ID
+  function setText(id, val){
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val ?? 0);
+  }
+
+  // Renderiza estado vazio na tabela
+  function renderEmptyTable(message){
+    const body = document.getElementById('v2-table-body');
+    if (!body) return;
+    body.innerHTML = `
+      <tr>
+        <td colspan="7">
+          <div class="empty-state">
+            <i data-lucide="inbox"></i>
+            <p>${message}</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    try{ lucide.createIcons(); }catch(e){}
+  }
+
+  // Wrapper seguro para JSON
+  async function safeJson(res){
+    try{
+      return await res.json();
+    }catch(e){
+      return null;
+    }
+  }
+
+  // Inicialização ao carregar o DOM
+  document.addEventListener('DOMContentLoaded', () => {
+    const regionSel = document.getElementById('region-filter');
+    const regionContainer = document.getElementById('region-filter-container');
+    const btnSync = document.getElementById('btn-sync-teste');
+    const btnReset = document.getElementById('btn-reset-releitura');
+    const btnUnrouted = document.getElementById('btn-unrouted');
+    const unroutedCountEl = document.getElementById('unrouted-count');
+
+    const role = getRoleFromToken();
+    const canSelectRegion = ['gerencia','diretoria','desenvolvedor'].includes(role);
+    const canSync = (role === 'desenvolvedor');
+    const canReset = (role === 'desenvolvedor');
+    const privileged = canSelectRegion;
+
+    // Configura visibilidade baseada em permissões
+    if (regionContainer) regionContainer.style.display = (canSelectRegion ? 'block' : 'none');
+    if (btnSync) btnSync.style.display = (canSync ? 'inline-flex' : 'none');
+    if (btnReset) btnReset.style.display = (canReset ? 'inline-flex' : 'none');
+
+    // Função principal de carregamento
+    async function loadReleitura(){
+      try{
+        const region = (canSelectRegion && regionSel) ? (regionSel.value || 'all') : 'all';
+        const date = (typeof selectedDateISO !== 'undefined') ? selectedDateISO : '';
+        const qs = `?region=${encodeURIComponent(region)}&date=${encodeURIComponent(date)}`;
+
+        const res = await window.authFetch('/api/status/releitura' + qs, { method:'GET' });
+        const js = await safeJson(res);
+
+        if (!res.ok){
+          const msg = (js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
+        if (!js){
+          throw new Error('Resposta inválida do servidor');
+        }
+
+        // Atualiza métricas principais
+        const m = js.metrics || {};
+        setText('v2-total', m.total ?? 0);
+        setText('v2-pend', m.pendentes ?? 0);
+        setText('v2-realizadas', m.realizadas ?? 0);
+        setText('v2-atrasadas', m.atrasadas ?? 0);
+        setText('v2-nao-roteados', js.unrouted_count ?? 0);
+
+        // Atualiza cards regionais
+        const regions = js.regions || {};
+        let skipFixedRegionIds = false;
+
+        try {
+          const cards = Array.from(document.querySelectorAll('.region-cards-grid .region-detail-card'));
+          const norm = (s) => (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+          // Lógica de visibilidade de cartões regionais para usuários não-privilegiados
+          if (!privileged) {
+            const keys = Object.keys(regions || {});
+            if (keys.length === 1) {
+              const onlyKey = keys[0];
+              const onlyNorm = norm(onlyKey);
+              const standard = ['araxa','uberaba','frutal'];
+              const isStandard = standard.includes(onlyNorm);
+              let matchedCard = null;
+
+              for (const c of cards) {
+                const h = c.querySelector('.region-detail-header');
+                const name = (h?.textContent || '').trim();
+                if (norm(name) === onlyNorm) {
+                  matchedCard = c;
+                }
+              }
+
+              for (const c of cards) c.style.display = 'none';
+
+              const targetCard = matchedCard || cards[0] || null;
+              if (targetCard) {
+                if (!matchedCard && !isStandard) {
+                  skipFixedRegionIds = true;
+                }
+                targetCard.style.display = '';
+                const header = targetCard.querySelector('.region-detail-header');
+                if (header) header.textContent = onlyKey;
+                const vals = targetCard.querySelectorAll('.region-metric-value');
+                const d = regions[onlyKey] || {};
+                if (vals[0]) vals[0].textContent = String(d.total ?? 0);
+                if (vals[1]) vals[1].textContent = String(d.pendentes ?? 0);
+                if (vals[2]) vals[2].textContent = String(d.realizadas ?? 0);
+                if (vals[3]) vals[3].textContent = String(d.atrasadas ?? 0);
+              }
+            } else {
+              for (const c of cards) {
+                const h = c.querySelector('.region-detail-header');
+                const name = (h?.textContent || '').trim();
+                const exists = keys.some(k => norm(k) === norm(name));
+                c.style.display = exists ? '' : 'none';
+              }
+            }
+          } else {
+            for (const c of cards) c.style.display = '';
+          }
+        } catch(e) { /* no-op */ }
+
+        // Atualização padrão para Araxá/Uberaba/Frutal
+        if (!skipFixedRegionIds) {
+          const araxa = regions['Araxá'] || {};
+          setText('araxa-total', araxa.total ?? 0);
+          setText('araxa-pend', araxa.pendentes ?? 0);
+          setText('araxa-real', araxa.realizadas ?? 0);
+          setText('araxa-atras', araxa.atrasadas ?? 0);
+
+          const uberaba = regions['Uberaba'] || {};
+          setText('uberaba-total', uberaba.total ?? 0);
+          setText('uberaba-pend', uberaba.pendentes ?? 0);
+          setText('uberaba-real', uberaba.realizadas ?? 0);
+          setText('uberaba-atras', uberaba.atrasadas ?? 0);
+
+          const frutal = regions['Frutal'] || {};
+          setText('frutal-total', frutal.total ?? 0);
+          setText('frutal-pend', frutal.pendentes ?? 0);
+          setText('frutal-real', frutal.realizadas ?? 0);
+          setText('frutal-atras', frutal.atrasadas ?? 0);
+        }
+
+        // Renderização de Gráficos
+        try {
+          const cl = (js.chart && Array.isArray(js.chart.labels)) ? js.chart.labels : null;
+          const cv = (js.chart && Array.isArray(js.chart.values)) ? js.chart.values : null;
+          const has = cl && cv && cl.length && cv.length;
+          initV2Chart(has ? cl : ['Sem dados'], has ? cv : [0]);
+        } catch(e) {
+          try { if (v2ChartInstance) v2ChartInstance.destroy(); } catch(_){}
+        }
+
+        try {
+          const dl = (js.due_chart && Array.isArray(js.due_chart.labels)) ? js.due_chart.labels : null;
+          const dv = (js.due_chart && Array.isArray(js.due_chart.values)) ? js.due_chart.values : null;
+          const hasD = dl && dv && dl.length && dv.length;
+          initV2DueChart(hasD ? dl : ['Sem dados'], hasD ? dv : [0]);
+        } catch(e) {
+          try { if (v2DueChartInstance) v2DueChartInstance.destroy(); } catch(_){}
+        }
+
+        // Renderizador de tags de status (HTML)
+        function renderStatusTag(status){
+          const s = (status || '').toString().trim();
+          if (!s) return '';
+          const sl = s.toLowerCase();
+          if (sl.includes('pend')) {
+            return `<span class="status-tag pendente"><i data-lucide="clock"></i>${s}</span>`;
+          }
+          if (sl.includes('atras') || sl.includes('venc')) {
+            return `<span class="status-tag atrasado"><i data-lucide="alert-triangle"></i>${s}</span>`;
+          }
+          if (sl.includes('real') || sl.includes('exec')) {
+            return `<span class="status-tag realizada"><i data-lucide="check-circle"></i>${s}</span>`;
+          }
+          return `<span class="status-tag neutral"><i data-lucide="info"></i>${s}</span>`;
+        }
+
+        // Preenchimento da Tabela Detalhada
+        const body = document.getElementById('v2-table-body');
+        if (body){
+          const details = Array.isArray(js.details) ? js.details : [];
+          if (!details.length){
+            renderEmptyTable('Nenhum dado encontrado');
+          } else {
+            body.innerHTML = '';
+            for (const row of details){
+              const ul = row.ul ?? '';
+              const razao = (typeof ul === 'string' && ul.length >= 2) ? ul.slice(0,2) : '';
+              body.innerHTML += `
+                <tr>
+                  <td>${renderStatusTag(row.status ?? '')}</td>
+                  <td>${ul}</td>
+                  <td>${row.inst ?? row.instalacao ?? ''}</td>
+                  <td title="${String((row.endereco ?? row.localidade ?? '')).replace(/"/g,'&quot;')}">${row.endereco ?? row.localidade ?? ''}</td>
+                  <td>${razao || ''}</td>
+                  <td>${row.reg ?? ''}</td>
+                  <td>${row.venc ?? row.vencimento ?? ''}</td>
+                </tr>
+              `;
+            }
+          }
+
+          // Atualização dinâmica dos gráficos secundários
+          try {
+            const regionCounts = {};
+            for (const r of details) {
+              const isUnrouted = (String(r.route_status || '').toUpperCase() === 'UNROUTED') || !r.region;
+              const region = isUnrouted ? 'Não roteado' : String(r.region);
+              regionCounts[region] = (regionCounts[region] || 0) + 1;
+            }
+
+            const regionOrder = ['Araxá', 'Uberaba', 'Frutal', 'Não roteado'];
+            const regionLabels = regionOrder.filter(x => regionCounts[x]).concat(
+              Object.keys(regionCounts).filter(k => !regionOrder.includes(k)).sort()
+            );
+            const regionValues = regionLabels.map(l => regionCounts[l] || 0);
+
+            if (typeof initV2RegionChart === 'function') {
+              initV2RegionChart(regionLabels.length ? regionLabels : ['Sem dados'], regionLabels.length ? regionValues : [0]);
+            }
+
+            const locCounts = {};
+            for (const r of details) {
+              const loc = (r.localidade || '').toString().trim();
+              if (!loc) continue;
+              locCounts[loc] = (locCounts[loc] || 0) + 1;
+            }
+            const topLoc = Object.entries(locCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const locLabels = topLoc.map(x => x[0]);
+            const locValues = topLoc.map(x => x[1]);
+
+            if (typeof initV2LocalidadeChart === 'function') {
+              initV2LocalidadeChart(locLabels.length ? locLabels : ['Sem dados'], locLabels.length ? locValues : [0]);
+            }
+          } catch (e) {
+            console.error('Erro ao atualizar gráficos:', e);
+          }
+        }
+
+        // Badge de Não Roteados
+        if (privileged && btnUnrouted && unroutedCountEl){
+          const c = Number(js.unrouted_count || 0);
+          unroutedCountEl.textContent = String(c);
+          btnUnrouted.style.display = c > 0 ? 'inline-flex' : 'none';
+        }
+
+        try{ lucide.createIcons(); }catch(e){}
+      }catch(err){
+        console.error('Erro ao carregar Releituras:', err);
+        setText('v2-total', 0);
+        setText('v2-pend', 0);
+        setText('v2-realizadas', 0);
+        setText('v2-atrasadas', 0);
+        renderEmptyTable('Falha ao carregar dados. Verifique se está logado e se o backend está rodando.');
+      }
+    }
+
+    // Expor função globalmente para o calendário
+    window.loadReleitura = loadReleitura;
+
+    // Listeners de Ações
+    btnSync?.addEventListener('click', async () => {
+      if (!canSync) return;
+      btnSync.disabled = true;
+      const old = btnSync.innerText;
+      btnSync.innerText = 'Sincronizando...';
+      try{
+        const r = await window.authFetch('/api/sync/releitura', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+        const js = await safeJson(r);
+        if (!r.ok){
+          throw new Error((js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${r.status}`);
+        }
+        alert((js && (js.message || js.msg)) ? (js.message || js.msg) : 'Sincronização concluída');
+        await loadReleitura();
+      }catch(e){
+        alert('Falha ao sincronizar: ' + (e?.message || e));
+      }finally{
+        btnSync.disabled = false;
+        btnSync.innerText = old;
+      }
+    });
+
+    btnReset?.addEventListener('click', async () => {
+      if (!canReset) return;
+      if(!confirm('Tem certeza que deseja zerar a Releitura (GLOBAL — todos os usuários)?')) return;
+      try{
+        const r = await window.authFetch('/api/releitura/reset', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({}) });
+        const js = await safeJson(r);
+        if (!r.ok){
+          throw new Error((js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${r.status}`);
+        }
+        alert((js && (js.message || js.msg)) ? (js.message || js.msg) : 'Releitura zerada');
+        await loadReleitura();
+      }catch(e){
+        alert('Falha ao zerar: ' + (e?.message || e));
+      }
+    });
+
+    btnUnrouted?.addEventListener('click', async () => {
+      try{
+        const r = await window.authFetch('/api/releitura/unrouted', { method:'GET' });
+        const js = await safeJson(r);
+        if (!r.ok){
+          throw new Error((js && (js.error || js.msg)) ? (js.error || js.msg) : `HTTP ${r.status}`);
+        }
+        const items = (js && js.items) ? js.items : [];
+        const modal = document.getElementById('unrouted-modal');
+        const t = document.getElementById('unrouted-table');
+        if (!modal || !t) return;
+        t.innerHTML = '<tr><th>Motivo</th><th>Região</th><th>UL</th><th>Instalação</th><th>Endereço</th><th>Vencimento</th></tr>';
+        for (const row of items){
+          t.innerHTML += `
+            <tr>
+              <td>${row.reason || ''}</td>
+              <td>${row.region || ''}</td>
+              <td>${row.ul || ''}</td>
+              <td>${row.instalacao || ''}</td>
+              <td>${row.endereco || ''}</td>
+              <td>${row.vencimento || ''}</td>
+            </tr>
+          `;
+        }
+        modal.style.display = 'block';
+      }catch(e){
+        alert('Falha ao carregar não roteados: ' + (e?.message || e));
+      }
+    });
+
+    regionSel?.addEventListener('change', loadReleitura);
+
+    // Carregamento inicial
+    loadReleitura();
+  });
+})();
+</script>
+
+</body>
+</html>

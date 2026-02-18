@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>LOGOS DECISION | Menu Principal</title>
+    <link rel="stylesheet" href="../css/v2_modern.css?v=1.0.2">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../js/sidebar_toggle.js?v=1.0.2"></script>
+    <script src="../js/utils.js?v=1.0.2"></script>
+    
+    <style>
+
+
+        /* ==================== ESTILOS ESPECÍFICOS DO MENU PRINCIPAL ==================== */
+        
+        .page-menu .v2-main {
+            padding: 24px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* Hero Section Moderna */
+        .hero-section {
+            /* Menos azul, mantém o efeito premium */
+            background: linear-gradient(135deg,
+                rgba(0, 209, 255, 0.08) 0%,
+                rgba(0, 209, 255, 0.025) 45%,
+                rgba(35, 134, 54, 0.03) 100%);
+            border: 1px solid rgba(0, 209, 255, 0.18);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle,
+                rgba(0, 209, 255, 0.035) 0%,
+                rgba(35, 134, 54, 0.025) 35%,
+                transparent 72%);
+            animation: rotate 30s linear infinite;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--v2-primary) 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        
+        /* Username no título deve ficar branco (não herdar gradiente) */
+        .hero-title #username-display {
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: #ffffff !important;
+            color: #ffffff !important;
+        }
+
+        /* Exclamação do título em branco também */
+        .hero-title .hero-punct {
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: #ffffff !important;
+            color: #ffffff !important;
+        }
+
+.hero-subtitle {
+            font-size: 1rem;
+            color: var(--v2-text-dim);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, rgba(35, 134, 54, 0.15) 0%, rgba(35, 134, 54, 0.05) 100%);
+            color: var(--v2-success);
+            border: 1px solid rgba(35, 134, 54, 0.4);
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.15);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--v2-success);
+            box-shadow: 0 0 8px var(--v2-success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .quick-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-btn-primary {
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.2) 0%, rgba(0, 209, 255, 0.08) 100%);
+            border: 1px solid rgba(0, 209, 255, 0.4);
+            color: var(--v2-primary);
+        }
+
+        .quick-btn-primary:hover {
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.3) 0%, rgba(0, 209, 255, 0.12) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 209, 255, 0.2);
+        }
+
+        .quick-btn-secondary {
+            background: linear-gradient(135deg, rgba(35, 134, 54, 0.2) 0%, rgba(35, 134, 54, 0.08) 100%);
+            border: 1px solid rgba(35, 134, 54, 0.4);
+            color: var(--v2-success);
+        }
+
+        .quick-btn-secondary:hover {
+            background: linear-gradient(135deg, rgba(35, 134, 54, 0.3) 0%, rgba(35, 134, 54, 0.12) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(35, 134, 54, 0.2);
+        }
+
+        .quick-btn-outline {
+            background: transparent;
+            border: 1px solid rgba(0, 209, 255, 0.3);
+            color: var(--v2-text);
+        }
+
+        .quick-btn-outline:hover {
+            background: rgba(0, 209, 255, 0.1);
+            border-color: rgba(0, 209, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Tech Badges */
+        .tech-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .tech-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.15) 0%, rgba(0, 209, 255, 0.05) 100%);
+            color: var(--v2-primary);
+            border: 1px solid rgba(0, 209, 255, 0.3);
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 48px;
+            border: 2px solid rgba(0, 209, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--v2-primary);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 4px rgba(0, 209, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--v2-primary);
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Module Cards */
+        .modules-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--v2-text);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .module-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: block;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(0, 209, 255, 0.1), 
+                transparent);
+            transition: left 0.5s;
+        }
+
+        .module-card:hover::before {
+            left: 100%;
+        }
+
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 209, 255, 0.15);
+            border-color: rgba(0, 209, 255, 0.3);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .module-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .module-icon i {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .module-info h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin-bottom: 4px;
+        }
+
+        .module-info p {
+            font-size: 0.85rem;
+            color: var(--v2-text-dim);
+        }
+
+        .module-description {
+            color: var(--v2-text-dim);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .module-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, var(--v2-warning) 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(210, 153, 34, 0.3);
+        }
+
+        /* Color variations */
+        .icon-blue { background: linear-gradient(135deg, var(--v2-primary) 0%, #6366f1 100%); }
+        .icon-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .icon-orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .icon-purple { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .icon-red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .icon-cyan { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+    
+
+        .quick-badge{
+            margin-left: 10px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            background: rgba(255, 186, 73, 0.16);
+            border: 1px solid rgba(255, 186, 73, 0.35);
+            color: #ffba49;
+        }
+    
+</style>
+</head>
+<body class="page-menu">
+    <div class="v2-container">
+        <!-- Sidebar -->
+        <aside class="v2-sidebar">
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">LOGOS</span><span class="logo-core">DECISION</span>
+                </div>
+            </div>
+
+            <nav class="v2-nav">
+                <a href="menu_principal.html" class="v2-nav-item active" data-title="Menu Principal">
+                    <i data-lucide="globe"></i>
+                    <span class="v2-nav-text">Menu Principal</span>
+                </a>
+                <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="v2-nav-text">Releituras</span>
+                </a>
+                <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
+                    <i data-lucide="door-open"></i>
+                    <span class="v2-nav-text">Porteira</span>
+                </a>
+                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
+                    <i data-lucide="circle-user-round"></i>
+                    <span class="v2-nav-text">Área do Usuário</span>
+                </a>
+                <div class="v2-nav-divider"></div>
+                <div class="v2-nav-section-label">Em breve</div>
+
+                <a href="relatorios.html" class="v2-nav-item" data-title="Relatórios">
+                    <i data-lucide="file-text"></i>
+                    <span class="v2-nav-text">Relatórios</span>
+                </a>
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
+                    <i data-lucide="brain"></i>
+                    <span class="v2-nav-text">Análise IA</span>
+                </a>
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
+                    <i data-lucide="settings"></i>
+                    <span class="v2-nav-text">Administração</span>
+                </a>
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
+                    <i data-lucide="power"></i>
+                    <span class="v2-nav-text">Sair</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="v2-content">
+            <!-- Header -->
+            <header class="v2-header">
+                <div class="v2-header-left">
+                    <h1 class="v2-header-title">Menu Principal</h1>
+                    <p class="v2-header-subtitle">Painel de Controle</p>
+                </div>
+                
+                
+                <div class="v2-header-right">
+                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
+                    <div class="v2-clock-widget">
+                        <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                        <div class="v2-date-display" id="v2-date">--/--/----</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="v2-main">
+                <!-- Hero Section -->
+                <section class="hero-section animate-fade-in">
+                    <div class="hero-content">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 300px;">
+                                <h1 class="hero-title">
+                                    Seja Bem-Vindo, <span id="username-display">Usuário</span><span class="hero-punct">!</span>
+                                </h1>
+                                <p class="hero-subtitle">
+                                    Sistema completo de monitoramento e análise de leituras — processamento inteligente de dados, relatórios em tempo real e controle avançado de operações.
+                                </p>
+                            </div>
+</div>
+<!-- Tech Badges -->
+                        <div class="tech-badges">
+                            <span class="tech-badge">
+                                <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
+                                Seguro
+                            </span>
+                            <span class="tech-badge">
+                                <i data-lucide="zap" style="width: 12px; height: 12px;"></i>
+                                Rápido
+                            </span>
+                            <span class="tech-badge">
+                                <i data-lucide="trending-up" style="width: 12px; height: 12px;"></i>
+                                Inteligente
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Search -->
+                <div class="search-container animate-fade-in animate-delay-1">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="module-search" 
+                        class="search-input" 
+                        placeholder="Buscar módulo..."
+                    >
+                </div>
+
+                <!-- Módulos Principais -->
+                <div class="modules-section animate-fade-in animate-delay-2">
+                    <h2 class="section-title">
+                        <i data-lucide="grid" style="width: 24px; height: 24px;"></i>
+                        Módulos Principais
+                    </h2>
+                    
+                    <div class="modules-grid">
+                        <!-- Releituras -->
+                        <a href="releitura.html" class="module-card">
+                            <div class="module-header">
+                                <div class="module-icon icon-blue">
+                                    <i data-lucide="refresh-cw"></i>
+                                </div>
+                                <div class="module-info">
+                                    <h3>Releituras</h3>
+                                    <p>Gestão e análise</p>
+                                </div>
+                            </div>
+                            <p class="module-description">
+                                Gestão e análise de releituras não executadas com processamento Excel e alertas automáticos
+                            </p>
+                        </a>
+
+                        <!-- Porteira -->
+                        <a href="porteira.html" class="module-card">
+                            <div class="module-header">
+                                <div class="module-icon icon-green">
+                                    <i data-lucide="door-open"></i>
+                                </div>
+                                <div class="module-info">
+                                    <h3>Porteira</h3>
+                                    <p>Controle de acesso</p>
+                                </div>
+                            </div>
+                            <p class="module-description">
+                                Controle de acesso e monitoramento de entradas e saídas do sistema em tempo real
+                            </p>
+                        </a>
+
+                        <!-- Relatórios -->
+                        <a href="relatorios.html" class="module-card">
+                            <div class="module-badge">Em breve</div>
+                            <div class="module-header">
+                                <div class="module-icon icon-orange">
+                                    <i data-lucide="file-bar-chart"></i>
+                                </div>
+                                <div class="module-info">
+                                    <h3>Relatórios</h3>
+                                    <p>Análises e exportação</p>
+                                </div>
+                            </div>
+                            <p class="module-description">
+                                Geração e exportação de relatórios personalizados com análises detalhadas
+                            </p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Módulos Avançados -->
+                <div class="modules-section animate-fade-in animate-delay-3">
+                    <h2 class="section-title">
+                        <i data-lucide="cpu" style="width: 24px; height: 24px;"></i>
+                        Módulos Avançados
+                    </h2>
+                    
+                    <div class="modules-grid">
+                        <!-- Usuários -->
+                        <a href="usuario.html" class="module-card">
+                            <div class="module-header">
+                                <div class="module-icon icon-purple">
+                                    <i data-lucide="users"></i>
+                                </div>
+                                <div class="module-info">
+                                    <h3>Usuários</h3>
+                                    <p>Gestão de perfis</p>
+                                </div>
+                            </div>
+                            <p class="module-description">
+                                Gerenciamento de perfis, permissões e controle de acesso ao sistema
+                            </p>
+                        </a>
+
+                        <!-- Administração -->
+                        <a href="administracao.html" class="module-card">
+                            <div class="module-badge">Em breve</div>
+                            <div class="module-header">
+                                <div class="module-icon icon-red">
+                                    <i data-lucide="settings"></i>
+                                </div>
+                                <div class="module-info">
+                                    <h3>Administração</h3>
+                                    <p>Configurações</p>
+                                </div>
+                            </div>
+                            <p class="module-description">
+                                Configurações e gerenciamento completo do sistema e suas funcionalidades
+                            </p>
+                        </a>
+
+                        <!-- IA -->
+                        <a href="ia.html" class="module-card">
+                            <span class="module-badge">Em Breve</span>
+                            <div class="module-header">
+                                <div class="module-icon icon-cyan">
+                                    <i data-lucide="brain"></i>
+                                </div>
+                                <div class="module-info">
+                                    <h3>Análise IA</h3>
+                                    <p>Inteligência Artificial</p>
+                                </div>
+                            </div>
+                            <p class="module-description">
+                                Inteligência artificial para análise preditiva e detecção de anomalias
+                            </p>
+                        </a>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="v2-footer">
+                <span>© 2025 LOGOS DECISION | Monitoramento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Decodificador JWT
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('Erro ao decodificar token:', e);
+                return null;
+            }
+        }
+
+        // Exibir nome do usuário
+        async function displayUsername() {
+            const el = document.getElementById('username-display');
+            if (!el) return;
+
+            const token = localStorage.getItem('logos_decision_token') || localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
+            let decoded = null;
+            if (token) {
+                decoded = parseJwt(token);
+            }
+
+            try {
+                const res = await authFetch('/api/user/me', { method: 'GET' });
+                if (res.ok) {
+                    const me = await res.json().catch(() => ({}));
+                    const nome = (me && me.nome != null) ? String(me.nome).trim() : '';
+                    const username = (me && me.username) ? String(me.username) : ((decoded && decoded.username) ? String(decoded.username) : '');
+                    const display = (nome && nome.toLowerCase() !== 'none') ? nome : (username || 'Usuário');
+                    el.textContent = display;
+                    return;
+                }
+            } catch (e) {
+                // Se falhar a API, tenta usar o token
+            }
+
+            if (decoded && decoded.username) {
+                el.textContent = decoded.username;
+            }
+        }
+
+        displayUsername();
+
+        // Busca de módulos
+        (function initModuleSearch(){
+            const input = document.getElementById('module-search');
+            if (!input) return;
+
+            const cards = Array.from(document.querySelectorAll('.module-card'));
+            function applyFilter(q){
+                const query = (q || '').trim().toLowerCase();
+                cards.forEach(card => {
+                    const hay = (card.textContent || '').toLowerCase();
+                    card.style.display = (!query || hay.includes(query)) ? '' : 'none';
+                });
+            }
+
+            input.addEventListener('input', (e) => applyFilter(e.target.value));
+        })();
+
+        // Relógio
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>

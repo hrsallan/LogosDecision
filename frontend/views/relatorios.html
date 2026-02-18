@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGOS DECISION | Relatórios</title>
+    <!-- Estilos V2 -->
+    <link rel="stylesheet" href="../css/v2_modern.css">
+    <!-- Dependências -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../js/sidebar_toggle.js"></script>
+    <script src="../js/utils.js"></script>
+</head>
+<body>
+    <div class="v2-container">
+        <!-- ============================== -->
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <!-- ============================== -->
+        <aside class="v2-sidebar">
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">LOGOS</span><span class="logo-core">DECISION</span>
+                </div>
+            </div>
+
+            <nav class="v2-nav">
+                <a href="menu_principal.html" class="v2-nav-item" data-title="Menu Principal">
+                    <i data-lucide="globe"></i>
+                    <span class="v2-nav-text">Menu Principal</span>
+                </a>
+                <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="v2-nav-text">Releituras</span>
+                </a>
+
+                <a href="porteira.html" class="v2-nav-item" data-title="Porteira">
+                    <i data-lucide="door-open"></i>
+                    <span class="v2-nav-text">Porteira</span>
+                </a>
+                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
+                    <i data-lucide="circle-user-round"></i>
+                    <span class="v2-nav-text">Área do Usuário</span>
+                </a>
+                <div class="v2-nav-divider"></div>
+                <div class="v2-nav-section-label">Em breve</div>
+
+                <a href="relatorios.html" class="v2-nav-item active" data-title="Relatórios">
+                    <i data-lucide="file-text"></i>
+                    <span class="v2-nav-text">Relatórios</span>
+                </a>
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
+                    <i data-lucide="brain"></i>
+                    <span class="v2-nav-text">Análise IA</span>
+                </a>
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
+                    <i data-lucide="settings"></i>
+                    <span class="v2-nav-text">Administração</span>
+                </a>
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
+                    <i data-lucide="power"></i>
+                    <span class="v2-nav-text">Sair</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- ============================== -->
+        <!-- CONTEÚDO PRINCIPAL -->
+        <!-- ============================== -->
+        <div class="v2-content">
+            <!-- CABEÇALHO -->
+            <header class="v2-header">
+                <div class="v2-header-left">
+                    <h1 class="v2-header-title">Relatórios</h1>
+                    <p class="v2-header-subtitle">Geração e análise de relatórios operacionais</p>
+                </div>
+                <div class="v2-header-right">
+                    <div id="v2-conn" class="v2-status-pill offline">SISTEMA OFFLINE</div>
+                    <div class="v2-clock-widget">
+                        <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                        <div class="v2-date-display" id="v2-date">--/--/----</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ÁREA DE CONTEÚDO -->
+            <main class="v2-main">
+                <div class="v2-dev-page">
+                    <i data-lucide="file-text" class="v2-dev-icon"></i>
+                    <h2 class="v2-dev-title">Em Breve</h2>
+                    <p class="v2-dev-subtitle">Esta página será desenvolvida e em breve estará disponível com funcionalidades completas de geração de relatórios.</p>
+                    <a href="menu_principal.html" class="v2-dev-link">← Voltar ao Menu Principal</a>
+                </div>
+            </main>
+
+            <!-- RODAPÉ -->
+            <footer class="v2-footer">
+                <span>© 2025 LOGOS DECISION | Monitoramento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        lucide.createIcons();
+
+        // Relógio
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+    </script>
+</body>
+</html>

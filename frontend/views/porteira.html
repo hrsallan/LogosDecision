@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>LOGOS DECISION | Porteira</title>
+    <!-- Estilos modernos v2 -->
+    <link rel="stylesheet" href="../css/v2_modern.css?v=1.0.2">
+    <!-- Dependências externas: Ícones Lucide e Chart.js -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Scripts utilitários -->
+    <script src="../js/sidebar_toggle.js?v=1.0.2"></script>
+    <script src="../js/utils.js?v=1.0.2"></script>
+    
+    <style>
+        /* ==================== MELHORIAS ESPECÍFICAS DA PÁGINA PORTEIRA ==================== */
+        
+        .page-porteira .v2-main {
+            padding: 24px;
+        }
+
+        /* Grid de métricas aprimorado */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* Cards de métricas */
+        .metric-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Efeito visual nos cards */
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(0, 209, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 209, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Variações de cor para alertas e perigo */
+        .metric-card.warning::before {
+            background: radial-gradient(circle, rgba(210, 153, 34, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-card.danger::before {
+            background: radial-gradient(circle, rgba(248, 81, 73, 0.12) 0%, transparent 70%);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(0, 209, 255, 0.1);
+        }
+
+        .metric-icon i {
+            width: 20px;
+            height: 20px;
+            color: var(--v2-primary);
+        }
+
+        .metric-card.warning .metric-icon {
+            background: rgba(210, 153, 34, 0.1);
+        }
+
+        .metric-card.warning .metric-icon i {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.danger .metric-icon {
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .metric-card.danger .metric-icon i {
+            color: var(--v2-danger);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--v2-text);
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric-card.warning .metric-value {
+            color: var(--v2-warning);
+        }
+
+        .metric-card.danger .metric-value {
+            color: var(--v2-danger);
+        }
+
+        /* Indicador de Ciclo Minimalista */
+        .cycle-indicator {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 209, 255, 0.06);
+            border: 1px solid rgba(0, 209, 255, 0.15);
+            padding: 8px 14px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .cycle-indicator:hover {
+            background: rgba(0, 209, 255, 0.1);
+            border-color: rgba(0, 209, 255, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 209, 255, 0.15);
+        }
+
+        .cycle-indicator i {
+            color: var(--v2-primary);
+            flex-shrink: 0;
+        }
+
+        .cycle-indicator span {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--v2-primary);
+            letter-spacing: 0.3px;
+        }
+
+        /* Cards de Gráfico */
+        .chart-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .chart-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-title i {
+            width: 24px;
+            height: 24px;
+            color: var(--v2-primary);
+        }
+
+        .chart-title h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            margin-top: 4px;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 400px;
+            padding: 16px 0;
+        }
+
+        .chart-canvas.large {
+            height: 500px;
+        }
+
+        /* Card de Tabela */
+        .table-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        /* Porteira: Atrasos Congelados (Snapshot diário) */
+        .atraso-snapshot-card .table-header {
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+        }
+
+        .snapshot-meta {
+            font-size: 0.78rem;
+            color: var(--v2-text-dim);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 6px 10px;
+            border-radius: 999px;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+
+        .data-table.atrasos-table th,
+        .data-table.atrasos-table td {
+            text-align: left;
+        }
+
+        .data-table.atrasos-table td:nth-child(1) {
+            font-weight: 800;
+            color: var(--v2-primary);
+        }
+
+        .data-table.atrasos-table td:nth-child(3),
+        .data-table.atrasos-table td:nth-child(4),
+        .data-table.atrasos-table td:nth-child(5) {
+            font-weight: 800;
+        }
+
+        .data-table.atrasos-table td.qtd-zero {
+            color: rgba(63, 185, 80, 0.95);
+        }
+        .data-table.atrasos-table td.qtd-late {
+            color: rgba(248, 81, 73, 0.95);
+        }
+
+        .data-table.atrasos-table tfoot td {
+            padding: 12px 16px;
+            border-top: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .data-table.atrasos-table tfoot .tfoot-label {
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .data-table.atrasos-table tfoot .tfoot-value {
+            font-weight: 900;
+        }
+
+        .snapshot-hint {
+            padding: 12px 24px 16px;
+            border-top: 1px solid var(--v2-border);
+            color: var(--v2-text-dim);
+            font-size: 0.82rem;
+            line-height: 1.35;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        /* Estilos da Tabela de Abertura de Porteira */
+        .abertura-porteira-card {
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .abertura-porteira-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--v2-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .abertura-porteira-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .abertura-porteira-title i {
+            width: 22px;
+            height: 22px;
+            color: var(--v2-primary);
+        }
+
+        .abertura-porteira-title h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .abertura-porteira-container {
+            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .abertura-month-section {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .abertura-month-section:first-child {
+            border-right: 1px solid var(--v2-border);
+        }
+
+        .abertura-month-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--v2-border);
+            text-align: center;
+        }
+
+        .abertura-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .abertura-table thead th {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--v2-text-dim);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--v2-border);
+        }
+
+        .abertura-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .abertura-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .abertura-table tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .abertura-table tbody td {
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .abertura-table tbody td:first-child {
+            font-weight: 700;
+            color: var(--v2-primary);
+        }
+
+        .abertura-table tbody td.atraso-value {
+            color: var(--v2-primary);
+            font-weight: 700;
+        }
+
+        /* Cores condicionais para células da tabela */
+        .abertura-table tbody td.abertura-qty {
+            font-weight: 800;
+        }
+        .abertura-table tbody td.abertura-qty.qty-ok {
+            color: rgba(255, 193, 7, 0.95); /* Amarelo */
+        }
+        .abertura-table tbody td.abertura-qty.qty-late {
+            color: rgba(248, 81, 73, 0.95); /* Vermelho */
+        }
+        .abertura-table tbody td.abertura-qty.qty-zero {
+            color: rgba(63, 185, 80, 0.95); /* Verde */
+        }
+
+
+        /* Legenda de cores (Abertura de Porteira) */
+        .abertura-porteira-legend{
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            text-align: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 12px 24px 18px;
+            border-top: 1px solid var(--v2-border);
+            background: rgba(255,255,255,0.01);
+        }
+        .abertura-porteira-legend .legend-item{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            color: var(--v2-muted-text);
+            letter-spacing: 0.2px;
+        }
+        .abertura-porteira-legend .legend-dot{
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-block;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+        }
+        .abertura-porteira-legend .legend-dot.legend-ok{ background: rgba(255, 193, 7, 0.95); }
+        .abertura-porteira-legend .legend-dot.legend-late{ background: rgba(248, 81, 73, 0.95); }
+        .abertura-porteira-legend .legend-dot.legend-zero{ background: rgba(63, 185, 80, 0.95); }
+
+
+        .abertura-table tfoot tr {
+            background: rgba(255, 255, 255, 0.02);
+            font-weight: 700;
+        }
+
+        .abertura-table tfoot td {
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-top: 1px solid var(--v2-border);
+            border-bottom: none;
+        }
+
+        .abertura-table tfoot td:first-child {
+            color: var(--v2-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.7rem;
+        }
+
+        /* Estado vazio para Abertura de Porteira */
+        .abertura-empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            background: rgba(248, 81, 73, 0.03);
+            border: 2px dashed var(--v2-danger);
+            border-radius: 12px;
+            margin: 16px;
+        }
+
+        .abertura-empty-state i {
+            width: 48px;
+            height: 48px;
+            color: var(--v2-danger);
+            margin-bottom: 16px;
+        }
+
+        .abertura-empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--v2-danger);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .abertura-empty-state-message {
+            font-size: 0.9rem;
+            color: var(--v2-text-dim);
+            line-height: 1.5;
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 1200px) {
+            .abertura-porteira-container {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            
+            .abertura-month-section:first-child {
+                border-right: none;
+                border-bottom: 1px solid var(--v2-border);
+            }
+        }
+
+        /* Estilos do cabeçalho da tabela */
+        .table-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(0, 209, 255, 0.03) 0%, transparent 100%);
+            border-bottom: 1px solid var(--v2-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .table-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-title i {
+            width: 22px;
+            height: 22px;
+            color: var(--v2-primary);
+        }
+
+        .table-title h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--v2-text);
+            margin: 0;
+        }
+
+        .table-filters {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            color: var(--v2-text-dim);
+            font-weight: 600;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--v2-primary);
+            background: rgba(0, 209, 255, 0.05);
+        }
+
+        .filter-input {
+            min-width: 250px;
+        }
+
+        .table-scroll {
+            max-height: 600px;
+            overflow: auto;
+        }
+
+        /* Tabela de Dados */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--v2-surface-light);
+        }
+
+        .data-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--v2-text-dim);
+            border-bottom: 2px solid var(--v2-border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            font-size: 0.85rem;
+            color: var(--v2-text);
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(0, 209, 255, 0.05);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--v2-text-dim);
+        }
+
+        .empty-state i {
+            width: 64px;
+            height: 64px;
+            color: var(--v2-text-dim);
+            opacity: 0.3;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        /* Botões de Ação no Header */
+        .header-actions-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--v2-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--v2-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .action-btn i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--v2-primary) 0%, rgba(0, 209, 255, 0.8) 100%);
+            color: #0a0c10;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(0, 209, 255, 0.25);
+        }
+
+        .action-btn.primary:hover {
+            box-shadow: 0 6px 16px rgba(0, 209, 255, 0.35);
+        }
+
+        .action-btn.danger {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--v2-danger);
+            border-color: rgba(248, 81, 73, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(248, 81, 73, 0.15);
+            border-color: rgba(248, 81, 73, 0.5);
+        }
+
+        /* Filtro de Região Dropdown */
+        .region-filter-container {
+            display: inline-block;
+        }
+
+        .region-select {
+            min-width: 200px;
+            padding: 10px 16px;
+            background: var(--v2-surface);
+            border: 1px solid var(--v2-border);
+            border-radius: 12px;
+            color: var(--v2-text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .region-select:hover {
+            border-color: rgba(0, 209, 255, 0.5);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .region-select:focus {
+            border-color: var(--v2-primary);
+            box-shadow: 0 0 0 3px rgba(0, 209, 255, 0.1);
+        }
+
+        .region-select option {
+            background: var(--v2-bg);
+            color: var(--v2-text);
+            padding: 10px;
+        }
+
+        /* Ajustes responsivos adicionais */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cycle-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-canvas {
+                height: 300px;
+            }
+
+            .chart-canvas.large {
+                height: 350px;
+            }
+
+            .table-filters {
+                width: 100%;
+            }
+
+            .filter-input {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .header-actions-group {
+                width: 100%;
+            }
+
+            .action-btn {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
+    
+/* Toast Notifications (Notificações Flutuantes) */
+@keyframes slideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(400px); opacity: 0; }
+}
+.spinning { animation: spin 1s linear infinite; }
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Badge de Região */
+.region-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.region-badge.araxa {
+    background: rgba(88, 166, 255, 0.15);
+    color: #58a6ff;
+    border: 1px solid rgba(88, 166, 255, 0.3);
+}
+.region-badge.uberaba {
+    background: rgba(35, 134, 54, 0.15);
+    color: #238636;
+    border: 1px solid rgba(35, 134, 54, 0.3);
+}
+.region-badge.frutal {
+    background: rgba(210, 153, 34, 0.15);
+    color: #d29922;
+    border: 1px solid rgba(210, 153, 34, 0.3);
+}
+.region-badge.nao-mapeado {
+    background: rgba(139, 148, 158, 0.15);
+    color: #8b949e;
+    border: 1px solid rgba(139, 148, 158, 0.3);
+}
+
+/* Barra superior de filtros */
+.top-filters-bar{
+    margin: 18px 0 6px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.03);
+    box-shadow: 0 8px 24px rgba(0,0,0,.22);
+}
+.top-filters-bar .table-filters{
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+</style>
+</head>
+<body class="page-porteira">
+    <div class="v2-container">
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <aside class="v2-sidebar">
+            <div class="v2-logo-section">
+                <button id="v2-sidebar-toggle" class="v2-sidebar-toggle" type="button" title="Minimizar menu" aria-label="Minimizar menu">
+                    <i data-lucide="panel-left"></i>
+                </button>
+                <div class="v2-logo-text v2-brand-text">
+                    <span class="logo-vigila">LOGOS</span><span class="logo-core">DECISION</span>
+                </div>
+            </div>
+
+            <nav class="v2-nav">
+                <a href="menu_principal.html" class="v2-nav-item" data-title="Menu Principal">
+                    <i data-lucide="globe"></i>
+                    <span class="v2-nav-text">Menu Principal</span>
+                </a>
+                <a href="releitura.html" class="v2-nav-item" data-title="Releituras">
+                    <i data-lucide="refresh-cw"></i>
+                    <span class="v2-nav-text">Releituras</span>
+                </a>
+                <a href="porteira.html" class="v2-nav-item active" data-title="Porteira">
+                    <i data-lucide="door-open"></i>
+                    <span class="v2-nav-text">Porteira</span>
+                </a>
+                <a href="usuario.html" class="v2-nav-item" data-title="Área do Usuário">
+                    <i data-lucide="circle-user-round"></i>
+                    <span class="v2-nav-text">Área do Usuário</span>
+                </a>
+
+                <div class="v2-nav-divider"></div>
+                <div class="v2-nav-section-label">Em breve</div>
+
+                <a href="relatorios.html" class="v2-nav-item" data-title="Relatórios">
+                    <i data-lucide="file-text"></i>
+                    <span class="v2-nav-text">Relatórios</span>
+                </a>
+                <a href="ia.html" class="v2-nav-item" data-title="Análise IA">
+                    <i data-lucide="brain"></i>
+                    <span class="v2-nav-text">Análise IA</span>
+                </a>
+                <a href="administracao.html" class="v2-nav-item" data-title="Administração">
+                    <i data-lucide="settings"></i>
+                    <span class="v2-nav-text">Administração</span>
+                </a>
+                <a href="login.html" class="v2-nav-item v2-nav-logout" data-title="Sair">
+                    <i data-lucide="power"></i>
+                    <span class="v2-nav-text">Sair</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <div class="v2-content">
+            <!-- CABEÇALHO (HEADER) -->
+            <header class="v2-header">
+                <div class="v2-header-left">
+                    <h1 class="v2-header-title">Monitoramento Porteira</h1>
+                    <p class="v2-header-subtitle">Análise de Leituras e Releituras | CEMIG SGL</p>
+                </div>
+                <div class="v2-header-right">
+                    <div class="header-actions-group" style="gap: 12px;">
+                        <div class="region-filter-container">
+                            <select id="regiao-filter" class="region-select">
+                                <option value="">Geral (todas)</option>
+                                <option value="Araxá">Araxá</option>
+                                <option value="Uberaba">Uberaba</option>
+                                <option value="Frutal">Frutal</option>
+                            </select>
+                        </div>
+                        <button type="button" class="action-btn primary" id="btn-sync-porteira" title="Sincronizar com Portal CEMIG">
+                            <i data-lucide="refresh-ccw"></i>
+                            <span>Sincronizar</span>
+                        </button>
+                        <button type="button" class="action-btn danger" id="btn-reset-porteira" title="Zerar banco de dados">
+                            <i data-lucide="trash-2"></i>
+                            <span>Zerar Banco</span>
+                        </button>
+                    </div>
+
+                    <div id="v2-conn" class="v2-status-pill online">SISTEMA ONLINE</div>
+                    
+                    <!-- Grupo de Relógio e Ciclo -->
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <!-- Indicador de Ciclo Minimalista -->
+                        <div class="cycle-indicator">
+                            <i data-lucide="calendar" style="width: 16px; height: 16px;"></i>
+                            <span id="current-cycle-display">Ciclo 98</span>
+                        </div>
+                        
+                        <div class="v2-clock-widget">
+                            <div class="v2-time-display" id="v2-clock-val">--:--</div>
+                            <div class="v2-date-display" id="v2-date">--/--/----</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- CONTEÚDO PRINCIPAL -->
+            <main class="v2-main">
+                <!-- MÉTRICAS -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="book-open"></i>
+                            </div>
+                            <span class="metric-label">Total Leituras</span>
+                        </div>
+                        <div class="metric-value" id="v2-total-leituras">0</div>
+                    </div>
+                    
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="x-circle"></i>
+                            </div>
+                            <span class="metric-label">Não Executadas</span>
+                        </div>
+                        <div class="metric-value" id="v2-leituras-nao-exec">0</div>
+                    </div>
+                    
+                    <div class="metric-card danger">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="percent"></i>
+                            </div>
+                            <span class="metric-label">% Não Executada</span>
+                        </div>
+                        <div class="metric-value" id="v2-perc-nao-executada">0.0%</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="alert-octagon"></i>
+                            </div>
+                            <span class="metric-label">Impedimentos</span>
+                        </div>
+                        <div class="metric-value" id="v2-impedimentos">0</div>
+                    </div>
+                    
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i data-lucide="trending-up"></i>
+                            </div>
+                            <span class="metric-label">% Impedimento</span>
+                        </div>
+                        <div class="metric-value" id="v2-perc-impedimento">0.0%</div>
+                    </div>
+                </div>
+
+                <!-- GRÁFICO PRINCIPAL -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="bar-chart-4"></i>
+                                <h3>Leituras e Releituras por Tipo</h3>
+                            </div>
+                            <p class="chart-subtitle">Comparativo entre executadas e não executadas</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas large">
+                        <canvas id="porteiraChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- GRÁFICO NÃO EXECUTADAS -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">
+                                <i data-lucide="pie-chart"></i>
+                                <h3>Leituras Não Executadas por Razão</h3>
+                            </div>
+                            <p class="chart-subtitle">Distribuição das pendências por categoria</p>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <canvas id="naoExecutadasChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- TABELA -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-title">
+                            <i data-lucide="table"></i>
+                            <h3>Pendências Separadas por Contrato</h3>
+                        </div>
+                        <div class="table-filters">
+                            <label for="razao-filter" class="filter-label">Razão:</label>
+                            <select id="razao-filter" class="filter-select">
+                                <option value="">Todas</option>
+                            </select>
+
+                            <input type="text" id="search-input" class="filter-input" placeholder="Buscar UL, Contrato, Localidade, Região...">
+                        </div>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Região</th>
+                                    <th>Localidade</th>
+                                    <th>Contrato</th>
+                                    <th>UL</th>
+                                    <th>Tipo UL</th>
+                                    <th>Razão</th>
+                                    <th>Total Leituras</th>
+                                    <th>Não Executadas</th>
+                                    <th>% Não Exec.</th>
+                                    <th>Impedimentos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="v2-table-body">
+                                <tr>
+                                    <td colspan="10">
+                                        <div class="empty-state">
+                                            <i data-lucide="inbox"></i>
+                                            <p>Nenhum dado carregado</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABELA ABERTURA DE PORTEIRA -->
+                <div class="abertura-porteira-card">
+                    <div class="abertura-porteira-header">
+                        <div class="abertura-porteira-title">
+                            <i data-lucide="calendar-check"></i>
+                            <h3>Abertura de Porteira</h3>
+                        </div>
+                    </div>
+                    <div class="abertura-porteira-container">
+                        <!-- MÊS ANTERIOR -->
+                        <div class="abertura-month-section">
+                            <div class="abertura-month-title" id="previous-month-title">Mês Anterior</div>
+                            <table class="abertura-table">
+                                <thead>
+                                    <tr>
+                                        <th>Razão</th>
+                                        <th>Data</th>
+                                        <th>Finalizado</th>
+                                        <th>OSB</th>
+                                        <th>Finalização OSB</th>
+                                        <th>CNV</th>
+                                        <th>Finalização CNV</th>
+                                        <th>Quantidade</th>
+                                        <th>Atraso</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="abertura-previous-tbody">
+                                    <!-- Conteúdo preenchido via JS -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td id="previous-total-osb">0</td>
+                                        <td>-</td>
+                                        <td id="previous-total-cnv">0</td>
+                                        <td>-</td>
+                                        <td id="previous-total-quantidade">0</td>
+                                        <td id="previous-total-atraso">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- MÊS ATUAL -->
+                        <div class="abertura-month-section">
+                            <div class="abertura-month-title" id="current-month-title">Mês Atual</div>
+                            <table class="abertura-table">
+                                <thead>
+                                    <tr>
+                                        <th>Razão</th>
+                                        <th>Data</th>
+                                        <th>Finalizado</th>
+                                        <th>OSB</th>
+                                        <th>Finalização OSB</th>
+                                        <th>CNV</th>
+                                        <th>Finalização CNV</th>
+                                        <th>Quantidade</th>
+                                        <th>Atraso</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="abertura-current-tbody">
+                                    <!-- Conteúdo preenchido via JS -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td>Total</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td id="current-total-osb">0</td>
+                                        <td>-</td>
+                                        <td id="current-total-cnv">0</td>
+                                        <td>-</td>
+                                        <td id="current-total-quantidade">0</td>
+                                        <td id="current-total-atraso">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="abertura-porteira-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot legend-zero"></span>
+                            <span>Verde: Concluídas.</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot legend-ok"></span>
+                            <span>Amarelo: Pendências dentro do prazo.</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot legend-late"></span>
+                            <span>Vermelho: Pendências em atraso.</span>
+                        </div>
+                    </div>
+                </div>
+            
+<!-- TABELA: ATRASOS CONGELADOS (ACUMULADO MENSAL) -->
+    <div class="table-card atraso-snapshot-card">
+        <div class="table-header">
+            <div class="table-title">
+                <i data-lucide="alarm-clock"></i>
+                <h3>Atrasos Congelados (Acumulado mensal)</h3>
+            </div>
+            <div class="table-filters">
+                <label for="atrasos-month-select" class="filter-label">Mês:</label>
+                <select id="atrasos-month-select" class="filter-select">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="data-table atrasos-table">
+                <thead>
+                    <tr>
+                        <th>Razão</th>
+                        <th>Vencimento</th>
+                        <th>OSB</th>
+                        <th>CNV</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="atrasos-congelados-body">
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i data-lucide="hourglass"></i>
+                                <p>Carregando...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" class="tfoot-label">Total</td>
+                        <td class="tfoot-value" id="atrasos-congelados-total-osb">0</td>
+                        <td class="tfoot-value" id="atrasos-congelados-total-cnv">0</td>
+                        <td class="tfoot-value" id="atrasos-congelados-total">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    </main>
+
+            <!-- RODAPÉ -->
+            <footer class="v2-footer">
+                <span>© 2025 LOGOS DECISION | Monitoramento Operacional Estratégico</span>
+                <span>Sistema em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scripts de Lógica -->
+    <script>
+        // Inicializa ícones Lucide
+        lucide.createIcons();
+
+        // Variáveis globais para gráficos e dados
+        let porteiraChart = null;
+        let naoExecutadasChart = null;
+        let allTableData = [];
+        let filteredTableData = [];
+        let selectedCycle = "";
+        let cacheBust = 0;
+        let universeNeedsRefresh = true;
+        let universeRows = [];
+
+        // Definição das razões rurais por ciclo
+        const CYCLE_RAZOES = {
+            "97": [1, 4, 7, 10, 13, 16],
+            "98": [2, 5, 8, 11, 14, 17],
+            "99": [3, 6, 9, 12, 15, 18],
+        };
+
+        /**
+         * Busca informações do ciclo atual do backend.
+         * Atualiza a variável global `selectedCycle`.
+         */
+        async function fetchCurrentCycleInfo() {
+            try {
+                const res = await authFetch(buildUrl('/api/porteira/current-cycle', false, false));
+                const data = await res.json();
+                
+                if (data.success && data.data) {
+                    const cycleInfo = data.data;
+                    selectedCycle = cycleInfo.ciclo;
+                    
+                    const displayEl = document.getElementById('current-cycle-display');
+                    if (displayEl) {
+                        displayEl.textContent = `Ciclo ${cycleInfo.ciclo} • ${cycleInfo.mes}`;
+                    }
+                    
+                    console.log(`🔄 Ciclo automático obtido: Ciclo ${cycleInfo.ciclo} (${cycleInfo.mes})`);
+                    return cycleInfo;
+                } else {
+                    console.warn('Falha ao obter ciclo do servidor, usando fallback.');
+                    return getAutoCycleFallback();
+                }
+            } catch (error) {
+                console.error('Erro ao buscar ciclo:', error);
+                return getAutoCycleFallback();
+            }
+        }
+
+        /**
+         * Fallback local para cálculo do ciclo caso a API falhe.
+         */
+        function getAutoCycleFallback() {
+            const now = new Date();
+            const month = now.getMonth() + 1; // 1-12
+            
+            const monthToCycle = {
+                1: "97", 2: "98", 3: "99",
+                4: "97", 5: "98", 6: "99",
+                7: "97", 8: "98", 9: "99",
+                10: "97", 11: "98", 12: "99"
+            };
+            
+            const monthNames = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                              "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            
+            selectedCycle = monthToCycle[month];
+            
+            const displayEl = document.getElementById('current-cycle-display');
+            if (displayEl) {
+                displayEl.textContent = `Ciclo ${selectedCycle} • ${monthNames[month]}`;
+            }
+            
+            console.log(`🔄 Ciclo fallback: Ciclo ${selectedCycle} (${monthNames[month]})`);
+            
+            return {
+                ciclo: selectedCycle,
+                mes: monthNames[month],
+                mes_numero: month,
+                ano: now.getFullYear()
+            };
+        }
+
+        // Relógio
+        setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('v2-clock-val').innerText = `${hours}:${minutes}`;
+            document.getElementById('v2-date').innerText = now.toLocaleDateString('pt-BR');
+        }, 1000);
+
+        // Funções auxiliares
+        function getSelectedRegion() {
+            return (document.getElementById('regiao-filter')?.value || '').toString().trim();
+        }
+
+        function buildUrl(path, includeCycle = true, includeRegion = true) {
+            const base = (window.VIGILACORE_API_BASE || '').replace(/\/$/, '') || 'http://127.0.0.1:5000';
+            const url = new URL(path, base);
+            if (includeCycle && selectedCycle) {
+                url.searchParams.set('ciclo', selectedCycle);
+            }
+            if (includeRegion) {
+                const regiao = getSelectedRegion();
+                if (regiao) url.searchParams.set('regiao', regiao);
+            }
+            if (cacheBust) {
+                url.searchParams.set('_t', String(cacheBust));
+            }
+            return url.toString();
+        }
+
+        function updateConnectionStatus(isOnline) {
+            const pill = document.getElementById('v2-conn');
+            if (isOnline) {
+                pill.innerText = "SISTEMA ONLINE";
+                pill.className = "v2-status-pill online";
+            } else {
+                pill.innerText = "SISTEMA OFFLINE";
+                pill.className = "v2-status-pill offline";
+            }
+        }
+
+        /**
+         * Exibe notificações toast flutuantes.
+         */
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const colors = {
+                success: { bg: '#238636', icon: 'check-circle' },
+                error: { bg: '#f85149', icon: 'x-circle' },
+                warning: { bg: '#d29922', icon: 'alert-triangle' },
+                info: { bg: '#58a6ff', icon: 'info' }
+            };
+
+            const config = colors[type] || colors.info;
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="${config.icon}" style="width: 20px; height: 20px;"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${config.bg};
+                color: white;
+                padding: 14px 20px;
+                border-radius: 10px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+                z-index: 10000;
+                font-size: 14px;
+                font-weight: 600;
+                min-width: 300px;
+                animation: slideIn 0.3s ease;
+            `;
+
+            document.body.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Renderização dos Gráficos
+        async function renderChart() {
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/chart"));
+                const payload = await res.json();
+
+                const ctx = document.getElementById("porteiraChart");
+                if (porteiraChart) porteiraChart.destroy();
+
+                porteiraChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: payload.labels,
+                        datasets: payload.datasets.map((ds, idx) => ({
+                            ...ds,
+                            backgroundColor: idx === 0 
+                                ? 'rgba(35, 134, 54, 0.2)' 
+                                : 'rgba(248, 81, 73, 0.2)',
+                            borderColor: idx === 0 
+                                ? 'rgba(35, 134, 54, 1)' 
+                                : 'rgba(248, 81, 73, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: "top",
+                                labels: {
+                                    color: '#c9d1d9',
+                                    font: { size: 13, weight: '600' },
+                                    padding: 20,
+                                    usePointStyle: true,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                                titleColor: '#00d1ff',
+                                bodyColor: '#c9d1d9',
+                                borderColor: '#30363d',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+
+                updateConnectionStatus(true);
+            } catch (error) {
+                console.error("Erro ao renderizar gráfico:", error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        async function renderNaoExecutadasChart() {
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/nao-executadas-chart"));
+                const text = await res.text().catch(() => "");
+                let data = null;
+                try { data = JSON.parse(text || '{}'); } catch { data = { success: res.ok }; }
+                
+                if (!res.ok) {
+                    throw new Error((data && data.error) ? data.error : (`HTTP ${res.status}`));
+                }
+
+                const ctx = document.getElementById("naoExecutadasChart");
+                if (naoExecutadasChart) naoExecutadasChart.destroy();
+
+                naoExecutadasChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: "Leituras Não Executadas",
+                            data: data.values,
+                            backgroundColor: 'rgba(248, 81, 73, 0.2)',
+                            borderColor: 'rgba(248, 81, 73, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(13, 27, 34, 0.95)',
+                                titleColor: '#f85149',
+                                bodyColor: '#c9d1d9',
+                                borderColor: '#30363d',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(48, 54, 61, 0.3)' },
+                                ticks: { color: '#8b949e' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#8b949e' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Erro ao renderizar gráfico de não executadas:", error);
+            }
+        }
+
+        // Funções de Tabela
+        async function loadTableData() {
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/table"));
+                const data = await res.json();
+
+                if (data.success) {
+                    allTableData = (data.data || []).filter(r =>
+                        (Number(r.Leituras_Nao_Executadas || 0) > 0) || (Number(r.Releituras_Nao_Executadas || 0) > 0)
+                    );
+
+                    updateMetrics(data.totals);
+                    updateRazaoFilter();
+                    filterTable();
+                    
+                    updateConnectionStatus(true);
+                } else {
+                    console.error("Erro ao carregar dados:", data.error);
+                    updateConnectionStatus(false);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados da tabela:", error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        let aberturaCache = null;
+        let aberturaLoading = false;
+        
+        async function loadAberturaPorteira() {
+            // Evita chamadas duplicadas simultâneas
+            if (aberturaLoading) {
+                console.log('Abertura já está carregando, pulando chamada duplicada');
+                return;
+            }
+            
+            // Usa cache se disponível e foi carregado recentemente (< 30 segundos)
+            if (aberturaCache && (Date.now() - aberturaCache.timestamp < 30000)) {
+                console.log('Usando cache de abertura');
+                renderAberturaSide('previous', aberturaCache.data.previous);
+                renderAberturaSide('current', aberturaCache.data.current);
+                return;
+            }
+            
+            aberturaLoading = true;
+            
+            try {
+                const res = await authFetch(buildUrl("/api/porteira/abertura"));
+                const data = await res.json();
+
+                if (data && data.success) {
+                    // Salva no cache
+                    aberturaCache = {
+                        data: data,
+                        timestamp: Date.now()
+                    };
+                    
+                    renderAberturaSide('previous', data.previous);
+                    renderAberturaSide('current', data.current);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar Abertura de Porteira:", error);
+                showToast('✗ Erro ao carregar dados de abertura', 'error');
+            } finally {
+                aberturaLoading = false;
+            }
+        }
+
+        // ===============================
+// Porteira: Atrasos Congelados (Acumulado mensal)
+// ===============================
+let atrasosMonthsCache = null;
+let atrasosCongeladosLoading = false;
+
+const __MONTHS_PT = {
+    1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho",
+    7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+};
+
+function _formatMonthLabelBR(monthStr) {
+    const s = String(monthStr || '').trim();
+    const m = s.match(/^(\d{4})-(\d{2})$/);
+    if (!m) return s || '—';
+    const year = m[1];
+    const mm = parseInt(m[2], 10);
+    const name = __MONTHS_PT[mm] || `Mês ${mm}`;
+    return `${name} ${year}`;
+}
+
+async function loadAtrasosCongeladosMonths(force = false) {
+    const select = document.getElementById('atrasos-month-select');
+    if (!select) return [];
+
+    if (!force && Array.isArray(atrasosMonthsCache)) {
+        return atrasosMonthsCache;
+    }
+
+    try {
+        const res = await authFetch(buildUrl('/api/porteira/atrasos-congelados/months'));
+        const data = await res.json();
+        const months = (data && data.success && Array.isArray(data.months)) ? data.months : [];
+        atrasosMonthsCache = months;
+
+        select.innerHTML = '';
+        if (!months.length) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'Sem dados';
+            select.appendChild(opt);
+        } else {
+            for (const mo of months) {
+                const opt = document.createElement('option');
+                opt.value = String(mo);
+                opt.textContent = _formatMonthLabelBR(String(mo));
+                select.appendChild(opt);
+            }
+        }
+
+        return months;
+    } catch (e) {
+        console.error('Erro ao listar meses de atrasos congelados:', e);
+        select.innerHTML = '<option value="">Erro</option>';
+        atrasosMonthsCache = [];
+        return [];
+    }
+}
+
+async function loadAtrasosCongeladosMonth(monthStr = null) {
+    if (atrasosCongeladosLoading) return;
+    atrasosCongeladosLoading = true;
+
+    const tbody = document.getElementById('atrasos-congelados-body');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    <div class="empty-state">
+                        <i data-lucide="hourglass"></i>
+                        <p>Carregando...</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        lucide.createIcons();
+    }
+
+    try {
+        const q = monthStr ? `?month=${encodeURIComponent(monthStr)}` : '';
+        const res = await authFetch(buildUrl(`/api/porteira/atrasos-congelados${q}`));
+        const data = await res.json();
+        if (!data || data.success !== true) {
+            throw new Error((data && (data.error || data.message)) || 'Falha ao carregar atrasos congelados');
+        }
+        renderAtrasosCongelados(data);
+    } catch (e) {
+        console.error('Erro ao carregar atrasos congelados:', e);
+        renderAtrasosCongelados({
+            success: true,
+            month: monthStr || '',
+            rows: Array.from({ length: 18 }, (_, i) => ({
+                razao: String(i + 1).padStart(2, '0'),
+                due_date: null,
+                osb: 0,
+                cnv: 0,
+                total: 0
+            })),
+            totals: { osb: 0, cnv: 0, total: 0 }
+        });
+    } finally {
+        atrasosCongeladosLoading = false;
+    }
+}
+
+function renderAtrasosCongelados(payload) {
+    const tbody = document.getElementById('atrasos-congelados-body');
+    const tOsb = document.getElementById('atrasos-congelados-total-osb');
+    const tCnv = document.getElementById('atrasos-congelados-total-cnv');
+    const tTot = document.getElementById('atrasos-congelados-total');
+
+    if (!tbody || !tOsb || !tCnv || !tTot) return;
+
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    tbody.innerHTML = '';
+
+    let sumOsb = 0;
+    let sumCnv = 0;
+    let sumTot = 0;
+
+    for (const r of rows) {
+        const rz = _formatRazaoRZ(r.razao);
+        const due = _formatDateBR(r.due_date);
+
+        const osb = Number(((r.osb ?? r.osb_atraso) ?? 0));
+        const cnv = Number(((r.cnv ?? r.cnv_atraso) ?? 0));
+        const tot = Number(((r.total ?? r.total_atraso) ?? (osb + cnv) ?? 0));
+
+        sumOsb += (Number.isFinite(osb) ? osb : 0);
+        sumCnv += (Number.isFinite(cnv) ? cnv : 0);
+        sumTot += (Number.isFinite(tot) ? tot : 0);
+
+        const osbCls = (osb > 0) ? 'qtd-late' : 'qtd-zero';
+        const cnvCls = (cnv > 0) ? 'qtd-late' : 'qtd-zero';
+        const totCls = (tot > 0) ? 'qtd-late' : 'qtd-zero';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${rz}</td>
+            <td>${due || '—'}</td>
+            <td class="${osbCls}">${Number.isFinite(osb) ? Math.round(osb) : 0}</td>
+            <td class="${cnvCls}">${Number.isFinite(cnv) ? Math.round(cnv) : 0}</td>
+            <td class="${totCls}">${Number.isFinite(tot) ? Math.round(tot) : 0}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    tOsb.textContent = String(Math.round(sumOsb));
+    tCnv.textContent = String(Math.round(sumCnv));
+    tTot.textContent = String(Math.round(sumTot));
+}
+
+async function loadAtrasosCongeladosWidget(force = false) {
+    const months = await loadAtrasosCongeladosMonths(force);
+    const select = document.getElementById('atrasos-month-select');
+    if (!select) return;
+
+    const currentVal = String(select.value || '').trim();
+    if (months.length) {
+        if (!currentVal || !months.includes(currentVal)) {
+            select.value = String(months[0]);
+        }
+        await loadAtrasosCongeladosMonth(select.value);
+    } else {
+        await loadAtrasosCongeladosMonth(null);
+    }
+}
+        function _formatRazaoRZ(raw) {
+            const s = String(raw || '').trim();
+            if (!s) return '';
+            const matches = s.match(/\d+/g) || [];
+            const digits = matches.join('');
+            if (!digits) return '';
+            const two = digits.slice(-2).padStart(2, '0');
+            return `RZ ${two}`;
+        }
+
+        function _formatDateBR(dateStr) {
+            // Converte YYYY-MM-DD para DD/MM/YYYY
+            if (!dateStr || !String(dateStr).trim()) return '';
+            const s = String(dateStr).trim();
+            
+            // Se já está em formato DD/MM/YYYY, retorna como está
+            if (s.match(/^\d{2}\/\d{2}\/\d{4}$/)) return s;
+            
+            // Se está em formato YYYY-MM-DD, converte
+            const match = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (match) {
+                return `${match[3]}/${match[2]}/${match[1]}`;
+            }
+            
+            // Caso contrário, retorna vazio
+            return '';
+        }
+
+        function _fmtNumberOrBlank(v) {
+            if (v === null || v === undefined) return '';
+            const n = Number(v);
+            return Number.isFinite(n) ? String(n) : '';
+        }
+
+        function _aberturaQtyClass(v, atraso, hasData) {
+            if (!hasData && (v === null || v === undefined)) return '';
+            const n = Number((v === null || v === undefined) ? 0 : v);
+            if (!Number.isFinite(n)) return '';
+            if (n === 0) return 'qty-zero';
+            const a = Number((atraso === null || atraso === undefined) ? 0 : atraso);
+            return a === 1 ? 'qty-late' : 'qty-ok';
+        }
+
+        function renderAberturaSide(which, payload) {
+            if (!payload) return;
+
+            const titleId = (which === 'previous') ? 'previous-month-title' : 'current-month-title';
+            const tbodyId = (which === 'previous') ? 'abertura-previous-tbody' : 'abertura-current-tbody';
+
+            const totalOsbId = (which === 'previous') ? 'previous-total-osb' : 'current-total-osb';
+            const totalCnvId = (which === 'previous') ? 'previous-total-cnv' : 'current-total-cnv';
+            const totalQtdId = (which === 'previous') ? 'previous-total-quantidade' : 'current-total-quantidade';
+            const totalAtrId = (which === 'previous') ? 'previous-total-atraso' : 'current-total-atraso';
+
+            const titleEl = document.getElementById(titleId);
+            if (titleEl && payload.label) titleEl.textContent = payload.label;
+
+            const tbody = document.getElementById(tbodyId);
+            if (tbody) {
+                const rows = payload.rows || [];
+                const hasData = !!payload.has_data;
+
+                tbody.innerHTML = rows.map(r => {
+                    const razao = _formatRazaoRZ(r.razao);
+                    const dataStr = (r.data && String(r.data).trim()) ? r.data : '--/--';
+                    const finalizadoStr = _formatDateBR(r.finalizado_em);
+                    const finalizadoOsbStr = _formatDateBR(r.finalizado_osb);
+                    const finalizadoCnvStr = _formatDateBR(r.finalizado_cnv);
+
+                    const osbDisp = hasData ? _fmtNumberOrBlank((r.osb ?? 0)) : _fmtNumberOrBlank(r.osb);
+                    const cnvDisp = hasData ? _fmtNumberOrBlank((r.cnv ?? 0)) : _fmtNumberOrBlank(r.cnv);
+                    const qtdDisp = hasData ? _fmtNumberOrBlank((r.quantidade ?? 0)) : _fmtNumberOrBlank(r.quantidade);
+                    const atrDisp = hasData ? _fmtNumberOrBlank((r.atraso ?? 0)) : _fmtNumberOrBlank(r.atraso);
+
+                    const osbClass = _aberturaQtyClass(r.osb, r.atraso, hasData);
+                    const cnvClass = _aberturaQtyClass(r.cnv, r.atraso, hasData);
+                    const qtdClass = _aberturaQtyClass(r.quantidade, r.atraso, hasData);
+
+                    return `
+                        <tr>
+                            <td>${razao}</td>
+                            <td>${dataStr}</td>
+                            <td>${finalizadoStr}</td>
+                            <td class="abertura-qty ${osbClass}">${osbDisp}</td>
+                            <td>${finalizadoOsbStr}</td>
+                            <td class="abertura-qty ${cnvClass}">${cnvDisp}</td>
+                            <td>${finalizadoCnvStr}</td>
+                            <td class="abertura-qty ${qtdClass}">${qtdDisp}</td>
+                            <td class="atraso-value">${atrDisp}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const tOsb = document.getElementById(totalOsbId);
+            const tCnv = document.getElementById(totalCnvId);
+            const tQtd = document.getElementById(totalQtdId);
+            const tAtr = document.getElementById(totalAtrId);
+
+            if (tOsb) tOsb.textContent = _fmtNumberOrBlank(payload.totals?.osb);
+            if (tCnv) tCnv.textContent = _fmtNumberOrBlank(payload.totals?.cnv);
+            if (tQtd) tQtd.textContent = _fmtNumberOrBlank(payload.totals?.quantidade);
+            if (tAtr) tAtr.textContent = _fmtNumberOrBlank(payload.totals?.atraso);
+        }
+
+        function updateMetrics(totals) {
+            const totalLeit = Number(totals.total_leituras || 0);
+            const naoExec = Number(totals.leituras_nao_exec || 0);
+            const impedimentos = Number(totals.impedimentos || 0);
+            
+            document.getElementById('v2-total-leituras').innerText = totalLeit;
+            document.getElementById('v2-leituras-nao-exec').innerText = naoExec;
+            document.getElementById('v2-impedimentos').innerText = impedimentos;
+            
+            const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
+            const percImpedimento = totalLeit > 0 ? ((impedimentos / totalLeit) * 100).toFixed(1) : '0.0';
+            
+            document.getElementById('v2-perc-nao-executada').innerText = `${percNaoExec}%`;
+            document.getElementById('v2-perc-impedimento').innerText = `${percImpedimento}%`;
+        }
+
+        function updateRazaoFilter() {
+            const razoes = [...new Set(allTableData.map(row => row.Razao))].sort();
+            const select = document.getElementById('razao-filter');
+            const current = (select?.value || '').trim();
+            
+            select.innerHTML = '<option value="">Todas</option>';
+            
+            razoes.forEach(razao => {
+                const option = document.createElement('option');
+                option.value = razao;
+                const rz = String(razao || '').padStart(2, '0');
+                option.textContent = `RZ ${rz}`;
+                select.appendChild(option);
+            });
+
+            if (current && [...select.options].some(o => o.value === current)) {
+                select.value = current;
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('v2-table-body');
+            if (!tbody) return;
+
+            if (!filteredTableData || filteredTableData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <i data-lucide="inbox"></i>
+                                <p>Nenhuma pendência encontrada para os filtros atuais</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            tbody.innerHTML = filteredTableData.map(row => {
+                const totalLeit = Number(row.Total_Leituras || 0);
+                const naoExec = Number(row.Leituras_Nao_Executadas || 0);
+                const impedimentos = Number(row.Impedimentos || 0);
+                const percNaoExec = totalLeit > 0 ? ((naoExec / totalLeit) * 100).toFixed(1) : '0.0';
+                const __rz = (row.Razao !== undefined && row.Razao !== null && String(row.Razao).trim() !== '') 
+                    ? String(row.Razao).padStart(2, '0') 
+                    : '';
+                const __razaoLabel = __rz ? `RZ ${__rz}` : '-';
+
+                return `
+                <tr>
+                    <td><span class="region-badge ${String(row.Regiao).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}">${row.Regiao || '-'}</span></td>
+                    <td>${row.Localidade || '-'}</td>
+                    <td><strong>${row.Conjunto_Contrato || '-'}</strong></td>
+                    <td>${row.UL || '-'}</td>
+                    <td>${row.Tipo_UL || '-'}</td>
+                    <td><strong style="color: var(--v2-primary);">${__razaoLabel}</strong></td>
+                    <td>${Math.round(totalLeit)}</td>
+                    <td><span style="color: var(--v2-warning); font-weight: 700;">${Math.round(naoExec)}</span></td>
+                    <td><span style="color: var(--v2-danger); font-weight: 600;">${percNaoExec}%</span></td>
+                    <td><span style="color: var(--v2-danger);">${Math.round(impedimentos)}</span></td>
+                </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function filterTable() {
+            const normalize = (s) => String(s || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+
+            const regiaoValue = normalize(document.getElementById('regiao-filter')?.value || '');
+            const razaoValue = (document.getElementById('razao-filter')?.value || '').trim();
+            const searchValue = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+
+            filteredTableData = (allTableData || []).filter(row => {
+                const matchRegiao = !regiaoValue || normalize(row.Regiao) === regiaoValue;
+                const matchRazao = !razaoValue || String(row.Razao || '') === razaoValue;
+
+                const haystack = [
+                    row.UL, row.Razao, row.Tipo_UL, row.Conjunto_Contrato, row.Regiao, row.Localidade
+                ].map(v => String(v || '').toLowerCase());
+
+                const matchSearch = !searchValue || haystack.some(v => v.includes(searchValue));
+                return matchRegiao && matchRazao && matchSearch;
+            });
+
+            renderTable();
+        }
+
+        let isRefreshing = false;
+        
+        async function refreshAll(force = false) {
+            // Evita múltiplas chamadas simultâneas
+            if (isRefreshing && !force) {
+                console.log('Refresh já em andamento, pulando chamada duplicada');
+                return;
+            }
+            
+            isRefreshing = true;
+            
+            try {
+                if (force) {
+                    cacheBust = Date.now();
+                    // Limpa o cache de abertura também
+                    aberturaCache = null;
+                }
+                await Promise.all([
+                    renderChart(),
+                    renderNaoExecutadasChart(),
+                    loadTableData(),
+                    loadAberturaPorteira(),
+                    loadAtrasosCongeladosWidget(force)
+                ]);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        function getRoleFromToken() {
+            try {
+                const token = localStorage.getItem('logos_decision_token') || localStorage.getItem('vigilacore_token') || localStorage.getItem('token');
+                if (!token) return '';
+                const payload = token.split('.')[1];
+                const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+                return String(json.role || '').toLowerCase();
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // Configuração de acesso baseado em função (RBAC)
+        const __role = getRoleFromToken();
+        const __canSelectRegion = ['gerencia','diretoria','desenvolvedor'].includes(__role);
+        const __canResetPorteira = (__role === 'desenvolvedor');
+        const __canSyncPorteira = (__role === 'desenvolvedor');
+
+        // Visibilidade de controles
+        const __regiaoContainer = document.querySelector('.header-actions-group .region-filter-container');
+        if (!__canSelectRegion && __regiaoContainer) {
+            __regiaoContainer.style.display = 'none';
+        }
+
+        const __btnSyncPorteira = document.getElementById('btn-sync-porteira');
+        if (!__canSyncPorteira && __btnSyncPorteira) {
+            __btnSyncPorteira.style.display = 'none';
+        }
+
+        const __btnResetPorteira = document.getElementById('btn-reset-porteira');
+        if (!__canResetPorteira && __btnResetPorteira) {
+            __btnResetPorteira.style.display = 'none';
+        }
+
+        // Event Listeners
+        document.getElementById('regiao-filter').addEventListener('change', () => refreshAll(true));
+        document.getElementById('razao-filter').addEventListener('change', filterTable);
+        document.getElementById('search-input').addEventListener('input', filterTable);
+
+        const __atrasosMonthSelect = document.getElementById('atrasos-month-select');
+        if (__atrasosMonthSelect) {
+            __atrasosMonthSelect.addEventListener('change', () => {
+                const v = String(__atrasosMonthSelect.value || '').trim();
+                loadAtrasosCongeladosMonth(v || null);
+            });
+        }
+
+        // Ação de Sincronizar
+        document.getElementById('btn-sync-porteira').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-sync-porteira');
+            const originalHTML = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader" class="spinning"></i><span>Sincronizando...</span>';
+                lucide.createIcons();
+
+                const res = await authFetch(buildUrl('/api/sync/porteira', false, false), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('✓ Dados sincronizados com sucesso!', 'success');
+                    await refreshAll(true);
+                } else {
+                    showToast('✗ Erro: ' + (data.error || 'Falha na sincronização'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao sincronizar:', error);
+                showToast('✗ Erro ao conectar com o servidor', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+            }
+        });
+
+        // Ação de Zerar Banco
+        if (__canResetPorteira) {
+            document.getElementById('btn-reset-porteira').addEventListener('click', async () => {
+                const confirmMessage = `⚠️ ATENÇÃO!
+Esta ação irá APAGAR PERMANENTEMENTE todos os dados de porteira de TODOS os usuários.
+Deseja realmente continuar?`;
+
+                if (!confirm(confirmMessage)) return;
+                if (!confirm('Última confirmação: Tem certeza ABSOLUTA?')) return;
+
+                try {
+                    const res = await authFetch(buildUrl('/api/reset/porteira', false), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        showToast('✓ Banco de porteira zerado!', 'success');
+                        await refreshAll(true);
+                    } else {
+                        showToast('✗ ' + (data.message || data.error || 'Falha ao zerar banco'), 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('✗ Erro ao conectar com o servidor', 'error');
+                }
+            });
+        }
+
+        // Inicialização
+        (async function init() {
+            await fetchCurrentCycleInfo();
+            await refreshAll(true);
+            
+            // Atualiza títulos dos meses na tabela
+            const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+            const now = new Date();
+            const currM = monthNames[now.getMonth()];
+            const currY = String(now.getFullYear()).slice(-2);
+            
+            const prevD = new Date(now);
+            prevD.setMonth(prevD.getMonth() - 1);
+            const prevM = monthNames[prevD.getMonth()];
+            const prevY = String(prevD.getFullYear()).slice(-2);
+            
+            document.getElementById('current-month-title').textContent = `${currM}/${currY}`;
+            document.getElementById('previous-month-title').textContent = `${prevM}/${prevY}`;
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.dist/
+build/
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+.env.*
+
+# Data folder (sensitive information)
+data/
+backend/data/
+*.xls
+*.xlsx
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Frontend deps
+node_modules/
+
+# Zip / archives
+*.zip
+*.7z
+*.rar

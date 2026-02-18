@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGOS DECISION - Em Breve</title>
+    <!-- Estilos V1 (Legado) mantidos para compatibilidade -->
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- BARRA LATERAL -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../../logos_decision_logo.svg" alt="Logo">
+                <div class="logo-text">LOGOS <strong>DECISION</strong></div>
+            </div>
+            <nav class="nav">
+                <a href="menu_principal.html" class="nav-item"><i data-lucide="globe"></i> Menu Principal</a>
+                <a href="releitura.html" class="nav-item"><i data-lucide="refresh-cw"></i> Releituras</a>
+                <a href="porteira.html" class="nav-item active"><i data-lucide="hourglass"></i> Porteira</a>
+                <div class="nav-divider"></div>
+                <div class="nav-section">Em Breve</div>
+                <a href="relatorios.html" class="nav-item"><i data-lucide="file-text"></i> Relatórios</a>
+                <a href="ia.html" class="nav-item"><i data-lucide="brain"></i> Análise IA</a>
+                <a href="usuario.html" class="nav-item"><i data-lucide="brain"></i> Área Usuário</a>
+                <a href="administracao.html" class="nav-item"><i data-lucide="brain"></i> Administração</a>
+                <a href="login.html" class="nav-item nav-logout"><i data-lucide="power"></i> Sair</a>
+            </nav>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL -->
+        <div class="main">
+            <header class="header">
+                <div class="header-left">
+                    <h1>Em Breve</h1>
+                    <p>Novas Funcionalidades</p>
+                </div>
+                <div class="header-right">
+                    <div class="status-pill offline">OFFLINE</div>
+                    <div class="clock">
+                        <span class="clock-time" id="time">--:--</span>
+                        <span class="clock-date" id="date">--/--</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="dev-page">
+                    <i data-lucide="hourglass" class="dev-icon"></i>
+                    <h2 class="dev-title">Em Desenvolvimento</h2>
+                    <p class="dev-subtitle">Esta funcionalidade está sendo desenvolvida e em breve estará disponível.</p>
+                    <a href="menu_principal.html" class="dev-link">← Voltar</a>
+                </div>
+            </div>
+
+            <footer class="footer">
+                <span>LOGOS DECISION 1.0</span>
+                <span>Em desenvolvimento</span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        lucide.createIcons();
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            document.getElementById('date').textContent = now.toLocaleDateString('pt-BR', {month: '2-digit', day: '2-digit'});
+        }, 1000);
+    </script>
+</body>
+</html>
