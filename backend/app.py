@@ -563,7 +563,21 @@ def status_releitura():
             atr=cur.fetchone()[0]
             metrics={"total":total,"pendentes":pend,"realizadas":real,"atrasadas":atr}
 
-            cur.execute(f"SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND DATE(upload_time)=DATE(?) ORDER BY upload_time DESC LIMIT 500", tuple(selected_ids)+(date_str,))
+            cur.execute(f"""SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND DATE(upload_time)=DATE(?) ORDER BY
+                CASE
+                    WHEN vencimento IS NULL OR TRIM(vencimento) = '' THEN 1
+                    ELSE 0
+                END,
+                CASE
+                    -- Formato BR: DD/MM/YYYY (ou com hora após)
+                    WHEN instr(vencimento, '/') = 3 THEN substr(vencimento, 7, 4) || '-' || substr(vencimento, 4, 2) || '-' || substr(vencimento, 1, 2)
+                    -- Formato ISO: YYYY-MM-DD (ou com hora após)
+                    WHEN instr(vencimento, '-') = 5 THEN substr(vencimento, 1, 10)
+                    ELSE '9999-12-31'
+                END,
+                reg ASC,
+                upload_time DESC
+            LIMIT 500""", tuple(selected_ids)+(date_str,))
         else:
             cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph})", tuple(selected_ids))
             total=cur.fetchone()[0]
@@ -575,7 +589,21 @@ def status_releitura():
             atr=cur.fetchone()[0]
             metrics={"total":total,"pendentes":pend,"realizadas":real,"atrasadas":atr}
 
-            cur.execute(f"SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' ORDER BY upload_time DESC LIMIT 500", tuple(selected_ids))
+            cur.execute(f"""SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' ORDER BY
+                CASE
+                    WHEN vencimento IS NULL OR TRIM(vencimento) = '' THEN 1
+                    ELSE 0
+                END,
+                CASE
+                    -- Formato BR: DD/MM/YYYY (ou com hora após)
+                    WHEN instr(vencimento, '/') = 3 THEN substr(vencimento, 7, 4) || '-' || substr(vencimento, 4, 2) || '-' || substr(vencimento, 1, 2)
+                    -- Formato ISO: YYYY-MM-DD (ou com hora após)
+                    WHEN instr(vencimento, '-') = 5 THEN substr(vencimento, 1, 10)
+                    ELSE '9999-12-31'
+                END,
+                reg ASC,
+                upload_time DESC
+            LIMIT 500""", tuple(selected_ids))
         
         rows=cur.fetchall()
         details=[{

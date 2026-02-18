@@ -1063,37 +1063,97 @@ def update_installation_status(installation_list, new_status, module, user_id):
 
 
 def get_releitura_details(user_id, date_str: str | None = None):
-    """Consulta detalhes de releitura pendentes."""
+    """Consulta detalhes de releitura pendentes (Deep-Scan).
+
+    Importante:
+      - O frontend renderiza na ordem que recebe; então a ordenação DEVE ser feita aqui.
+      - A coluna 'vencimento' no banco costuma estar em 'DD/MM/YYYY', mas pode vir com
+        hora junto ("18/02/2026 00:00") ou em ISO ("2026-02-18").
+      - Itens com vencimento vazio/inválido vão pro final.
+
+    Retorno:
+      - Lista de dicionários (JSON-friendly) limitada a 500 itens.
+    """
+
+    # --- 1) Consulta ao banco ---
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
+
     if date_str:
-        cursor.execute('''
+        # Filtra por dia de upload (snapshot do dia) + pendentes
+        cursor.execute(
+            """
             SELECT ul, instalacao, endereco, razao, vencimento, reg, status, region, route_status, route_reason, ul_regional, localidade
             FROM releituras
             WHERE user_id = ? AND status = 'PENDENTE' AND DATE(upload_time)=DATE(?)
-        ''', (user_id, date_str))
+            """,
+            (user_id, date_str)
+        )
     else:
-        cursor.execute('''
+        # Pendentes gerais
+        cursor.execute(
+            """
             SELECT ul, instalacao, endereco, razao, vencimento, reg, status, region, route_status, route_reason, ul_regional, localidade
-            FROM releituras 
+            FROM releituras
             WHERE user_id = ? AND status = 'PENDENTE'
-        ''', (user_id,))
+            """,
+            (user_id,)
+        )
+
     rows = cursor.fetchall()
     conn.close()
 
-    details = []
+    # --- 2) Converte para lista de dicts (formato consumido pelo frontend) ---
+    details: list[dict] = []
     for r in rows:
-        item = {"ul": r[0], "inst": r[1], "endereco": r[2], "razao": r[3], "venc": r[4], "reg": r[5], "status": r[6], "region": r[7], "route_status": r[8], "route_reason": r[9], "ul_regional": r[10], "localidade": r[11]}
-        details.append(item)
+        details.append({
+            "ul": r[0],
+            "inst": r[1],
+            "endereco": r[2],
+            "razao": r[3],
+            "venc": r[4],
+            "reg": r[5],
+            "status": r[6],
+            "region": r[7],
+            "route_status": r[8],
+            "route_reason": r[9],
+            "ul_regional": r[10],
+            "localidade": r[11],
+        })
 
-    # Ordenação por data de vencimento
-    def sort_key(item):
-        try:
-            return (datetime.strptime(item['venc'], '%d/%m/%Y'), item['reg'])
-        except ValueError:
-            return (datetime(2099, 12, 31), "ZZ")
+    # --- 3) Ordenação robusta por data de vencimento ---
+    def _parse_venc(item: dict) -> datetime:
+        """Converte o vencimento do item para datetime.
 
-    details.sort(key=sort_key)
+        Aceita:
+          - 'DD/MM/YYYY'
+          - 'YYYY-MM-DD'
+          - versões com hora anexada (remove hora automaticamente)
+
+        Se não conseguir converter, retorna uma data futura para empurrar o item pro fim.
+        """
+        s = (item.get("venc") or item.get("vencimento") or "")
+        s = str(s).strip()
+        if not s:
+            return datetime(2099, 12, 31)
+
+        # remove hora (" 00:00") e sufixo ISO ("T00:00:00")
+        s = s.split()[0]
+        s = s.split("T")[0]
+
+        for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                pass
+
+        return datetime(2099, 12, 31)
+
+    def _sort_key(item: dict):
+        # desempate pela REG (03, Z3, etc.)
+        return (_parse_venc(item), (item.get("reg") or "ZZ"))
+
+    details.sort(key=_sort_key)
     return details[:500]
 
 
