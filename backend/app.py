@@ -81,7 +81,9 @@ app = Flask(
 CORS(
     app,
     resources={r"/api/*": {"origins": "*"}},
-    allow_headers=["Content-Type", "Authorization"],
+    # Inclui o header do ngrok para pular o "browser warning" em chamadas programáticas
+    # (isso é especialmente importante se o frontend estiver em outro domínio/porta e cair em preflight CORS)
+    allow_headers=["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
     expose_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 )
@@ -405,15 +407,13 @@ def api_ping():
 
 @app.route('/api/status/releitura', methods=['GET'])
 def status_releitura():
-    """
-    Retorna métricas, dados de gráficos e detalhes das releituras.
+    """Retorna métricas, gráficos e detalhes de Releitura.
 
-    Lógica diferenciada por perfil:
-    - Analistas: Veem apenas sua própria base.
-    - Gerência/Diretoria: Veem dados agregados por região (Araxá, Uberaba, Frutal).
+    Histórico por data:
+      - A data selecionada deve refletir o estado/snapshot daquele dia.
+      - Analistas: usa snapshot diário (se existir) e gráficos por hora.
+      - Gerência/Diretoria/Desenvolvedor: agrega snapshots/gráficos por região.
     """
-    from core.database import save_releitura_daily_snapshot, get_releitura_daily_snapshot
-    
     user = get_current_user_from_request()
     if not user:
         return jsonify({"error": "Usuário não autenticado"}), 401
@@ -421,77 +421,72 @@ def status_releitura():
     user_id = int(user['id'])
     role = norm_role(user.get('role'))
 
-    date_str = request.args.get('date')
+    # Parâmetros
+    date_str = (request.args.get('date') or '').strip() or None
     region = (request.args.get('region') or 'all').strip()
-    
-    # Determina se é consulta de hoje ou de data específica
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    is_today = not date_str or date_str == today_str
-    
-    # Se for consulta de ontem ou data anterior, tenta usar snapshot fixo
-    if not is_today and date_str:
-        snapshot = get_releitura_daily_snapshot(user_id, date_str)
-        if snapshot:
-            # Usa dados fixos do snapshot
-            metrics = snapshot['metrics']
-            regions_summary = snapshot['regions']
-            
-            # Ainda busca detalhes e gráficos do banco para ter mais informações
-            labels, values = get_releitura_chart_data(user_id, date_str)
-            due_labels, due_values = get_releitura_due_chart_data(user_id, date_str)
-            details = get_releitura_details(user_id, date_str)
-            
-            try:
-                unrouted_count = count_releitura_unrouted(user_id, date_str)
-            except Exception:
-                unrouted_count = 0
-            
-            return jsonify({
-                "status": "online",
-                "metrics": metrics,
-                "chart": {"labels": labels, "values": values},
-                "due_chart": {"labels": due_labels, "values": due_values},
-                "details": details,
-                "regions": regions_summary,
-                "unrouted_count": unrouted_count,
-                "from_snapshot": True
-            })
 
-    # Visão do Analista (Individual)
-    if role not in ('gerencia', 'diretoria', 'desenvolvedor'):
+    # "Hoje" local (evita bug UTC vs Brasil)
+    try:
+        from zoneinfo import ZoneInfo  # py3.9+
+        tz = ZoneInfo(os.environ.get('APP_TIMEZONE', 'America/Araguaina'))
+        today_str = datetime.now(tz).date().isoformat()
+    except Exception:
+        # Fallback: -3h (Brasil sem DST)
+        today_str = (datetime.now() - timedelta(hours=3)).date().isoformat()
+
+    if not date_str:
+        date_str = today_str
+
+    is_today = (date_str == today_str)
+    privileged = role in ('gerencia', 'diretoria', 'desenvolvedor')
+
+    # ============================
+    # VISÃO DO ANALISTA (INDIVIDUAL)
+    # ============================
+    if not privileged:
+        snap = None
+        if not is_today and date_str:
+            try:
+                snap = get_releitura_daily_snapshot(user_id, date_str)
+            except Exception:
+                snap = None
+
         labels, values = get_releitura_chart_data(user_id, date_str)
-        metrics = get_releitura_metrics(user_id, date_str)
         due_labels, due_values = get_releitura_due_chart_data(user_id, date_str)
         details = get_releitura_details(user_id, date_str)
+
+        if snap and isinstance(snap, dict) and isinstance(snap.get('metrics'), dict):
+            metrics = snap['metrics']
+            regions_summary = snap.get('regions') or {}
+        else:
+            metrics = get_releitura_metrics(user_id, date_str)
+            base_name = (user.get('base') or '').strip() or 'Minha Base'
+            regions_summary = {
+                base_name: {
+                    "configured": True,
+                    "total": metrics.get('total', 0),
+                    "pendentes": metrics.get('pendentes', 0),
+                    "realizadas": metrics.get('realizadas', 0),
+                    "atrasadas": metrics.get('atrasadas', 0),
+                }
+            }
+
         try:
             unrouted_count = count_releitura_unrouted(user_id, date_str)
         except Exception:
             unrouted_count = 0
 
-        base_name = (user.get('base') or '').strip() or 'Minha Base'
-        regions_summary = {
-            base_name: {
-                "configured": True,
-                "total": metrics.get('total', 0) if isinstance(metrics, dict) else 0,
-                "pendentes": metrics.get('pendentes', 0) if isinstance(metrics, dict) else 0,
-                "realizadas": metrics.get('realizadas', 0) if isinstance(metrics, dict) else 0,
-                "atrasadas": metrics.get('atrasadas', 0) if isinstance(metrics, dict) else 0,
-            }
-        }
-        
-        # Salva snapshot se for consulta de hoje
+        # Snapshot de HOJE (best-effort). Obs.: também é salvo na sincronização.
         if is_today:
             try:
                 snapshot_data = {
                     'metrics': metrics if isinstance(metrics, dict) else {},
-                    'regions': regions_summary
+                    'regions': regions_summary if isinstance(regions_summary, dict) else {},
                 }
                 save_releitura_daily_snapshot(user_id, today_str, snapshot_data)
-            except Exception as e:
-                import traceback
-                print(f"Erro ao salvar snapshot: {e}")
-                traceback.print_exc()
-        
+            except Exception:
+                pass
+
         return jsonify({
             "status": "online",
             "metrics": metrics,
@@ -499,202 +494,207 @@ def status_releitura():
             "due_chart": {"labels": due_labels, "values": due_values},
             "details": details,
             "regions": regions_summary,
-            "unrouted_count": unrouted_count
+            "unrouted_count": unrouted_count,
+            "from_snapshot": bool(snap)
         })
 
-    # Visão Gerencial (Agregada)
+    # =======================================
+    # VISÃO GERENCIAL (AGREGADA POR REGIÃO)
+    # =======================================
     targets = get_releitura_region_targets()
-    print(f"[DEBUG Releitura] Targets configurados: {targets}")
-    
+
     region_user_ids = {}
-    for rname in ('Araxá','Uberaba','Frutal'):
+    for rname in ('Araxá', 'Uberaba', 'Frutal'):
         matricula = targets.get(rname)
         uid = get_user_id_by_matricula(matricula) if matricula else None
-        print(f"[DEBUG Releitura] Região {rname} -> Matrícula: {matricula} -> User ID: {uid}")
-        region_user_ids[rname]=uid
+        region_user_ids[rname] = uid
 
+    # Manager "padrão" para registros não roteados
     manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
     manager_id = get_user_id_by_username(manager_username) or user_id
-    print(f"[DEBUG Releitura] Manager: {manager_username} -> ID: {manager_id}")
 
-    def agg_chart(fn):
-        # Função auxiliar para agregar gráficos de múltiplos usuários
-        combined = {}
-        for rname, uid in region_user_ids.items():
-            if not uid: 
-                continue
-            if region != 'all' and region != rname:
-                continue
-            labs, vals = fn(uid, date_str)
-            for l,v in zip(labs, vals):
-                combined[l]=combined.get(l,0)+v
-        labels_sorted = sorted(combined.keys())
-        return labels_sorted, [combined[k] for k in labels_sorted]
-
-    # Agregar métricas
-    import sqlite3
-    from core.database import DB_PATH
-    conn = sqlite3.connect(str(DB_PATH))
-    cur = conn.cursor()
-
-    selected_ids=[]
-    if region=='all':
-        selected_ids=[uid for uid in region_user_ids.values() if uid]
-    else:
-        selected_ids=[region_user_ids.get(region)] if region_user_ids.get(region) else []
-
-    if not selected_ids:
-        metrics={"total":0,"pendentes":0,"realizadas":0,"atrasadas":0}
-        labels, values = [], []
-        due_labels, due_values = [], []
-        details=[]
-    else:
-        ph=",".join(["?"]*len(selected_ids))
-        today=datetime.now().strftime("%d/%m/%Y")
-        
-        if date_str:
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND DATE(upload_time)=DATE(?)", tuple(selected_ids)+(date_str,))
-            total=cur.fetchone()[0]
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND DATE(upload_time)=DATE(?)", tuple(selected_ids)+(date_str,))
-            pend=cur.fetchone()[0]
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='CONCLUÍDA' AND DATE(upload_time)=DATE(?)", tuple(selected_ids)+(date_str,))
-            real=cur.fetchone()[0]
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND vencimento <> '' AND vencimento < ? AND DATE(upload_time)=DATE(?)", tuple(selected_ids)+(today,date_str))
-            atr=cur.fetchone()[0]
-            metrics={"total":total,"pendentes":pend,"realizadas":real,"atrasadas":atr}
-
-            cur.execute(f"""SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND DATE(upload_time)=DATE(?) ORDER BY
-                CASE
-                    WHEN vencimento IS NULL OR TRIM(vencimento) = '' THEN 1
-                    ELSE 0
-                END,
-                CASE
-                    -- Formato BR: DD/MM/YYYY (ou com hora após)
-                    WHEN instr(vencimento, '/') = 3 THEN substr(vencimento, 7, 4) || '-' || substr(vencimento, 4, 2) || '-' || substr(vencimento, 1, 2)
-                    -- Formato ISO: YYYY-MM-DD (ou com hora após)
-                    WHEN instr(vencimento, '-') = 5 THEN substr(vencimento, 1, 10)
-                    ELSE '9999-12-31'
-                END,
-                reg ASC,
-                upload_time DESC
-            LIMIT 500""", tuple(selected_ids)+(date_str,))
-        else:
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph})", tuple(selected_ids))
-            total=cur.fetchone()[0]
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE'", tuple(selected_ids))
-            pend=cur.fetchone()[0]
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='CONCLUÍDA'", tuple(selected_ids))
-            real=cur.fetchone()[0]
-            cur.execute(f"SELECT COUNT(*) FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' AND vencimento <> '' AND vencimento < ?", tuple(selected_ids)+(today,))
-            atr=cur.fetchone()[0]
-            metrics={"total":total,"pendentes":pend,"realizadas":real,"atrasadas":atr}
-
-            cur.execute(f"""SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade FROM releituras WHERE user_id IN ({ph}) AND status='PENDENTE' ORDER BY
-                CASE
-                    WHEN vencimento IS NULL OR TRIM(vencimento) = '' THEN 1
-                    ELSE 0
-                END,
-                CASE
-                    -- Formato BR: DD/MM/YYYY (ou com hora após)
-                    WHEN instr(vencimento, '/') = 3 THEN substr(vencimento, 7, 4) || '-' || substr(vencimento, 4, 2) || '-' || substr(vencimento, 1, 2)
-                    -- Formato ISO: YYYY-MM-DD (ou com hora após)
-                    WHEN instr(vencimento, '-') = 5 THEN substr(vencimento, 1, 10)
-                    ELSE '9999-12-31'
-                END,
-                reg ASC,
-                upload_time DESC
-            LIMIT 500""", tuple(selected_ids))
-        
-        rows=cur.fetchall()
-        details=[{
-            "status": r[0],
-            "ul": r[1],
-            "inst": r[2],
-            "instalacao": r[2],
-            "endereco": r[3],
-            "razao": r[4],
-            "venc": r[5],
-            "vencimento": r[5],
-            "reg": r[6],
-            "upload_time": r[7],
-            "region": r[8],
-            "route_status": r[9],
-            "route_reason": r[10],
-            "ul_regional": r[11],
-            "localidade": r[12],
-        } for r in rows]
-
-        labels, values = agg_chart(get_releitura_chart_data)
-        due_labels, due_values = agg_chart(get_releitura_due_chart_data)
-
-    conn.close()
-
-    # Resumo por Região (Cards)
-    regions_summary={}
+    # Regiões selecionadas
+    selected = []
     for rname, uid in region_user_ids.items():
         if not uid:
-            print(f"[DEBUG Releitura] Região {rname} não configurada (uid=None)")
-            regions_summary[rname]={"configured":False,"total":0,"pendentes":0,"realizadas":0,"atrasadas":0}
             continue
-        
-        print(f"[DEBUG Releitura] Calculando métricas para {rname} (uid={uid})")
-        cur2 = sqlite3.connect(str(DB_PATH)).cursor()
-        
-        if date_str:
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND DATE(upload_time)=DATE(?)", (uid, date_str))
-            t=cur2.fetchone()[0]
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND DATE(upload_time)=DATE(?)", (uid, date_str))
-            p=cur2.fetchone()[0]
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='CONCLUÍDA' AND DATE(upload_time)=DATE(?)", (uid, date_str))
-            rd=cur2.fetchone()[0]
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND vencimento <> '' AND vencimento < ? AND DATE(upload_time)=DATE(?)", (uid, today, date_str))
-            a=cur2.fetchone()[0]
+        if region != 'all' and region != rname:
+            continue
+        selected.append((rname, uid))
+
+    # Agrega gráfico por hora
+    def agg_hourly_chart():
+        labels_ref = None
+        totals = None
+        for _r, uid in selected:
+            labs, vals = get_releitura_chart_data(uid, date_str)
+            if labels_ref is None:
+                labels_ref = list(labs)
+                totals = [0] * len(vals)
+            for i, v in enumerate(vals):
+                if totals is not None and i < len(totals):
+                    totals[i] += int(v or 0)
+        if labels_ref is None:
+            labels_ref = [f"{h:02d}h" for h in range(5, 22)]
+            totals = [0] * len(labels_ref)
+        return labels_ref, totals
+
+    # Agrega gráfico de vencimentos
+    def agg_due_chart():
+        labels_ref = None
+        combined = {}
+        for _r, uid in selected:
+            labs, vals = get_releitura_due_chart_data(uid, date_str)
+            if labels_ref is None:
+                labels_ref = list(labs)
+            for l, v in zip(labs, vals):
+                combined[l] = combined.get(l, 0) + int(v or 0)
+        if labels_ref is None:
+            labels_ref = ['--/--'] * 7
+        values_ref = [combined.get(l, 0) for l in labels_ref]
+        return labels_ref, values_ref
+
+    labels, values = agg_hourly_chart()
+    due_labels, due_values = agg_due_chart()
+
+    # Resumo por região com snapshot (se existir)
+    regions_summary = {}
+    total_sum = pend_sum = real_sum = atr_sum = 0
+
+    for rname, uid in region_user_ids.items():
+        if not uid:
+            regions_summary[rname] = {"configured": False, "total": 0, "pendentes": 0, "realizadas": 0, "atrasadas": 0}
+            continue
+
+        snap = None
+        if date_str and not is_today:
+            try:
+                snap = get_releitura_daily_snapshot(uid, date_str)
+            except Exception:
+                snap = None
+
+        if snap and isinstance(snap, dict) and isinstance(snap.get('metrics'), dict):
+            m = snap['metrics']
         else:
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=?", (uid,))
-            t=cur2.fetchone()[0]
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE'", (uid,))
-            p=cur2.fetchone()[0]
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='CONCLUÍDA'", (uid,))
-            rd=cur2.fetchone()[0]
-            cur2.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND status='PENDENTE' AND vencimento <> '' AND vencimento < ?", (uid, today))
-            a=cur2.fetchone()[0]
-        
-        cur2.connection.close()
-        regions_summary[rname]={"configured":True,"total":t,"pendentes":p,"realizadas":rd,"atrasadas":a}
+            m = get_releitura_metrics(uid, date_str)
 
-    conn = sqlite3.connect(str(DB_PATH))
-    cur = conn.cursor()
-    if date_str:
-        cur.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND route_status='UNROUTED' AND DATE(upload_time)=DATE(?)", (manager_id, date_str))
-    else:
-        cur.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND route_status='UNROUTED'", (manager_id,))
-    unrouted_count=cur.fetchone()[0]
-    conn.close()
+        r_total = int(m.get('total', 0) or 0)
+        r_pend = int(m.get('pendentes', 0) or 0)
+        r_real = int(m.get('realizadas', 0) or 0)
+        r_atr = int(m.get('atrasadas', 0) or 0)
 
-    # Salva snapshot se for consulta de hoje
+        regions_summary[rname] = {
+            "configured": True,
+            "total": r_total,
+            "pendentes": r_pend,
+            "realizadas": r_real,
+            "atrasadas": r_atr,
+        }
+
+        if region == 'all' or region == rname:
+            total_sum += r_total
+            pend_sum += r_pend
+            real_sum += r_real
+            atr_sum += r_atr
+
+    metrics = {"total": total_sum, "pendentes": pend_sum, "realizadas": real_sum, "atrasadas": atr_sum}
+
+    # Detalhes (tabela) — best-effort
+    details = []
+    try:
+        if selected:
+            ids = [uid for _r, uid in selected]
+            ph = ",".join(["?"] * len(ids))
+            conn = sqlite3.connect(str(DB_PATH))
+            cur = conn.cursor()
+            if date_str:
+                cur.execute(f"""
+                    SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade
+                    FROM releituras
+                    WHERE user_id IN ({ph}) AND status='PENDENTE' AND DATE(upload_time)=DATE(?)
+                    ORDER BY
+                        CASE WHEN vencimento IS NULL OR TRIM(vencimento) = '' THEN 1 ELSE 0 END,
+                        CASE
+                            WHEN instr(vencimento, '/') = 3 THEN substr(vencimento, 7, 4) || '-' || substr(vencimento, 4, 2) || '-' || substr(vencimento, 1, 2)
+                            WHEN instr(vencimento, '-') = 5 THEN substr(vencimento, 1, 10)
+                            ELSE '9999-12-31'
+                        END,
+                        reg ASC,
+                        upload_time DESC
+                    LIMIT 500
+                """, tuple(ids) + (date_str,))
+            else:
+                cur.execute(f"""
+                    SELECT status, ul, instalacao, endereco, razao, vencimento, reg, upload_time, region, route_status, route_reason, ul_regional, localidade
+                    FROM releituras
+                    WHERE user_id IN ({ph}) AND status='PENDENTE'
+                    ORDER BY
+                        CASE WHEN vencimento IS NULL OR TRIM(vencimento) = '' THEN 1 ELSE 0 END,
+                        CASE
+                            WHEN instr(vencimento, '/') = 3 THEN substr(vencimento, 7, 4) || '-' || substr(vencimento, 4, 2) || '-' || substr(vencimento, 1, 2)
+                            WHEN instr(vencimento, '-') = 5 THEN substr(vencimento, 1, 10)
+                            ELSE '9999-12-31'
+                        END,
+                        reg ASC,
+                        upload_time DESC
+                    LIMIT 500
+                """, tuple(ids))
+
+            rows = cur.fetchall()
+            conn.close()
+            details = [{
+                "status": r[0],
+                "ul": r[1],
+                "inst": r[2],
+                "instalacao": r[2],
+                "endereco": r[3],
+                "razao": r[4],
+                "venc": r[5],
+                "vencimento": r[5],
+                "reg": r[6],
+                "upload_time": r[7],
+                "region": r[8],
+                "route_status": r[9],
+                "route_reason": r[10],
+                "ul_regional": r[11],
+                "localidade": r[12],
+            } for r in rows]
+    except Exception:
+        details = []
+
+    # Não roteados (contagem) — mantém regra existente (manager)
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        cur = conn.cursor()
+        if date_str:
+            cur.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND route_status='UNROUTED' AND DATE(upload_time)=DATE(?)", (manager_id, date_str))
+        else:
+            cur.execute("SELECT COUNT(*) FROM releituras WHERE user_id=? AND route_status='UNROUTED'", (manager_id,))
+        unrouted_count = int(cur.fetchone()[0] or 0)
+        conn.close()
+    except Exception:
+        unrouted_count = 0
+
+    # Snapshot gerencial de HOJE (best-effort)
     if is_today:
         try:
             snapshot_data = {
                 'metrics': metrics if isinstance(metrics, dict) else {},
-                'regions': regions_summary
+                'regions': regions_summary if isinstance(regions_summary, dict) else {},
             }
             save_releitura_daily_snapshot(user_id, today_str, snapshot_data)
-        except Exception as e:
-            import traceback
-            print(f"Erro ao salvar snapshot: {e}")
-            traceback.print_exc()
-
-    print(f"[DEBUG Releitura] Resumo final das regiões: {regions_summary}")
-    print(f"[DEBUG Releitura] Não roteados (manager): {unrouted_count}")
+        except Exception:
+            pass
 
     return jsonify({
-        "status":"online",
-        "metrics":metrics,
-        "chart":{"labels":labels,"values":values},
-        "due_chart":{"labels":due_labels,"values":due_values},
-        "details":details,
-        "regions":regions_summary,
-        "unrouted_count":unrouted_count
+        "status": "online",
+        "metrics": metrics,
+        "chart": {"labels": labels, "values": values},
+        "due_chart": {"labels": due_labels, "values": due_values},
+        "details": details,
+        "regions": regions_summary,
+        "unrouted_count": unrouted_count,
+        "from_snapshot": (not is_today)
     })
 
 

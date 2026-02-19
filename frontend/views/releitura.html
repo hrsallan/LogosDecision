@@ -1288,7 +1288,14 @@
         );
 
         // Seleção de data (ISO)
-        let selectedDateISO = new Date().toISOString().slice(0, 10);
+        // IMPORTANTE: toISOString() usa UTC e pode adiantar/atrasar o dia (ex.: Brasil).
+        // Esta função gera YYYY-MM-DD na data LOCAL do navegador.
+        function localISODate(d = new Date()) {
+            const tzOffsetMs = d.getTimezoneOffset() * 60000;
+            return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 10);
+        }
+
+        let selectedDateISO = localISODate();
 
         // ==================== LÓGICA DO CALENDÁRIO ====================
         let currentCalendarDate = new Date();
@@ -1340,7 +1347,7 @@
         // Limpar seleção
         clearDateBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            selectedDateISO = new Date().toISOString().slice(0, 10);
+            selectedDateISO = localISODate();
             selectedDateText.textContent = 'Hoje';
             currentCalendarDate = new Date();
             renderCalendar();
@@ -1357,7 +1364,7 @@
         todayBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const today = new Date();
-            selectedDateISO = today.toISOString().slice(0, 10);
+            selectedDateISO = localISODate(today);
             selectedDateText.textContent = 'Hoje';
             currentCalendarDate = new Date(today);
             renderCalendar();
@@ -1391,12 +1398,13 @@
             // Dias do mês anterior
             for (let i = firstDayWeek - 1; i >= 0; i--) {
                 const day = prevLastDate - i;
-                daysHTML += `<div class="calendar-day other-month" data-date="${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}">${day}</div>`;
+                const prevYear = prevLastDay.getFullYear();
+                const prevMonth = String(prevLastDay.getMonth() + 1).padStart(2, '0');
+                daysHTML += `<div class="calendar-day other-month" data-date="${prevYear}-${prevMonth}-${String(day).padStart(2, '0')}">${day}</div>`;
             }
-            
             // Dias do mês atual
             const today = new Date();
-            const todayStr = today.toISOString().slice(0, 10);
+            const todayStr = localISODate(today);
             
             for (let day = 1; day <= lastDateOfMonth; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;

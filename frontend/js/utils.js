@@ -63,6 +63,19 @@ window.authFetch = function(url, options = {}) {
         finalUrl = window.VIGILACORE_API_BASE.replace(/\/$/, '') + path;
     }
 
+    // ✅ NGROK (FREE TIER): remove o "browser warning" em chamadas programáticas (fetch/XHR)
+    // - Não remove o aviso quando o usuário abre o link diretamente no navegador.
+    // - É seguro enviar esse header só quando o destino é ngrok.
+    try {
+        const host = new URL(finalUrl).hostname;
+        const isNgrok = /ngrok(-free)?\.dev$/i.test(host) || /ngrok\.io$/i.test(host);
+        if (isNgrok) {
+            options.headers['ngrok-skip-browser-warning'] = options.headers['ngrok-skip-browser-warning'] || '1';
+        }
+    } catch (_) {
+        // Se a URL não for parseável por algum motivo, apenas ignora.
+    }
+
     return fetch(finalUrl, options);
 };
 
@@ -78,7 +91,14 @@ window.authFetch = function(url, options = {}) {
 window.pingFetch = function(path = '/api/ping') {
     const base = window.VIGILACORE_API_BASE.replace(/\/$/, '');
     const p = path.startsWith('/') ? path : ('/' + path);
-    return fetch(base + p, { method: 'GET', cache: 'no-store' });
+    const url = base + p;
+    const headers = {};
+    try {
+        const host = new URL(url).hostname;
+        const isNgrok = /ngrok(-free)?\.dev$/i.test(host) || /ngrok\.io$/i.test(host);
+        if (isNgrok) headers['ngrok-skip-browser-warning'] = '1';
+    } catch (_) {}
+    return fetch(url, { method: 'GET', cache: 'no-store', headers });
 };
 
 // Contador de falhas consecutivas de ping para evitar "piscar" o status em instabilidades breves

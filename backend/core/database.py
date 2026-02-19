@@ -995,6 +995,51 @@ def save_releitura_data(details, file_hash, user_id):
     pendentes = int(cursor.fetchone()[0] or 0)
     realizadas = max(total - pendentes, 0)
 
+    # Calcula atrasadas (com base na data local do snapshot)
+    try:
+        snap_ref = _pas_local_today().date()
+    except Exception:
+        snap_ref = (datetime.now() - timedelta(hours=3)).date()
+
+    cursor.execute("SELECT vencimento FROM releituras WHERE user_id = ? AND status = 'PENDENTE'", (user_id,))
+    vrows = cursor.fetchall()
+    atrasadas = 0
+    for (venc,) in vrows:
+        v = (venc or '').strip()
+        try:
+            d = datetime.strptime(v, '%d/%m/%Y').date()
+            if d < snap_ref:
+                atrasadas += 1
+        except Exception:
+            pass
+
+    # Salva snapshot diário (para histórico por data) no momento da sincronização
+    try:
+        snapshot_date = snap_ref.isoformat()
+        u = get_user_by_id(int(user_id)) or {}
+        base_name = (u.get('base') or '').strip() or 'Minha Base'
+        snapshot_payload = {
+            'metrics': {
+                'total': int(total),
+                'pendentes': int(pendentes),
+                'realizadas': int(realizadas),
+                'atrasadas': int(atrasadas),
+            },
+            'regions': {
+                base_name: {
+                    'configured': True,
+                    'total': int(total),
+                    'pendentes': int(pendentes),
+                    'realizadas': int(realizadas),
+                    'atrasadas': int(atrasadas),
+                }
+            }
+        }
+        save_releitura_daily_snapshot(int(user_id), snapshot_date, snapshot_payload)
+    except Exception:
+        # Snapshot é best-effort — não deve quebrar a sincronização
+        pass
+
     conn.close()
     _save_grafico_snapshot('releitura', total, pendentes, realizadas, file_hash, now, user_id)
     return
@@ -1179,8 +1224,14 @@ def get_releitura_metrics(user_id, date_str: str | None = None):
     pendentes = len(rows)
     realizadas = max(total - pendentes, 0)
 
-    ref = datetime.now() - timedelta(hours=3)
-    today = ref.date()
+    # Referência do 'hoje' deve seguir a data selecionada quando houver filtro
+    try:
+        ref_dt = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.now()
+    except Exception:
+        ref_dt = datetime.now()
+
+    ref_dt = ref_dt - timedelta(hours=3)
+    today = ref_dt.date()
 
     atrasadas = 0
     for (venc,) in rows:
