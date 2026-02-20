@@ -7,7 +7,6 @@ baseadas nos dados armazenados no banco de dados.
 
 import sqlite3
 from datetime import datetime, timedelta
-from collections import defaultdict
 
 # Caminho absoluto para o banco de dados
 from core.config import DB_PATH

@@ -94,7 +94,7 @@ def authenticate_user(username: str, password: str) -> Optional[Dict]:
         if ok:
             try:
                 # Upgrade automático para bcrypt (segurança)
-                print(f"🔒 Atualizando senha do usuário {username_db} para bcrypt...")
+                print(f"[SECURITY] Atualizando senha do usuário {username_db} para bcrypt...")
                 conn2 = sqlite3.connect(str(DB_PATH))
                 cur2 = conn2.cursor()
                 cur2.execute('UPDATE users SET password = ? WHERE id = ?', (hash_password(password), user_id))

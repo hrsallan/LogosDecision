@@ -57,6 +57,9 @@ def _clear_download_dir(download_dir: Path) -> None:
             pass
 
 
+
+
+
 def switch_to_main_tab(driver):
     """Garante o foco do WebDriver na aba principal do navegador."""
     driver.switch_to.window(driver.window_handles[0])
@@ -215,7 +218,6 @@ def download_releitura_excel(
         except:
             pass
 
-
 def download_porteira_excel(
     portal_user: str | None = None,
     portal_pass: str | None = None,
@@ -357,5 +359,4 @@ def download_porteira_excel(
 
 if __name__ == "__main__":
     # Teste de execução direta
-    path = download_releitura_excel()
-    print(f"Relatório coletado em: {path}")
+    print("Portal scraper rodando.")

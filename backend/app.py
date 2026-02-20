@@ -200,7 +200,7 @@ def list_all_user_ids() -> list[int]:
         conn.close()
         return ids
     except Exception as e:
-        print(f"⚠️  Erro ao listar usuários: {e}")
+        print(f"[WARN] Erro ao listar usuários: {e}")
         return []
 
 # -------------------------------------------------------
@@ -849,8 +849,10 @@ def sync_releitura():
     if role != 'desenvolvedor':
         return jsonify({"success": False, "error": "Acesso negado"}), 403
 
+    # BUG FIX: manager_username definido fora do try para evitar NameError no except → HTTP 500
+    manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
+
     try:
-        manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
         manager_id = get_user_id_by_username(manager_username) or int(user['id'])
 
         creds = get_portal_credentials(manager_id)
@@ -866,7 +868,7 @@ def sync_releitura():
                 from core.email_alerts import notify_scraper_error
                 notify_scraper_error(
                     where="API/sync/releitura",
-                    err=RuntimeError("Relatório não foi baixado (releitura)") ,
+                    err=RuntimeError("Relatório não foi baixado (releitura)"),
                     extra={"manager_username": manager_username, "downloaded_path": downloaded_path},
                     traceback_text="(sem traceback: download não gerou arquivo)",
                 )
@@ -972,8 +974,10 @@ def sync_porteira():
 
     user_id = int(user['id'])
 
+    # BUG FIX: manager_username definido fora do try para evitar NameError no except → HTTP 500
+    manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
+
     try:
-        manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
         manager_id = get_user_id_by_username(manager_username) or None
         creds = get_portal_credentials(manager_id) if manager_id else None
         if not creds:
@@ -1008,10 +1012,14 @@ def sync_porteira():
     if details is None:
         return jsonify({"success": False, "error": "Falha ao processar o Excel baixado (porteira)."}), 400
 
-    if is_file_duplicate(file_hash, 'porteira', user_id):
-        return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado anteriormente."})
+    # BUG FIX: verificar duplicidade individualmente, não só pelo user_id do dev logado
+    # (usar user_id do dev como proxy fazia retornar DUPLICADO para todos os outros usuários)
+    all_uids = list_all_user_ids()
+    any_new = any(not is_file_duplicate(file_hash, 'porteira', _uid) for _uid in all_uids)
+    if not any_new:
+        return jsonify({"success": False, "error": "DUPLICADO", "message": "Este relatório já foi processado para todos os usuários."})
 
-    for _uid in list_all_user_ids():
+    for _uid in all_uids:
         if not is_file_duplicate(file_hash, 'porteira', _uid):
             save_porteira_table_data(details, _uid, file_hash=file_hash)
             save_file_history('porteira', len(details), file_hash, _uid)
@@ -1353,7 +1361,7 @@ def porteira_stats_by_region():
         stats = get_porteira_stats_by_region(user['id'], ciclo=ciclo, regiao=regiao)
         return jsonify({'success': True, 'data': stats})
     except Exception as e:
-        print(f"Erro ao buscar estatísticas por região: {e}")
+        print(f"[ERROR] Erro ao buscar estatísticas por região: {e}")
         return jsonify({'success': False, 'error': 'Erro ao processar estatísticas por região'}), 500
 
 
@@ -1380,7 +1388,7 @@ def porteira_listar_regioes():
 
         return jsonify({'success': True, 'regioes': regioes})
     except Exception as e:
-        print(f"Erro ao listar regiões: {e}")
+        print(f"[ERROR] Erro ao listar regiões: {e}")
         return jsonify({'success': False, 'error': 'Erro ao buscar regiões'}), 500
 
 
@@ -1480,7 +1488,7 @@ with app.app_context():
     try:
         init_scheduler()
     except Exception as e:
-        print(f"⚠️ Scheduler não iniciado: {e}")
+        print(f"[WARN] Scheduler não iniciado: {e}")
 
 
 # -------------------------------

@@ -259,26 +259,27 @@ class AutoScheduler:
             if details is None or not details:
                 logger.warning("⚠️ Nenhum dado extraído do Excel de Porteira")
                 return
-            
-            # Verificação de duplicidade
-            if is_file_duplicate(file_hash, 'porteira', save_user_id):
-                logger.info("ℹ️ Relatório já processado anteriormente (ignorado)")
-                return
-            
-            # Distribuição para todos os usuários (para que cada um veja sua base)
+
+            # BUG FIX: verificar duplicidade por usuário individual, não apenas save_user_id
             try:
-                import sqlite3
+                import sqlite3 as _sqlite3
                 from core.database import DB_PATH as _DB
-                conn = sqlite3.connect(str(_DB))
-                cur = conn.cursor()
-                cur.execute('SELECT id FROM users')
-                all_ids = [int(r[0]) for r in cur.fetchall() if r and r[0] is not None]
-                conn.close()
+                _conn = _sqlite3.connect(str(_DB))
+                _cur = _conn.cursor()
+                _cur.execute('SELECT id FROM users')
+                all_ids = [int(r[0]) for r in _cur.fetchall() if r and r[0] is not None]
+                _conn.close()
             except Exception:
                 all_ids = [int(save_user_id)]
 
+            any_new = any(not is_file_duplicate(file_hash, 'porteira', uid) for uid in all_ids)
+            if not any_new:
+                logger.info("ℹ️ Relatório já processado para todos os usuários (ignorado)")
+                return
+
             for _uid in all_ids:
-                save_porteira_table_data(details, _uid, file_hash=file_hash)
+                if not is_file_duplicate(file_hash, 'porteira', _uid):
+                    save_porteira_table_data(details, _uid, file_hash=file_hash)
 
             # Salva histórico apenas para o usuário alvo/gerente
             save_file_history('porteira', len(details), file_hash, save_user_id)
@@ -418,7 +419,7 @@ def init_scheduler():
 
 if __name__ == "__main__":
     # Teste isolado do módulo
-    print("🧪 Testando Scheduler...")
+    print("[TEST] Testando Scheduler...")
     scheduler = get_scheduler()
     print(f"Status: {scheduler.get_status()}")
     
@@ -431,9 +432,9 @@ if __name__ == "__main__":
                 time.sleep(60)
         except KeyboardInterrupt:
             scheduler.stop()
-            print("\n👋 Encerrado.")
+            print("\n[INFO] Encerrado.")
     else:
-        print("⚠️ Habilite no .env para testar.")
+        print("[WARN] Habilite no .env para testar.")
 
 # -------------------------------
 # Tarefa Isolada: Releitura
@@ -453,17 +454,17 @@ def sync_releitura_task():
         manager_username = (os.environ.get("RELEITURA_MANAGER_USERNAME") or "GRTRI").strip()
         manager_id = get_user_id_by_username(manager_username)
         if not manager_id:
-            print(f"⚠️ [scheduler] Gerente '{manager_username}' não encontrado. Abortando.")
+            print(f"[WARN] [scheduler] Gerente '{manager_username}' não encontrado. Abortando.")
             return
 
         creds = get_portal_credentials(manager_id)
         if not creds:
-            print(f"⚠️ [scheduler] Credenciais não configuradas para '{manager_username}'.")
+            print(f"[WARN] [scheduler] Credenciais não configuradas para '{manager_username}'.")
             return
 
         downloaded_path = download_releitura_excel(portal_user=creds['portal_user'], portal_pass=creds['portal_password'])
         if not downloaded_path or not os.path.exists(downloaded_path):
-            print("❌ [scheduler] Download falhou.")
+            print("[ERROR] [scheduler] Download falhou.")
             try:
                 from core.email_alerts import notify_scraper_error
                 notify_scraper_error(
@@ -515,9 +516,9 @@ def sync_releitura_task():
         if unrouted_list:
             save_releitura_data(unrouted_list, file_hash, manager_id)
 
-        print("✅ [scheduler] Releitura sincronizada com sucesso.")
+        print("[SUCCESS] [scheduler] Releitura sincronizada com sucesso.")
     except Exception as e:
-        print(f"❌ [scheduler] Erro no sync de Releitura: {e}")
+        print(f"[ERROR] [scheduler] Erro no sync de Releitura: {e}")
         try:
             from core.email_alerts import notify_scraper_error
             notify_scraper_error(where="Scheduler/Releitura", err=e)

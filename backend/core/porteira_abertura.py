@@ -13,6 +13,26 @@ from typing import Dict, Tuple, Optional
 import threading
 
 import pandas as pd
+import pandera as pa
+import html
+
+# ==============================================================================
+# SEGURANÇA E VALIDAÇÃO DE DADOS (PANDERA & XSS)
+# ==============================================================================
+
+def sanitize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Escapa caracteres HTML de colunas de texto para prevenir XSS."""
+    str_cols = df.select_dtypes(include=['object', 'string']).columns
+    for col in str_cols:
+        df[col] = df[col].astype(str).apply(
+            lambda x: html.escape(x) if x and x != 'nan' and x != 'None' else x
+        ).replace('nan', None).replace('None', None)
+    return df
+
+# Schema de validação para Calendário de Leitura
+schema_calendario = pa.DataFrameSchema({
+    "Razao": pa.Column(int, pa.Check.in_range(1, 18), nullable=False),
+})
 
 
 # Cache simples para evitar reabrir o Excel a cada requisição

@@ -28,6 +28,35 @@ load_dotenv()
 
 # Caminho absoluto para o banco de dados
 from core.config import DB_PATH
+from sqlalchemy import create_engine
+import  urllib.parse
+
+def get_secure_engine():
+    """
+    Retorna uma engine do SQLAlchemy configurada com segurança.
+    Prepara o terreno para migração para PostgreSQL lendo de variáveis de ambiente,
+    mas fornece suporte total ao SQLite atual de forma transparente.
+    """
+    db_type = os.environ.get("DB_TYPE", "sqlite")
+    
+    if db_type == "postgresql":
+        db_user = os.environ.get("DB_USER")
+        db_password = os.environ.get("DB_PASSWORD")
+        db_host = os.environ.get("DB_HOST", "localhost")
+        db_port = os.environ.get("DB_PORT", "5432")
+        db_name = os.environ.get("DB_NAME")
+        
+        if not all([db_user, db_password, db_host, db_name]):
+            raise ValueError("Credenciais de banco de dados incompletas no ambiente!")
+            
+        password_escaped = urllib.parse.quote_plus(db_password)
+        engine_url = f"postgresql://{db_user}:{password_escaped}@{db_host}:{db_port}/{db_name}?sslmode=require"
+    else:
+        # Fallback para o SQLite atual
+        engine_url = f"sqlite:///{DB_PATH}"
+        
+    return create_engine(engine_url)
+
 # --- Configurações de Ciclos (Porteira) ---
 # Regras operacionais para filtragem de ciclos da CEMIG:
 #   • Razões urbanas (01..88) são incluídas em TODOS os ciclos.
@@ -534,7 +563,7 @@ def init_db():
                 'INSERT INTO users (id, username, password, role, nome, base, matricula) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (1, 'mgsetel', hashed_pw, 'diretoria', 'Administrador', 'Diretoria', None)
             )
-            print("✅ Usuário padrão 'mgsetel' criado com sucesso.")
+            print("[SUCCESS] Usuário padrão 'mgsetel' criado com sucesso.")
         else:
             # Garantir privilégios
             cursor.execute("SELECT id, role FROM users WHERE username = 'mgsetel'")
@@ -1535,9 +1564,9 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
             role = role.replace(' ', '')
             user_matricula = (str(r[1]).strip() if r[1] is not None else None) or None
             user_base = (str(r[2]).strip() if r[2] is not None else None) or None
-            print(f"📊 [Porteira] Usuário {user_id}: role={role}, matricula={user_matricula}, base={user_base}")
+            print(f"[INFO] [Porteira] Usuário {user_id}: role={role}, matricula={user_matricula}, base={user_base}")
     except Exception as e:
-        print(f"⚠️  [Porteira] Erro ao buscar dados do usuário {user_id}: {e}")
+        print(f"[WARN] [Porteira] Erro ao buscar dados do usuário {user_id}: {e}")
         role = ""
         user_matricula = None
 
@@ -1556,14 +1585,14 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
 
     if not user_matricula:
         user_matricula = norm_base_to_matricula(user_base)
-        print(f"📊 [Porteira] Matrícula mapeada da base: {user_matricula}")
+        print(f"[INFO] [Porteira] Matrícula mapeada da base: {user_matricula}")
 
     # Permissões de visualização
     can_see_all = role in ("gerencia", "diretoria", "desenvolvedor")
-    print(f"📊 [Porteira] Usuário pode ver tudo: {can_see_all}")
+    print(f"[INFO] [Porteira] Usuário pode ver tudo: {can_see_all}")
 
     if (not can_see_all) and (not user_matricula):
-        print(f"⚠️  Usuário {user_id} (role={role}) sem matrícula/base definida. Protegendo dados.")
+        print(f"[WARN] Usuário {user_id} (role={role}) sem matrícula/base definida. Protegendo dados.")
         cursor.execute('DELETE FROM resultados_leitura WHERE user_id = ?', (int(user_id),))
         conn.commit()
         conn.close()
@@ -1583,6 +1612,15 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
         return ""
 
     cursor.execute('DELETE FROM resultados_leitura WHERE user_id = ?', (int(user_id),))
+
+    # BUG FIX: verificação de coluna movida para FORA do loop (era executada para cada linha → N queries desnecessárias)
+    try:
+        cursor.execute("PRAGMA table_info(resultados_leitura)")
+        cols = {row[1] for row in cursor.fetchall()}
+        if "Impedimentos" not in cols:
+            cursor.execute("ALTER TABLE resultados_leitura ADD COLUMN Impedimentos REAL DEFAULT 0")
+    except Exception:
+        pass
 
     inserted = 0
     skipped_by_region = 0
@@ -1621,15 +1659,7 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
             continue
 
         ul = str(data.get('UL') or '').strip()
-        
-        try:
-            cursor.execute("PRAGMA table_info(resultados_leitura)")
-            cols = {row[1] for row in cursor.fetchall()}
-            if "Impedimentos" not in cols:
-                cursor.execute("ALTER TABLE resultados_leitura ADD COLUMN Impedimentos REAL DEFAULT 0")
-        except Exception:
-            pass
-        
+
         cursor.execute('''
             INSERT INTO resultados_leitura
             (user_id, Conjunto_Contrato, UL, Regiao, Localidade, Matricula, Tipo_UL, Razao,
@@ -1675,7 +1705,7 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
         # Snapshot diário de atrasos (primeiro relatório do dia)
         refresh_porteira_atrasos_daily_snapshot(conn, int(user_id), file_hash=file_hash)
     except Exception as e:
-        print(f"⚠️  [Porteira] Falha ao atualizar Abertura de Porteira (histórico mensal): {e}")
+        print(f"[WARN] [Porteira] Falha ao atualizar Abertura de Porteira (histórico mensal): {e}")
 
     conn.commit()
     conn.close()
@@ -1683,10 +1713,10 @@ def save_porteira_table_data(data_list, user_id, file_hash: str | None = None):
     now = datetime.now().isoformat()
     _save_grafico_snapshot('porteira', total, pendentes, realizadas, None, now, int(user_id))
 
-    print(f"📊 [Porteira] Resumo do salvamento:")
-    print(f"   ✅ Linhas inseridas: {inserted}")
-    print(f"   ⚠️  Puladas por região diferente: {skipped_by_region}")
-    print(f"   ⚠️  Puladas sem matrícula identificada: {skipped_no_matricula}")
+    print(f"[STATS] [Porteira] Resumo do salvamento:")
+    print(f"   [SUCCESS] Linhas inseridas: {inserted}")
+    print(f"   [WARN] Puladas por região diferente: {skipped_by_region}")
+    print(f"   [WARN] Puladas sem matrícula identificada: {skipped_no_matricula}")
 
 
 def get_porteira_chart_summary(user_id, ciclo: str | None = None, regiao: str | None = None):
@@ -2307,7 +2337,7 @@ def refresh_porteira_abertura_snapshots(
             file_hash=file_hash,
         )
     except Exception as e:
-        print(f"⚠️  [Porteira] Falha ao atualizar Atrasos Congelados (mensal): {e}")
+        print(f"[WARN] [Porteira] Falha ao atualizar Atrasos Congelados (mensal): {e}")
 
 def get_porteira_abertura_snapshot_latest(
     user_id: int,
@@ -2574,7 +2604,7 @@ def reset_porteira_database(user_id):
     conn.commit()
     conn.close()
 
-    print(f"✅ Dados da Porteira do usuário {user_id} zerados com sucesso!")
+    print(f"[SUCCESS] Dados da Porteira do usuário {user_id} zerados com sucesso!")
 
 
 def save_file_history(module, count, file_hash, user_id):
@@ -2600,14 +2630,8 @@ def save_file_history(module, count, file_hash, user_id):
 # Utilitários de Roteamento e Reset Global
 # -------------------------------
 
-def get_user_id_by_username(username: str):
-    """Busca ID por username."""
-    conn = sqlite3.connect(str(DB_PATH))
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM users WHERE username = ?", (username,))
-    row = cur.fetchone()
-    conn.close()
-    return int(row[0]) if row else None
+# BUG FIX: definição duplicada de get_user_id_by_username removida.
+# A versão correta com UPPER() (case-insensitive) já está definida acima (~linha 830).
 
 
 def get_user_id_by_matricula(matricula: str):

@@ -15,12 +15,56 @@ Principais Funções:
 
 import os
 import pandas as pd
+import pandera as pa
+from pandera.typing import Series
+import html
 import re
 import hashlib
 import tempfile
 import subprocess
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
+
+# ==============================================================================
+# SEGURANÇA E VALIDAÇÃO DE DADOS (PANDERA & XSS)
+# ==============================================================================
+
+def sanitize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Escapa caracteres HTML de colunas de texto para prevenir XSS."""
+    str_cols = df.select_dtypes(include=['object', 'string']).columns
+    for col in str_cols:
+        df[col] = df[col].astype(str).apply(
+            lambda x: html.escape(x) if x and x != 'nan' and x != 'None' else x
+        ).replace('nan', None).replace('None', None)
+    return df
+
+# Schema de validação para Releituras
+schema_releituras = pa.DataFrameSchema({
+    "ul": pa.Column(str, pa.Check.str_matches(r"^\d{8}$"), nullable=False),
+    "inst": pa.Column(str, pa.Check.str_matches(r"^\d{10}$"), nullable=False),
+    "venc": pa.Column(str, pa.Check.str_matches(r"^\d{2}/\d{2}/\d{4}$"), nullable=False),
+    "reg": pa.Column(str, nullable=False),
+    "endereco": pa.Column(str, nullable=True)
+})
+
+# Schema de validação para Porteira (Resultados)
+schema_porteira = pa.DataFrameSchema({
+    "Conjunto_Contrato": pa.Column(str, nullable=False),
+    "UL": pa.Column(str, pa.Check.str_matches(r"^\d{8}$"), nullable=False),
+    "UL_Regional": pa.Column(str, pa.Check.str_matches(r"^\d{4}$"), nullable=False),
+    "Localidade_UL": pa.Column(str, pa.Check.str_matches(r"^\d{2}$"), nullable=False),
+    "Nome_Localidade": pa.Column(str, nullable=False),
+    "Regiao": pa.Column(str, nullable=False),
+    "Supervisao": pa.Column(str, nullable=False),
+    "Razao": pa.Column(str, pa.Check.str_matches(r"^\d{2}$"), nullable=False),
+    "Total_Leituras": pa.Column(float, pa.Check.ge(0.0)),
+    "Leituras_Nao_Executadas": pa.Column(float, pa.Check.ge(0.0)),
+    "Porcentagem_Nao_Executada": pa.Column(float, pa.Check.ge(0.0)),
+    "Releituras_Totais": pa.Column(float, pa.Check.ge(0.0)),
+    "Releituras_Nao_Executadas": pa.Column(float, pa.Check.ge(0.0)),
+    "Impedimentos": pa.Column(float, pa.Check.ge(0.0))
+})
+
 
 def get_file_hash(file_path):
     """
@@ -58,7 +102,8 @@ def _to_xlsx_if_needed(path_str: str) -> str:
 
     # Tentar ler via xlrd primeiro (biblioteca Python para .xls antigos)
     try:
-        import xlrd  # type: ignore
+        import xlrd
+        xlrd.open_workbook(path_str)
         return path_str
     except Exception:
         pass
@@ -138,14 +183,14 @@ def deep_scan_excel(file_path):
     try:
         # Validar tipo de relatório para evitar processamento incorreto
         report_type, msg = validate_report_type(file_path)
-        print(f"🔍 {msg}")
+        print(f"[INFO] {msg}")
         
         if report_type == "PORTEIRA":
-            print("⚠️ AVISO: Este arquivo parece ser do tipo PORTEIRA, não RELEITURAS!")
+            print("[WARN] AVISO: Este arquivo parece ser do tipo PORTEIRA, não RELEITURAS!")
             print("   Use a função deep_scan_porteira_excel() em vez desta.")
             return None
         elif report_type == "UNKNOWN":
-            print("⚠️ AVISO: Tipo de relatório não identificado. Tentando processar mesmo assim...")
+            print("[WARN] AVISO: Tipo de relatório não identificado. Tentando processar mesmo assim...")
 
         normalized_path = _to_xlsx_if_needed(file_path)
         engine = "openpyxl" if str(normalized_path).lower().endswith(".xlsx") else None
@@ -211,15 +256,33 @@ def deep_scan_excel(file_path):
             
             i += 1
         
+            i += 1
+        
         # Log estatísticas para debug
-        print(f"\n📊 Estatísticas de Processamento (RELEITURAS):")
+        print(f"\n[STATS] Estatísticas de Processamento (RELEITURAS):")
         for key, value in stats.items():
             print(f"   • {key}: {value}")
+            
+        # ==========================================
+        # Validação de Segurança e Sanitização (XSS)
+        # ==========================================
+        if details:
+            df_sec = pd.DataFrame(details)
+            df_sec = sanitize_dataframe(df_sec)
+            try:
+                schema_releituras.validate(df_sec)
+            except pa.errors.SchemaError as err:
+                print(f"[SECURITY] ALERTA DE SEGURANÇA: Falha na validação do schema Releituras!\n{err.failure_cases}")
+                # Dependendo do fluxo, podemos dropar as linhas inválidas ou lenientemente seguir:
+                # df_sec = df_sec.drop(err.failure_cases.index) # fail open
+                raise ValueError("Pipeline Interrompido devido à falha de integridade nos campos do Excel.")
+                
+            details = df_sec.to_dict('records')
         
         return details
         
     except Exception as e:
-        print(f"❌ Erro ao analisar Excel de Releitura: {e}")
+        print(f"[ERROR] Erro ao analisar Excel de Releitura: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -236,7 +299,7 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
     localidade_map = {}
     
     if not ref_path.exists():
-        print(f"⚠️ Arquivo de referência não encontrado: {ref_path}")
+        print(f"[WARN] Arquivo de referência não encontrado: {ref_path}")
         return localidade_map
     
     try:
@@ -245,7 +308,7 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
         # Normalizar nomes das colunas (trim)
         df_ref.columns = [str(col).strip() for col in df_ref.columns]
         
-        print(f"📋 Colunas disponíveis no arquivo de referência: {list(df_ref.columns)}")
+        print(f"[INFO] Colunas disponíveis no arquivo de referência: {list(df_ref.columns)}")
         
         # Mapeamento dinâmico de colunas (case-insensitive)
         col_mapping = {}
@@ -260,10 +323,10 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
             elif ('regiao' in col_lower or 'região' in col_lower) and not col_mapping.get('regiao'):
                 col_mapping['regiao'] = col
         
-        print(f"🔍 Mapeamento de colunas: {col_mapping}")
+        print(f"[INFO] Mapeamento de colunas: {col_mapping}")
         
         if 'ul' not in col_mapping:
-            print("❌ Coluna 'UL' não encontrada no arquivo de referência!")
+            print("[ERROR] Coluna 'UL' não encontrada no arquivo de referência!")
             return localidade_map
         
         for _, row in df_ref.iterrows():
@@ -284,15 +347,15 @@ def load_localidade_reference(ref_path: Path) -> Dict[str, Dict[str, str]]:
                 localidade_map[ul_regional] = info
                 
             except Exception as e:
-                print(f"⚠️ Erro ao processar linha de referência: {e}")
+                print(f"[WARN] Erro ao processar linha de referência: {e}")
                 continue
         
-        print(f"✅ Arquivo de referência carregado: {len(localidade_map)} localidades mapeadas")
+        print(f"[SUCCESS] Arquivo de referência carregado: {len(localidade_map)} localidades mapeadas")
         
         return localidade_map
         
     except Exception as e:
-        print(f"❌ Erro ao carregar arquivo de referência: {e}")
+        print(f"[ERROR] Erro ao carregar arquivo de referência: {e}")
         import traceback
         traceback.print_exc()
         return localidade_map
@@ -311,14 +374,14 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
     try:
         # ==================== VALIDAR TIPO DE RELATÓRIO ====================
         report_type, msg = validate_report_type(file_path)
-        print(f"🔍 {msg}")
+        print(f"[INFO] {msg}")
         
         if report_type == "RELEITURAS":
-            print("⚠️ AVISO: Este arquivo parece ser do tipo RELEITURAS, não PORTEIRA!")
+            print("[WARN] AVISO: Este arquivo parece ser do tipo RELEITURAS, não PORTEIRA!")
             print("   Use a função deep_scan_excel() em vez desta.")
             return None
         elif report_type == "UNKNOWN":
-            print("⚠️ AVISO: Tipo de relatório não identificado. Tentando processar mesmo assim...")
+            print("[WARN] AVISO: Tipo de relatório não identificado. Tentando processar mesmo assim...")
         
         # ==================== CARREGAR REFERÊNCIA ====================
         # Caminho relativo para o arquivo de referência na raiz ou pasta data
@@ -448,7 +511,7 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
             
             razao_int = int(razao)
             if razao_int < 1 or razao_int > 18:
-                print(f"⚠️ Razão fora do intervalo esperado (01-18): {razao} (UL: {ul_clean})")
+                print(f"[WARN] Razão fora do intervalo esperado (01-18): {razao} (UL: {ul_clean})")
 
             # ==================== EXTRAÇÃO DE VALORES ====================
             def _num(idx):
@@ -490,17 +553,17 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
 
         # ==================== LOGS FINAIS ====================
         print(f"\n{'='*80}")
-        print(f"📊 ESTATÍSTICAS DE PROCESSAMENTO - PORTEIRA")
+        print(f"[STATS] ESTATÍSTICAS DE PROCESSAMENTO - PORTEIRA")
         print(f"{'='*80}")
-        print(f"📁 Arquivo: {Path(file_path).name}")
-        print(f"🎯 Ciclo: {ciclo if ciclo else 'Todos'}")
-        print(f"📈 Válidas: {stats['linhas_validas']} / {stats['total_linhas_arquivo']}")
-        print(f"🚫 Filtradas por ciclo: {stats['filtradas_por_ciclo']}")
-        print(f"📍 Mapeamento: {len(stats['ul_regionais_encontradas'])} ULs regionais identificadas")
+        print(f"[INFO] Arquivo: {Path(file_path).name}")
+        print(f"[INFO] Ciclo: {ciclo if ciclo else 'Todos'}")
+        print(f"[STATS] Válidas: {stats['linhas_validas']} / {stats['total_linhas_arquivo']}")
+        print(f"[WARN] Filtradas por ciclo: {stats['filtradas_por_ciclo']}")
+        print(f"[INFO] Mapeamento: {len(stats['ul_regionais_encontradas'])} ULs regionais identificadas")
         print(f"{'='*80}\n")
 
         if not data_rows:
-            print("❌ Nenhum dado válido extraído!")
+            print("[ERROR] Nenhum dado válido extraído!")
             return []
 
         # ==================== AGREGAÇÃO DOS DADOS ====================
@@ -543,12 +606,26 @@ def deep_scan_porteira_excel(file_path, ciclo=None):
                 "Releituras_Nao_Executadas": float(r["Releituras_Nao_Executadas"]),
                 "Impedimentos": float(r.get("Impedimentos", 0)),
             })
+            
+        # ==========================================
+        # Validação de Segurança e Sanitização (XSS)
+        # ==========================================
+        if details:
+            df_sec = pd.DataFrame(details)
+            df_sec = sanitize_dataframe(df_sec)
+            try:
+                schema_porteira.validate(df_sec)
+            except pa.errors.SchemaError as err:
+                print(f"[SECURITY] ALERTA DE SEGURANÇA: Falha na validação do schema Porteira!\n{err.failure_cases}")
+                raise ValueError("Pipeline Interrompido devido à falha de integridade nos campos da Porteira.")
+                
+            details = df_sec.to_dict('records')
 
-        print(f"✅ Processamento concluído: {len(details)} registros agregados gerados\n")
+        print(f"[SUCCESS] Processamento concluído: {len(details)} registros agregados gerados\n")
         return details
 
     except Exception as e:
-        print(f"❌ Erro crítico ao analisar Excel da Porteira: {e}")
+        print(f"[ERROR] Erro crítico ao analisar Excel da Porteira: {e}")
         import traceback
         traceback.print_exc()
         return None

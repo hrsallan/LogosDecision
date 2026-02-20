@@ -186,17 +186,17 @@ def send_email(subject: str, body: str, *, to_addrs: Iterable[str], cc_addrs: It
     """Envia e-mail via SMTP/TLS. Retorna True se enviou, False caso contrário."""
     cfg = _get_config()
     if not cfg.enabled:
-        print("ℹ️ [email] ALERT_EMAIL_ENABLED=0 (não enviando e-mail)")
+        print("[INFO] [email] ALERT_EMAIL_ENABLED=0 (não enviando e-mail)")
         return False
 
     if not cfg.user or not cfg.password:
-        print("⚠️ [email] SMTP não configurado (ALERT_SMTP_USER/ALERT_SMTP_PASS ausentes)")
+        print("[WARN] [email] SMTP não configurado (ALERT_SMTP_USER/ALERT_SMTP_PASS ausentes)")
         return False
 
     to_list = list(to_addrs)
     cc_list = list(cc_addrs)
     if not to_list:
-        print("⚠️ [email] ALERT_EMAIL_TO vazio (sem destinatário)")
+        print("[WARN] [email] ALERT_EMAIL_TO vazio (sem destinatário)")
         return False
 
     msg = EmailMessage()
@@ -216,7 +216,7 @@ def send_email(subject: str, body: str, *, to_addrs: Iterable[str], cc_addrs: It
             smtp.send_message(msg)
         return True
     except (smtplib.SMTPException, socket.timeout, OSError) as e:
-        print(f"❌ [email] Falha ao enviar e-mail: {e}")
+        print(f"[ERROR] [email] Falha ao enviar e-mail: {e}")
         return False
 
 
@@ -229,7 +229,7 @@ def notify_scraper_error(*, where: str, err: Exception, extra: dict | None = Non
     # Mesmo se desabilitado, não quebra fluxo.
     key = f"scraper:{where}".lower().replace(" ", "_")
     if not _can_send(key, cfg.cooldown_min):
-        print(f"⏳ [email] Cooldown ativo para '{where}'.")
+        print(f"[INFO] [email] Cooldown ativo para '{where}'.")
         return False
 
     tb = traceback_text or traceback.format_exc()
